@@ -19,6 +19,21 @@ This template should help get you started developing with Vue 3 in Vite.
 
 See [Vite Configuration Reference](https://vite.dev/config/).
 
+## Database (PostgreSQL)
+
+The API in `server/` stores users, providers, bookings, favorites, applications and uploaded media in PostgreSQL.
+Tables and demo data are created automatically on first start. Set `DATABASE_URL` to use your own server
+(default: `postgres://postgres:postgres@localhost:5432/massage`, the database must use UTF8 encoding).
+
+```sh
+npm run db:local   # optional: local PostgreSQL without installing anything (data in .pgdata)
+npm run server     # API on http://localhost:3001
+npm run dev        # Vite dev server, proxies /api and /uploads to the API
+```
+
+Demo accounts: `admin@example.com / admin123`, `mali@example.com / seller123`, `somchai@example.com / buyer123`.
+Role permissions live in `server/roles.json`. Uploaded media is saved in `server/uploads`.
+
 ## Project Setup
 
 ```sh
