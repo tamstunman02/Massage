@@ -23,6 +23,12 @@ export const api = {
     headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name) },
   }),
   deleteMedia: (id) => request('DELETE', `/api/media/${id}`),
+  providerReviews: (id) => request('GET', `/api/providers/${id}/reviews`),
+  createReview: (providerId, payload) => request('POST', `/api/providers/${providerId}/reviews`, payload),
+  uploadReviewMedia: (reviewId, file) => request('POST', `/api/reviews/${reviewId}/media`, file, {
+    raw: true,
+    headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name) },
+  }),
   bookings: () => request('GET', '/api/bookings'),
   createBooking: (payload) => request('POST', '/api/bookings', payload),
   updateBooking: (id, status) => request('PATCH', `/api/bookings/${encodeURIComponent(id)}`, { status }),

@@ -19,6 +19,25 @@ app.use('/uploads', express.static(uploadDir, { setHeaders: (res) => res.setHead
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch(next)
 const fail = (res, status, message) => res.status(status).json({ error: message })
 const text = (value, max = 500) => String(value ?? '').trim().slice(0, max)
+const defaultServices = [
+  { name: 'พบปะพูดคุย', duration: '60 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 0 },
+  { name: 'ร่วมกิจกรรม', duration: '90 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 300 },
+  { name: 'งานอีเวนต์', duration: '90 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 500 },
+]
+
+async function populateMockProviderDetails(db, providerId) {
+  await db.query(
+    `UPDATE providers SET
+       age = CASE WHEN age IS NULL OR age < 18 THEN 22 + (id % 13) ELSE age END,
+       height_cm = COALESCE(height_cm, 155 + (id % 26)),
+       weight_kg = COALESCE(weight_kg, 45 + ((id * 7) % 36)),
+       measurements = CASE WHEN measurements = '' THEN
+         (30 + (id % 8))::text || '-' || (23 + (id % 7))::text || '-' || (33 + (id % 9))::text
+         ELSE measurements END
+     WHERE id = $1`,
+    [providerId],
+  )
+}
 
 const mediaTypes = {
   'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif',
@@ -69,16 +88,29 @@ const providerSql = `
   FROM providers p`
 
 function toProvider(row) {
+  const services = Array.isArray(row.services) && row.services.length
+    ? row.services
+    : defaultServices.map(({ add, ...service }) => ({ ...service, price: Number(row.price) + add }))
   return {
-    id: row.id, name: row.name, age: row.age, province: row.province, area: row.area, gender: row.gender,
+    id: row.id, name: row.name, age: row.age, heightCm: row.height_cm, weightKg: row.weight_kg,
+    measurements: row.measurements, province: row.province, area: row.area, gender: row.gender,
     line: row.line, price: row.price, rating: row.rating, reviews: row.reviews, initials: row.initials,
     visual: row.visual, category: row.category, description: row.description, tags: row.tags, venue: row.venue,
-    modes: row.modes, active: row.active, membershipActive: row.membership_active, media: row.media,
+    modes: row.modes, services, active: row.active, membershipActive: row.membership_active, media: row.media,
   }
 }
 
 const bookingSql = `
   SELECT b.*, p.name AS provider FROM bookings b JOIN providers p ON p.id = b.provider_id`
+
+const reviewSql = `
+  SELECT r.id, r.booking_id, r.provider_id, r.user_id, r.service_rating, r.value_rating, r.comment, r.created_at,
+    u.name AS user_name,
+    COALESCE(json_agg(json_build_object('id', rm.id, 'name', rm.name, 'type', 'image', 'url', '/uploads/' || rm.file) ORDER BY rm.id)
+      FILTER (WHERE rm.id IS NOT NULL), '[]') AS media
+  FROM reviews r
+  JOIN users u ON u.id = r.user_id
+  LEFT JOIN review_media rm ON rm.review_id = r.id`
 
 function toBooking(row) {
   return {
@@ -131,6 +163,7 @@ app.post('/api/register', wrap(async (req, res) => {
         [name, province, phone, price, name.slice(0, 1), description,
           text(req.body.businessName, 200) || `สถานที่ตามที่ผู้ให้บริการระบุ · ${province}`])
       providerId = created.rows[0].id
+      await populateMockProviderDetails(client, providerId)
       await client.query(
         'INSERT INTO applications (provider_id, name, line, province, gender, service) VALUES ($1,$2,$3,$4,$5,$6)',
         [providerId, name, phone, province, 'ไม่ประสงค์ระบุ', description])
@@ -171,18 +204,63 @@ app.get('/api/providers', wrap(async (req, res) => {
 app.patch('/api/providers/:id', requirePermission('profile:edit:own'), wrap(async (req, res) => {
   const id = Number(req.params.id)
   if (req.user.providerId !== id) return fail(res, 403, 'แก้ไขได้เฉพาะโปรไฟล์ของตนเอง')
-  const modes = Array.isArray(req.body.modes) ? req.body.modes.filter((m) => ['ที่ร้าน', 'นอกสถานที่'].includes(m)) : null
+  let modes = null
+  if (Object.hasOwn(req.body, 'modes')) {
+    if (!Array.isArray(req.body.modes) || req.body.modes.length > 30 ||
+        req.body.modes.some((mode) => typeof mode !== 'string' || mode.length > 60)) {
+      return fail(res, 400, 'รูปแบบนัดหมายต้องเป็นรายการไม่เกิน 30 แบบ และแต่ละแบบไม่เกิน 60 ตัวอักษร')
+    }
+    modes = [...new Set(req.body.modes.map((mode) => mode.trim()).filter(Boolean))]
+    if (!modes.length) return fail(res, 400, 'ต้องกำหนดรูปแบบนัดหมายอย่างน้อย 1 แบบ')
+  }
+  let services = null
+  if (Object.hasOwn(req.body, 'services')) {
+    if (!Array.isArray(req.body.services) || !req.body.services.length || req.body.services.length > 30) {
+      return fail(res, 400, 'ต้องกำหนดรูปแบบบริการ 1–30 รายการ')
+    }
+    services = []
+    const serviceNames = new Set()
+    for (const item of req.body.services) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        return fail(res, 400, 'ข้อมูลรูปแบบบริการไม่ถูกต้อง')
+      }
+      const name = text(item.name, 60)
+      const duration = text(item.duration, 40)
+      const description = text(item.description, 200)
+      const price = Number(item.price)
+      const nameKey = name.toLocaleLowerCase()
+      if (!name || !duration || !description.trim() || !Number.isInteger(price) || price < 1 || price > 1000000 ||
+          serviceNames.has(nameKey)) {
+        return fail(res, 400, 'กรุณากรอกชื่อ ระยะเวลา รายละเอียด และราคาของแต่ละรูปแบบให้ถูกต้องและไม่ซ้ำกัน')
+      }
+      serviceNames.add(nameKey)
+      services.push({ name, duration, description, price })
+    }
+  }
+  const integerField = (value, min, max) => Number.isInteger(Number(value)) && Number(value) >= min && Number(value) <= max
+  const age = req.body.age === undefined ? null : integerField(req.body.age, 18, 100) ? Number(req.body.age) : undefined
+  const heightCm = req.body.heightCm === undefined ? null : integerField(req.body.heightCm, 120, 230) ? Number(req.body.heightCm) : undefined
+  const weightKg = req.body.weightKg === undefined ? null : integerField(req.body.weightKg, 30, 250) ? Number(req.body.weightKg) : undefined
+  const measurements = req.body.measurements === undefined ? null
+    : typeof req.body.measurements === 'string' ? text(req.body.measurements, 80) : undefined
+  if (age === undefined || heightCm === undefined || weightKg === undefined || measurements === undefined) {
+    return fail(res, 400, 'กรุณากรอกอายุ ส่วนสูง น้ำหนัก และสัดส่วนให้ถูกต้อง')
+  }
   const { rows } = await pool.query(
     `UPDATE providers SET
        name = COALESCE($2, name), price = COALESCE($3, price), description = COALESCE($4, description),
-       venue = COALESCE($5, venue), province = COALESCE($6, province), modes = COALESCE($7, modes)
+       venue = COALESCE($5, venue), province = COALESCE($6, province), modes = COALESCE($7, modes),
+       services = COALESCE($8, services), age = COALESCE($9, age), height_cm = COALESCE($10, height_cm),
+       weight_kg = COALESCE($11, weight_kg), measurements = COALESCE($12, measurements)
      WHERE id = $1 RETURNING id`,
     [id, req.body.name === undefined ? null : text(req.body.name, 100) || null,
       Number.isFinite(Number(req.body.price)) && req.body.price !== '' && req.body.price != null
         ? Math.max(0, Math.min(1000000, Number(req.body.price))) : null,
-      req.body.description === undefined ? null : text(req.body.description, 1000),
+      req.body.description === undefined ? null
+        : typeof req.body.description === 'string' ? req.body.description.slice(0, 1000) : '',
       req.body.venue === undefined ? null : text(req.body.venue, 200),
-      req.body.province === undefined ? null : text(req.body.province, 100), modes])
+      req.body.province === undefined ? null : text(req.body.province, 100), modes,
+      services === null ? null : JSON.stringify(services), age, heightCm, weightKg, measurements])
   if (!rows[0]) return fail(res, 404, 'ไม่พบโปรไฟล์')
   const result = await pool.query(`${providerSql} WHERE p.id = $1`, [id])
   res.json(toProvider(result.rows[0]))
@@ -226,6 +304,99 @@ app.delete('/api/media/:id', requirePermission('profile:edit:own'), wrap(async (
   res.json({ ok: true })
 }))
 
+// ---------- provider reviews ----------
+app.get('/api/providers/:id/reviews', wrap(async (req, res) => {
+  const providerId = Number(req.params.id)
+  if (!Number.isInteger(providerId) || providerId < 1) return fail(res, 400, 'รหัสโปรไฟล์ไม่ถูกต้อง')
+  const { rows } = await pool.query(
+    `${reviewSql} WHERE r.provider_id = $1 GROUP BY r.id, u.name ORDER BY r.created_at DESC`, [providerId])
+  const reviewRows = rows.map((row) => ({
+    id: row.id, bookingId: row.user_id === req.user?.id ? row.booking_id : null,
+    userName: row.user_name, serviceRating: row.service_rating, valueRating: row.value_rating,
+    comment: row.comment, createdAt: row.created_at, media: row.media, isDemo: false,
+  }))
+  const { rows: demoRows } = await pool.query(
+    `SELECT id, user_name, service_rating, value_rating, comment, created_at
+     FROM demo_reviews WHERE provider_id = $1 ORDER BY created_at DESC, id DESC`, [providerId])
+  reviewRows.push(...demoRows.map((row) => ({
+    id: `demo-${row.id}`, bookingId: null, userName: row.user_name,
+    serviceRating: row.service_rating, valueRating: row.value_rating,
+    comment: row.comment, createdAt: row.created_at, media: [], isDemo: true,
+  })))
+  reviewRows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  const canReviewBookings = req.user?.role === 'buyer'
+    ? (await pool.query(
+      `SELECT b.id FROM bookings b
+       WHERE b.provider_id = $1 AND b.user_id = $2 AND b.status = 'เสร็จสิ้น'
+         AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.id)
+       ORDER BY b.created_at DESC`, [providerId, req.user.id])).rows.map((row) => row.id)
+    : []
+  res.json({ reviews: reviewRows, canReviewBookings })
+}))
+
+app.post('/api/providers/:id/reviews', requirePermission('review:create'), wrap(async (req, res) => {
+  const providerId = Number(req.params.id)
+  const bookingId = text(req.body.bookingId, 100)
+  const serviceRating = Number(req.body.serviceRating)
+  const valueRating = Number(req.body.valueRating)
+  const comment = text(req.body.comment, 2000)
+  if (!Number.isInteger(providerId) || providerId < 1 ||
+      !Number.isInteger(serviceRating) || serviceRating < 1 || serviceRating > 5 ||
+      !Number.isInteger(valueRating) || valueRating < 1 || valueRating > 5 ||
+      comment.length < 2) {
+    return fail(res, 400, 'กรุณาให้คะแนนและเขียนรีวิวให้ครบถ้วน')
+  }
+  const { rows: bookings } = await pool.query(
+    `SELECT id FROM bookings WHERE id = $1 AND provider_id = $2 AND user_id = $3 AND status = 'เสร็จสิ้น'`,
+    [bookingId, providerId, req.user.id])
+  if (!bookings[0]) return fail(res, 403, 'รีวิวได้เมื่อการนัดหมายของคุณเสร็จสิ้นแล้วเท่านั้น')
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO reviews (booking_id, provider_id, user_id, service_rating, value_rating, comment)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+      [bookingId, providerId, req.user.id, serviceRating, valueRating, comment])
+    const review = await pool.query(
+      `${reviewSql} WHERE r.id = $1 GROUP BY r.id, u.name`, [rows[0].id])
+    const row = review.rows[0]
+    res.status(201).json({
+      id: row.id, bookingId: row.booking_id, userName: row.user_name,
+      serviceRating: row.service_rating, valueRating: row.value_rating,
+      comment: row.comment, createdAt: row.created_at, media: row.media,
+    })
+  } catch (error) {
+    if (error.code === '23505') return fail(res, 409, 'รีวิวการนัดหมายนี้ไปแล้ว')
+    throw error
+  }
+}))
+
+app.post('/api/reviews/:id/media', requirePermission('review:create'),
+  express.raw({ type: () => true, limit: '8mb' }), wrap(async (req, res) => {
+    const reviewId = Number(req.params.id)
+    if (!Number.isInteger(reviewId) || reviewId < 1) return fail(res, 400, 'รหัสรีวิวไม่ถูกต้อง')
+    const { rows: reviews } = await pool.query(
+      'SELECT id FROM reviews WHERE id = $1 AND user_id = $2', [reviewId, req.user.id])
+    if (!reviews[0]) return fail(res, 404, 'ไม่พบรีวิวของคุณ')
+    const mime = String(req.headers['content-type'] || '').split(';')[0].trim()
+    const ext = mediaTypes[mime]
+    if (!ext || !mime.startsWith('image/')) return fail(res, 415, 'ไฟล์แนบรีวิวต้องเป็น JPG, PNG, WebP หรือ GIF')
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) return fail(res, 400, 'ไม่พบไฟล์รูปภาพ')
+    const { rows: countRows } = await pool.query('SELECT count(*)::int AS count FROM review_media WHERE review_id = $1', [reviewId])
+    if (countRows[0].count >= 6) return fail(res, 400, 'แนบรูปรีวิวได้ไม่เกิน 6 รูป')
+    let name = 'review-image'
+    try { name = text(decodeURIComponent(String(req.headers['x-file-name'] || name)), 200) } catch { /* keep default */ }
+    const file = `${randomBytes(16).toString('hex')}.${ext}`
+    await writeFile(path.join(uploadDir, file), req.body)
+    try {
+      const { rows } = await pool.query(
+        'INSERT INTO review_media (review_id, name, file) VALUES ($1,$2,$3) RETURNING id',
+        [reviewId, name, file])
+      res.status(201).json({ id: rows[0].id, name, url: `/uploads/${file}` })
+    } catch (error) {
+      await unlink(path.join(uploadDir, file)).catch(() => {})
+      throw error
+    }
+  }))
+
 // ---------- bookings ----------
 app.get('/api/bookings', wrap(async (req, res) => {
   if (!req.user) return res.json([])
@@ -243,16 +414,16 @@ app.post('/api/bookings', requirePermission('booking:create'), wrap(async (req, 
     'SELECT * FROM providers WHERE id = $1 AND active AND membership_active', [Number(req.body.providerId)])
   const provider = found[0]
   if (!provider) return fail(res, 404, 'ไม่พบผู้ให้บริการ')
-  const mode = provider.modes.includes(req.body.mode) ? req.body.mode : provider.modes[0]
-  const extras = { 'พบปะพูดคุย': ['60 นาที', 0], 'ร่วมกิจกรรม': ['90 นาที', 300], 'งานอีเวนต์': ['90 นาที', 500] }
-  const serviceName = extras[req.body.service] ? req.body.service : 'พบปะพูดคุย'
-  const [duration, add] = extras[serviceName]
-  const amount = provider.price + add + (mode === 'นอกสถานที่' ? 250 : 0)
+  const mode = text(req.body.mode, 60)
+  if (!provider.modes.includes(mode)) return fail(res, 400, 'รูปแบบนัดหมายนี้ไม่มีให้บริการแล้ว')
+  const service = toProvider(provider).services.find((item) => item.name === text(req.body.service, 60))
+  if (!service) return fail(res, 400, 'รูปแบบบริการนี้ไม่มีให้จองแล้ว')
+  const amount = service.price + (mode === 'นอกสถานที่' ? 250 : 0)
   const reference = `ND-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 10)}`
   const { rows } = await pool.query(
     `INSERT INTO bookings (id, provider_id, user_id, service, date, time, mode, venue, amount, guest_name, phone, note)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
-    [reference, provider.id, req.user.id, `${serviceName} · ${duration}`, text(req.body.date, 20), text(req.body.time, 10), mode,
+    [reference, provider.id, req.user.id, `${service.name} · ${service.duration}`, text(req.body.date, 20), text(req.body.time, 10), mode,
       mode === 'ที่ร้าน' ? provider.venue : text(req.body.address, 300), amount,
       text(req.body.guestName, 100), text(req.body.phone, 50), text(req.body.note, 1000)])
   const result = await pool.query(`${bookingSql} WHERE b.id = $1`, [rows[0].id])
@@ -320,11 +491,13 @@ app.post('/api/applications/:id/approve', requirePermission('provider:approve'),
   if (item.provider_id) {
     await pool.query('UPDATE providers SET active = TRUE WHERE id = $1', [item.provider_id])
   } else {
-    await pool.query(
+    const createdProvider = await pool.query(
       `INSERT INTO providers (name, age, province, area, gender, line, price, initials, category, description, tags, venue, modes, active)
-       VALUES ($1,0,$2,$2,$3,$4,1000,$5,'New provider',$6,'{ผู้ให้บริการใหม่,โปรไฟล์ตัวอย่าง}','สถานที่นัดพบตามที่ระบุ','{ที่ร้าน,นอกสถานที่}',TRUE)`,
+       VALUES ($1,0,$2,$2,$3,$4,1000,$5,'New provider',$6,'{ผู้ให้บริการใหม่,โปรไฟล์ตัวอย่าง}','สถานที่นัดพบตามที่ระบุ','{ที่ร้าน,นอกสถานที่}',TRUE)
+       RETURNING id`,
       [item.name, item.province, item.gender, item.line, item.name.slice(0, 1),
         item.service || 'ผู้ให้บริการอิสระ · กรุณาตกลงรายละเอียดและขอบเขตก่อนนัดหมาย'])
+    await populateMockProviderDetails(pool, createdProvider.rows[0].id)
   }
   res.json({ ok: true })
 }))

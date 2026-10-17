@@ -11,7 +11,7 @@
     ]
   },
   "seller": {
-    "label": "ผู้ขายบริการ",
+    "label": "ผู้บริการ",
     "permissions": [
       "profile:edit:own",
       "service:create", "service:edit:own", "service:delete:own", "service:view",
@@ -21,7 +21,7 @@
     ]
   },
   "buyer": {
-    "label": "ผู้ซื้อบริการ",
+    "label": "นักท่องเที่ยว",
     "permissions": [
       "profile:edit:own",
       "provider:view", "service:view",
