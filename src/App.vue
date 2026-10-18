@@ -25,6 +25,7 @@ const selectedProvince = ref('')
 const selectedGender = ref('')
 const selectedMode = ref('')
 const selectedService = ref('')
+const appliedSearchFilters = ref({ name: '', province: '', gender: '', mode: '', service: '' })
 const isSearchFilterOpen = ref(false)
 const searchFilterInput = ref(null)
 const searchFilterTrigger = ref(null)
@@ -51,6 +52,10 @@ const adminProviderProvince = ref('')
 const adminProviderGender = ref('')
 const adminProviderPage = ref(1)
 const adminProviderPageSize = 50
+const adminTravelers = ref([])
+const adminTravelerSearch = ref('')
+const selectedTraveler = ref(null)
+const isAdminTravelerLoading = ref(false)
 const accountTab = ref('appointments')
 const member = ref(null)
 const activeRole = ref('buyer')
@@ -75,16 +80,18 @@ function can(permission) {
 }
 
 async function loadData() {
-  const [providerList, bookingList, favoriteList, applicationList] = await Promise.all([
+  const [providerList, bookingList, favoriteList, applicationList, travelerList] = await Promise.all([
     api.providers(),
     currentUser.value ? api.bookings() : [],
     can('favorite:manage') ? api.favorites() : [],
     can('provider:approve') ? api.applications() : [],
+    can('user:view') ? api.adminTravelers() : [],
   ])
   providers.value = providerList
   bookings.value = bookingList
   favorites.value = favoriteList
   applications.value = applicationList
+  adminTravelers.value = travelerList
   if (selectedProvider.value) {
     selectedProvider.value = providerList.find((item) => item.id === selectedProvider.value.id) || null
   }
@@ -226,6 +233,13 @@ function openAdmin() {
   navigate('admin')
 }
 
+async function openAdminTraveler(traveler) {
+  isAdminTravelerLoading.value = true
+  const details = await safely(() => api.adminTraveler(traveler.id), 'โหลดข้อมูลนักท่องเที่ยวไม่สำเร็จ')
+  if (details) selectedTraveler.value = details
+  isAdminTravelerLoading.value = false
+}
+
 const services = [
   { name: 'พบปะพูดคุย', duration: '60 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 0 },
   { name: 'ร่วมกิจกรรม', duration: '90 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 300 },
@@ -238,14 +252,15 @@ function providerServices(provider) {
 }
 
 const visibleProviders = computed(() => {
-  const term = searchName.value.trim().toLocaleLowerCase()
+  const filters = appliedSearchFilters.value
+  const term = filters.name.trim().toLocaleLowerCase()
   const results = providers.value.filter((provider) => {
     const searchable = `${provider.name} ${provider.line} ${provider.area} ${provider.province} ${provider.category} ${provider.tags.join(' ')}`.toLocaleLowerCase()
     return provider.active && provider.membershipActive &&
-      (!selectedProvince.value || provider.province === selectedProvince.value) &&
-      (!selectedGender.value || provider.gender === selectedGender.value) &&
-      (!selectedMode.value || provider.modes.includes(selectedMode.value)) &&
-      (!selectedService.value || provider.tags.some((tag) => tag.toLocaleLowerCase().includes(selectedService.value.toLocaleLowerCase()))) &&
+      (!filters.province || provider.province === filters.province) &&
+      (!filters.gender || provider.gender === filters.gender) &&
+      (!filters.mode || provider.modes.includes(filters.mode)) &&
+      (!filters.service || provider.tags.some((tag) => tag.toLocaleLowerCase().includes(filters.service.toLocaleLowerCase()))) &&
       (!term || searchable.includes(term))
   })
   if (sortBy.value === 'ราคา: ต่ำไปสูง') return [...results].sort((a, b) => a.price - b.price)
@@ -291,6 +306,12 @@ const adminProviderPageCount = computed(() => Math.ceil(filteredAdminProviders.v
 const paginatedAdminProviders = computed(() => {
   const start = (adminProviderPage.value - 1) * adminProviderPageSize
   return filteredAdminProviders.value.slice(start, start + adminProviderPageSize)
+})
+const filteredAdminTravelers = computed(() => {
+  const term = adminTravelerSearch.value.trim().toLocaleLowerCase()
+  return adminTravelers.value.filter((traveler) =>
+    !term || `${traveler.name} ${traveler.email} ${traveler.phone}`.toLocaleLowerCase().includes(term),
+  )
 })
 const activeProviderCount = computed(() => providers.value.filter((provider) => provider.active && provider.membershipActive).length)
 const sellerProvider = computed(() => providers.value.find((provider) => provider.id === memberSellerProviderId.value))
@@ -429,6 +450,22 @@ function resetSearchFilters() {
   selectedGender.value = ''
   selectedMode.value = ''
   selectedService.value = ''
+}
+
+function applySearchFilters() {
+  appliedSearchFilters.value = {
+    name: searchName.value,
+    province: selectedProvince.value,
+    gender: selectedGender.value,
+    mode: selectedMode.value,
+    service: selectedService.value,
+  }
+  closeSearchFilters()
+}
+
+function clearSearchFilters() {
+  resetSearchFilters()
+  appliedSearchFilters.value = { name: '', province: '', gender: '', mode: '', service: '' }
 }
 
 function openSellerArea() {
@@ -681,9 +718,23 @@ function showNotice(message) {
   window.setTimeout(() => { notice.value = '' }, 3200)
 }
 
+async function resendVerification() {
+  try {
+    await api.resendVerification()
+    showNotice('ส่งลิงก์ยืนยันไปที่อีเมลของคุณแล้ว')
+  } catch (error) {
+    showNotice(error.message || 'ส่งอีเมลไม่สำเร็จ')
+  }
+}
+
 function formatDate(date) {
   if (!date) return 'ยังไม่ได้เลือกวันที่'
   return new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${date}T00:00:00`))
+}
+
+function formatDateTime(date) {
+  if (!date) return 'ไม่ระบุ'
+  return new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(date))
 }
 
 function scrollToProviders() {
@@ -725,6 +776,7 @@ function scrollToProviders() {
         </template>
       </div>
     </header>
+    <div v-if="currentUser && currentUser.emailVerified === false && currentRole !== 'admin'" class="lux-verify-banner" role="status"><span>✉ กรุณายืนยันอีเมล <strong>{{ currentUser.email }}</strong> ภายใน 3 วัน มิฉะนั้นบัญชีจะถูกลบอัตโนมัติ</span><button type="button" @click="resendVerification">ส่งลิงก์ยืนยันอีกครั้ง</button></div>
 
     <main v-if="view === 'home'" class="lux-home">
       <section class="lux-hero">
@@ -792,27 +844,27 @@ function scrollToProviders() {
 
     <main v-else-if="view === 'search'" class="lux-page lux-search-page">
       <div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><span>ค้นหาผู้ให้บริการ</span></div>
-      <button ref="searchFilterTrigger" class="lux-search-filter-trigger" type="button" @click="openSearchFilters"><span class="lux-search-filter-icon">⌕</span><span class="lux-search-filter-copy"><strong>ค้นหาบริการ</strong><small>{{ searchName || selectedProvince || selectedGender || selectedMode || selectedService ? 'ปรับคำค้นหาและตัวกรอง' : 'ค้นหาผู้ให้บริการ ชื่อบริการ หรือพื้นที่' }}</small></span><span v-if="selectedProvince || selectedGender || selectedMode || selectedService" class="lux-search-filter-active">มีตัวกรอง</span><span class="lux-search-filter-arrow">⌄</span></button>
+      <button ref="searchFilterTrigger" class="lux-search-filter-trigger" type="button" @click="openSearchFilters"><span class="lux-search-filter-icon">⌕</span><span class="lux-search-filter-copy"><strong>ค้นหาบริการ</strong><small>{{ appliedSearchFilters.name || appliedSearchFilters.province || appliedSearchFilters.gender || appliedSearchFilters.mode || appliedSearchFilters.service ? 'ปรับคำค้นหาและตัวกรอง' : 'ค้นหาผู้ให้บริการ ชื่อบริการ หรือพื้นที่' }}</small></span><span v-if="appliedSearchFilters.province || appliedSearchFilters.gender || appliedSearchFilters.mode || appliedSearchFilters.service" class="lux-search-filter-active">มีตัวกรอง</span><span class="lux-search-filter-arrow">⌄</span></button>
       <div class="lux-page-heading"><div><div class="lux-kicker"><span></span> FIND YOUR CONNECTION</div><h1>ค้นหาผู้ให้บริการ<span>อิสระ</span></h1><p>เลือกดูโปรไฟล์ รูปแบบนัดพบ และรายละเอียดบริการทั่วประเทศไทย</p></div><div class="lux-result-note"><strong>{{ visibleProviders.length.toString().padStart(2, '0') }}</strong><span>โปรไฟล์ที่ตรงกับคุณ</span></div></div>
       <section class="lux-search-results"><div class="lux-results-toolbar"><div><span>แสดง</span> {{ visibleProviders.length }} โปรไฟล์ <span>ผู้ให้บริการอิสระ</span></div><label>เรียงตาม <select v-model="sortBy"><option>แนะนำ</option><option>คะแนนสูงสุด</option><option>ราคา: ต่ำไปสูง</option></select></label></div>
           <div class="lux-provider-grid lux-results-grid"><article v-for="provider in visibleProviders" :key="provider.id" class="lux-provider-card"><div class="lux-card-image" :class="[provider.visual, { 'lux-card-image-has-media': providerPreviewMedia(provider) }]" role="button" tabindex="0" :aria-label="`ดูโปรไฟล์ ${provider.name}`" @click="openProfile(provider)" @keydown.enter="openProfile(provider)" @keydown.space.prevent="openProfile(provider)"><img v-if="providerPreviewMedia(provider)?.type === 'image'" class="lux-card-photo" :src="providerPreviewMedia(provider).url" :alt="`ภาพแนะนำของ ${provider.name}`" loading="lazy" /><video v-else-if="providerPreviewMedia(provider)" class="lux-card-photo" :src="providerPreviewMedia(provider).url" muted autoplay loop playsinline :aria-label="`วิดีโอแนะนำของ ${provider.name}`"></video><span v-else class="lux-scene-symbol">{{ provider.initials }}</span><button class="lux-heart" :class="{ loved: favorites.includes(provider.id) }" :aria-label="favorites.includes(provider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click.stop="toggleFavorite(provider)">{{ favorites.includes(provider.id) ? '♥' : '♡' }}</button><span class="lux-image-bottom"><span>✦ {{ provider.rating }}</span><span>{{ provider.province }}</span></span></div><div class="lux-card-content"><div class="lux-card-meta"><span class="lux-verified">PROFILE</span><span>{{ provider.gender }}</span></div><button class="lux-provider-name" @click="openProfile(provider)">{{ provider.name }}<small>, {{ provider.age }} ปี · {{ provider.area }}</small></button><div class="lux-card-foot"><button @click="openProfile(provider)">รายละเอียด <span>↗</span></button></div></div></article>
-            <div v-if="!visibleProviders.length" class="lux-empty"><span>✳</span><h3>ยังไม่พบโปรไฟล์ที่ตรงใจ</h3><p>ลองปรับตัวกรองหรือค้นหาด้วยคำอื่น</p><button class="lux-button lux-button-primary" @click="searchName = ''; selectedProvince = ''; selectedGender = ''; selectedMode = ''; selectedService = ''">ล้างตัวกรอง</button></div>
+            <div v-if="!visibleProviders.length" class="lux-empty"><span>✳</span><h3>ยังไม่พบโปรไฟล์ที่ตรงใจ</h3><p>ลองปรับตัวกรองหรือค้นหาด้วยคำอื่น</p><button class="lux-button lux-button-primary" @click="clearSearchFilters">ล้างตัวกรอง</button></div>
           </div>
       </section>
       <div v-if="isSearchFilterOpen" class="lux-search-filter-modal" role="dialog" aria-modal="true" aria-labelledby="search-filter-title" @click.self="closeSearchFilters">
         <section class="lux-search-filter-dialog">
-          <header class="lux-search-filter-header"><div><span class="lux-search-filter-eyebrow">FIND YOUR MATCH</span><h2 id="search-filter-title">ค้นหาบริการ</h2><p>เลือกตัวกรองที่ต้องการ แล้วดูโปรไฟล์ที่ตรงใจ</p></div><button type="button" aria-label="ปิดตัวกรอง" @click="closeSearchFilters">×</button></header>
+          <header class="lux-search-filter-header"><div><span class="lux-search-filter-eyebrow">FIND YOUR MATCH</span><h2 id="search-filter-title">ค้นหาบริการ</h2><p>เลือกตัวกรอง แล้วกดค้นหาเพื่อดูโปรไฟล์ที่ตรงใจ</p></div><button type="button" aria-label="ปิดตัวกรอง" @click="closeSearchFilters">×</button></header>
           <label class="lux-filter-search lux-search-modal-query"><span>⌕</span><input ref="searchFilterInput" v-model="searchName" placeholder="ค้นหาชื่อ บริการ หรือพื้นที่" /></label>
           <div class="lux-search-modal-selects"><label class="lux-filter-select"><span>จังหวัด</span><select v-model="selectedProvince"><option value="">ทุกจังหวัด</option><option v-for="province in provinces" :key="province">{{ province }}</option></select></label><label class="lux-filter-select"><span>อัตลักษณ์ทางเพศ</span><select v-model="selectedGender"><option value="">ทั้งหมด</option><option>ผู้หญิง</option><option>ผู้ชาย</option><option>นอนไบนารี</option><option>ทรานส์เจนเดอร์</option><option>เควียร์</option><option>LGBTQ+</option><option>ไม่ประสงค์ระบุ</option></select></label></div>
           <fieldset class="lux-filter-group lux-filter-mode"><legend>รูปแบบการนัดพบ</legend><div class="lux-search-modal-mode-options"><label class="lux-check-row"><input v-model="selectedMode" type="radio" value="" /><span>ทั้งหมด</span></label><label v-for="mode in availableAppointmentModes" :key="mode" class="lux-check-row"><input v-model="selectedMode" type="radio" :value="mode" /><span>{{ mode === 'ที่ร้าน' ? 'สถานที่นัดพบ' : mode === 'นอกสถานที่' ? 'นัดตามพื้นที่ที่ตกลง' : mode }}</span></label></div></fieldset>
           <fieldset class="lux-filter-group lux-filter-services"><legend>รูปแบบบริการ</legend><div class="lux-search-modal-service-options"><label v-for="service in [{ value: '', label: 'ทั้งหมด' }, { value: 'พบปะพูดคุย', label: 'พบปะพูดคุย' }, { value: 'ร่วมกิจกรรม', label: 'ร่วมกิจกรรม' }, { value: 'งานอีเวนต์', label: 'งานอีเวนต์' }, { value: 'ไลฟ์สไตล์', label: 'ไลฟ์สไตล์' }]" :key="service.value || 'all'" class="lux-check-row"><input v-model="selectedService" type="radio" :value="service.value" /><span>{{ service.label }}</span></label></div></fieldset>
-          <footer class="lux-search-filter-footer"><button type="button" class="lux-search-reset" @click="resetSearchFilters">ล้างตัวกรอง</button><button type="button" class="lux-button lux-button-primary" @click="closeSearchFilters">แสดง {{ visibleProviders.length }} โปรไฟล์ <span>→</span></button></footer>
+          <footer class="lux-search-filter-footer"><button type="button" class="lux-search-reset" @click="resetSearchFilters">ล้างตัวกรอง</button><button type="button" class="lux-button lux-button-primary" @click="applySearchFilters">ค้นหาโปรไฟล์ <span>→</span></button></footer>
         </section>
       </div>
     </main>
 
     <main v-else-if="view === 'profile' && selectedProvider" class="lux-page lux-profile-page">
-      <div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><button @click="navigate('search')">ค้นหาบริการ</button><span>/</span><span>{{ selectedProvider.name }}</span></div>
+      <div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><button v-if="currentRole === 'admin'" @click="adminTab = 'providers'; navigate('admin')">พาร์ตเนอร์</button><button v-else @click="navigate('search')">ค้นหาบริการ</button><span>/</span><span>{{ selectedProvider.name }}</span></div>
       <div class="lux-profile-layout"><section class="lux-profile-main"><div class="lux-profile-identity"><div class="lux-profile-monogram" :class="[selectedProvider.visual, { 'has-profile-image': featuredProfileImage }]"><img v-if="featuredProfileImage" :src="featuredProfileImage.url" :alt="`รูปโปรไฟล์ ${selectedProvider.name}`" /><span v-else>{{ selectedProvider.initials }}</span></div><div class="lux-profile-title"><div class="lux-profile-label"><span class="lux-verified">PROVIDER PROFILE</span><span v-if="reviewSummary">★ {{ reviewSummary.service }} / 5 <small>({{ reviewSummary.count }} รีวิว)</small></span><span v-else>ยังไม่มีคะแนนรีวิว</span></div><h1>{{ selectedProvider.name }}<small>, {{ selectedProvider.age }}</small></h1><p>ผู้ให้บริการอิสระ · {{ selectedProvider.area }}, {{ selectedProvider.province }}</p></div><button class="lux-heart lux-profile-heart" :class="{ loved: favorites.includes(selectedProvider.id) }" :aria-label="favorites.includes(selectedProvider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click="toggleFavorite(selectedProvider)">{{ favorites.includes(selectedProvider.id) ? '♥' : '♡' }}</button></div>
           <div v-if="selectedProvider.media?.length" class="lux-profile-section lux-promo-gallery"><div class="lux-section-title"><div><div class="lux-kicker"><span></span> PROVIDER MOMENTS</div><h2>ภาพและวิดีโอแนะนำโปรไฟล์</h2></div><span>{{ selectedProvider.media.length }} รายการ · แตะเพื่อขยาย</span></div><div class="lux-promo-grid"><button v-for="(media, index) in selectedProvider.media" :key="media.id" class="lux-promo-item" type="button" :aria-label="`ขยาย${media.type === 'image' ? 'รูปภาพ' : 'วิดีโอ'} ${media.name}`" @click="openMediaViewer(selectedProvider.media, index)"><img v-if="media.type === 'image'" :src="media.url" :alt="media.name" loading="lazy" /><template v-else><video :src="media.url" preload="metadata" playsinline :aria-label="media.name"></video><span class="lux-promo-play" aria-hidden="true">▶</span></template></button></div></div>
           <div class="lux-profile-section"><div class="lux-kicker"><span></span> ABOUT THE PROVIDER</div><h2>คุยรายละเอียดและ<span>ขอบเขตให้ชัดเจน</span></h2><p class="lux-provider-about-copy">{{ selectedProvider.description }}</p><p class="lux-provider-about-guidance">โปรดพูดคุยเรื่องเวลา สถานที่ ราคา และขอบเขตให้ตรงกันก่อนยืนยัน ทุกฝ่ายสามารถปฏิเสธหรือยุติการนัดหมายได้</p><div class="lux-tag-row"><span v-for="tag in selectedProvider.tags" :key="tag">{{ tag }}</span></div></div>
@@ -964,13 +1016,48 @@ function scrollToProviders() {
       </div>
     </main>
 
-    <main v-else-if="view === 'admin'" class="lux-page lux-admin-page"><div class="lux-admin-top"><div><div class="lux-kicker"><span></span> NUANIA ADMINISTRATION</div><h1>ภาพรวม<span>แพลตฟอร์ม</span></h1><p>จัดการพาร์ตเนอร์ การนัดหมาย และดูแลประสบการณ์ของสมาชิก</p></div><span class="lux-demo-status">● DEMO ENVIRONMENT · ข้อมูลตัวอย่าง</span></div><div class="lux-admin-tabs"><button v-for="tab in [{id:'overview', label:'ภาพรวม'}, {id:'providers', label:'พาร์ตเนอร์'}, {id:'bookings', label:'การนัดหมาย'}, {id:'applications', label:'ใบสมัคร'}]" :key="tab.id" :class="{ active: adminTab === tab.id }" @click="adminTab = tab.id">{{ tab.label }} <small v-if="tab.id === 'applications' && applications.length">{{ applications.length }}</small></button></div>
+    <main v-else-if="view === 'admin'" class="lux-page lux-admin-page"><div class="lux-admin-top"><div><div class="lux-kicker"><span></span> NUANIA ADMINISTRATION</div><h1>ภาพรวม<span>แพลตฟอร์ม</span></h1><p>จัดการพาร์ตเนอร์ การนัดหมาย และดูแลประสบการณ์ของสมาชิก</p></div><span class="lux-demo-status">● DEMO ENVIRONMENT · ข้อมูลตัวอย่าง</span></div><div class="lux-admin-tabs"><button v-for="tab in [{id:'overview', label:'ภาพรวม'}, {id:'providers', label:'พาร์ตเนอร์'}, {id:'bookings', label:'การนัดหมาย'}, {id:'applications', label:'ใบสมัคร'}, {id:'travelers', label:'นักท่องเที่ยว'}]" :key="tab.id" :class="{ active: adminTab === tab.id }" @click="adminTab = tab.id">{{ tab.label }} <small v-if="tab.id === 'applications' && applications.length">{{ applications.length }}</small></button></div>
       <template v-if="adminTab === 'overview'"><div class="lux-admin-metrics"><article><span>พาร์ตเนอร์ที่เผยแพร่</span><strong>{{ activeProviderCount }}</strong><small>↑ 8.4% <i>เทียบกับเดือนก่อน</i></small></article><article><span>นัดหมายเดือนนี้</span><strong>{{ bookings.length + 126 }}</strong><small>● <i>อัปเดตจากข้อมูลตัวอย่าง</i></small></article><article><span>รายได้ค่าสมาชิก</span><strong>฿{{ (activeProviderCount * 299).toLocaleString() }}</strong><small>สมมติสมาชิก {{ activeProviderCount }} ราย</small></article><article><span>กำลังรอตรวจสอบ</span><strong>{{ applications.length }}</strong><small><i>ใบสมัครพาร์ตเนอร์ใหม่</i></small></article></div><div class="lux-admin-overview-grid"><section class="lux-admin-panel"><div class="lux-admin-panel-head"><div><h2>การนัดหมายล่าสุด</h2><p>ภาพรวมการจองจากผู้ใช้บริการ</p></div><button @click="adminTab = 'bookings'">ดูทั้งหมด ↗</button></div><div class="lux-admin-table-wrap"><table class="lux-admin-table"><thead><tr><th>รหัส / ผู้รับบริการ</th><th>ผู้ให้บริการ</th><th>วันและเวลา</th><th>รูปแบบ</th><th>ยอด</th><th>สถานะ</th></tr></thead><tbody><tr v-for="item in bookings.slice(0, 5)" :key="item.id"><td><strong>{{ item.id }}</strong><small>คุณ{{ item === bookings[0] ? 'กานต์' : 'ลูกค้า' }}</small></td><td>{{ item.provider }}</td><td>{{ formatDate(item.date) }} · {{ item.time }}</td><td>{{ item.mode }}</td><td>฿{{ item.amount.toLocaleString() }}</td><td><span class="lux-status" :class="{ waiting: item.status === 'รอยืนยัน' }">{{ item.status }}</span></td></tr></tbody></table></div></section><aside class="lux-admin-panel lux-admin-side-panel"><div class="lux-admin-panel-head"><div><h2>รอตรวจสอบ</h2><p>ใบสมัครพาร์ตเนอร์</p></div><span>{{ applications.length }}</span></div><div v-if="applications.length" class="lux-pending-list"><div v-for="item in applications.slice(0, 4)" :key="item.id"><span class="lux-pending-avatar">{{ item.name.slice(0, 1) }}</span><div><strong>{{ item.name }}</strong><small>{{ item.province }} · {{ item.line }}</small></div><button @click="approveApplication(item)">อนุมัติ</button></div></div><div v-else class="lux-admin-no-pending"><span>✓</span><strong>ไม่มีรายการค้าง</strong><small>ใบสมัครใหม่จะแสดงที่นี่</small></div></aside></div></template>
-      <section v-else class="lux-admin-panel lux-admin-detail-panel"><div class="lux-admin-panel-head"><div><h2>{{ adminTab === 'providers' ? 'พาร์ตเนอร์ทั้งหมด' : adminTab === 'bookings' ? 'รายการนัดหมาย' : 'ใบสมัครพาร์ตเนอร์' }}</h2><p>การจัดการภายใน · การเปลี่ยนแปลงเป็นข้อมูลตัวอย่างในเบราว์เซอร์</p></div><span>{{ adminTab === 'providers' ? `${filteredAdminProviders.length} / ${providers.length}` : adminTab === 'bookings' ? bookings.length : applications.length }} รายการ</span></div><div v-if="adminTab === 'providers'" class="lux-admin-provider-filters"><label><span>ค้นหาชื่อ</span><input v-model="adminProviderSearch" type="search" placeholder="พิมพ์ชื่อพาร์ตเนอร์" /></label><label><span>จังหวัด</span><select v-model="adminProviderProvince"><option value="">ทุกจังหวัด</option><option v-for="province in provinces" :key="province">{{ province }}</option></select></label><label><span>เพศ</span><select v-model="adminProviderGender"><option value="">ทุกเพศ</option><option v-for="gender in adminProviderGenders" :key="gender">{{ gender }}</option></select></label><button type="button" @click="adminProviderSearch = ''; adminProviderProvince = ''; adminProviderGender = ''">ล้างตัวกรอง</button></div><div v-if="adminTab === 'providers' && filteredAdminProviders.length" class="lux-admin-table-wrap"><table class="lux-admin-table"><thead><tr><th>พาร์ตเนอร์</th><th>พื้นที่ให้บริการ</th><th>รูปแบบ</th><th>สมาชิก</th><th>โปรไฟล์</th></tr></thead><tbody><tr v-for="provider in paginatedAdminProviders" :key="provider.id"><td><div class="lux-admin-provider"><img v-if="providerPreviewMedia(provider)?.type === 'image'" :src="providerPreviewMedia(provider).url" :alt="`ภาพโปรไฟล์ ${provider.name}`" loading="lazy" /><video v-else-if="providerPreviewMedia(provider)" :src="providerPreviewMedia(provider).url" muted playsinline preload="metadata" :aria-label="`วิดีโอโปรไฟล์ ${provider.name}`"></video><span v-else class="lux-admin-provider-placeholder">{{ provider.initials }}</span><div><strong>{{ provider.name }} · {{ provider.category }}</strong><small>LINE {{ provider.line }}</small></div></div></td><td>{{ provider.area }}, {{ provider.province }}</td><td>{{ provider.modes.join(' / ') }}</td><td><button class="lux-admin-action" @click="setProviderStatus(provider, 'membershipActive')">{{ provider.membershipActive ? 'สมาชิกใช้งาน' : 'หมดอายุ' }}</button></td><td><button class="lux-admin-action" @click="setProviderStatus(provider, 'active')">{{ provider.active ? 'เผยแพร่' : 'ซ่อน' }}</button></td></tr></tbody></table><nav v-if="adminProviderPageCount > 1" class="lux-admin-pagination" aria-label="หน้าพาร์ตเนอร์">
+      <section v-else-if="adminTab !== 'travelers'" class="lux-admin-panel lux-admin-detail-panel"><div class="lux-admin-panel-head"><div><h2>{{ adminTab === 'providers' ? 'พาร์ตเนอร์ทั้งหมด' : adminTab === 'bookings' ? 'รายการนัดหมาย' : 'ใบสมัครพาร์ตเนอร์' }}</h2><p>การจัดการภายใน · การเปลี่ยนแปลงเป็นข้อมูลตัวอย่างในเบราว์เซอร์</p></div><span>{{ adminTab === 'providers' ? `${filteredAdminProviders.length} / ${providers.length}` : adminTab === 'bookings' ? bookings.length : applications.length }} รายการ</span></div><div v-if="adminTab === 'providers'" class="lux-admin-provider-filters"><label><span>ค้นหาชื่อ</span><input v-model="adminProviderSearch" type="search" placeholder="พิมพ์ชื่อพาร์ตเนอร์" /></label><label><span>จังหวัด</span><select v-model="adminProviderProvince"><option value="">ทุกจังหวัด</option><option v-for="province in provinces" :key="province">{{ province }}</option></select></label><label><span>เพศ</span><select v-model="adminProviderGender"><option value="">ทุกเพศ</option><option v-for="gender in adminProviderGenders" :key="gender">{{ gender }}</option></select></label><button type="button" @click="adminProviderSearch = ''; adminProviderProvince = ''; adminProviderGender = ''">ล้างตัวกรอง</button></div><div v-if="adminTab === 'providers' && filteredAdminProviders.length" class="lux-admin-table-wrap"><table class="lux-admin-table"><thead><tr><th>พาร์ตเนอร์</th><th>พื้นที่ให้บริการ</th><th>รูปแบบ</th><th>สมาชิก</th><th>โปรไฟล์</th><th>รายละเอียด</th></tr></thead><tbody><tr v-for="provider in paginatedAdminProviders" :key="provider.id"><td><div class="lux-admin-provider"><img v-if="providerPreviewMedia(provider)?.type === 'image'" :src="providerPreviewMedia(provider).url" :alt="`ภาพโปรไฟล์ ${provider.name}`" loading="lazy" /><video v-else-if="providerPreviewMedia(provider)" :src="providerPreviewMedia(provider).url" muted playsinline preload="metadata" :aria-label="`วิดีโอโปรไฟล์ ${provider.name}`"></video><span v-else class="lux-admin-provider-placeholder">{{ provider.initials }}</span><div><strong>{{ provider.name }} · {{ provider.category }}</strong><small>LINE {{ provider.line }}</small></div></div></td><td>{{ provider.area }}, {{ provider.province }}</td><td>{{ provider.modes.join(' / ') }}</td><td><button class="lux-admin-action" @click="setProviderStatus(provider, 'membershipActive')">{{ provider.membershipActive ? 'สมาชิกใช้งาน' : 'หมดอายุ' }}</button></td><td><button class="lux-admin-action" @click="setProviderStatus(provider, 'active')">{{ provider.active ? 'เผยแพร่' : 'ซ่อน' }}</button></td><td><button type="button" class="lux-admin-action" @click="openProfile(provider)">ดูรายละเอียด</button></td></tr></tbody></table><nav v-if="adminProviderPageCount > 1" class="lux-admin-pagination" aria-label="หน้าพาร์ตเนอร์">
   <button type="button" :disabled="adminProviderPage === 1" @click="adminProviderPage--">ก่อนหน้า</button>
   <span>หน้า {{ adminProviderPage }} / {{ adminProviderPageCount }}</span>
   <button type="button" :disabled="adminProviderPage === adminProviderPageCount" @click="adminProviderPage++">ถัดไป</button>
 </nav></div><div v-else-if="adminTab === 'providers'" class="lux-admin-provider-empty">ไม่พบพาร์ตเนอร์ตามเงื่อนไขที่เลือก</div><div v-else-if="adminTab === 'bookings'" class="lux-admin-table-wrap"><table class="lux-admin-table"><thead><tr><th>รหัสการจอง</th><th>ผู้ให้บริการ</th><th>บริการ</th><th>วัน / เวลา</th><th>รูปแบบ</th><th>สถานะ</th></tr></thead><tbody><tr v-for="item in bookings" :key="item.id"><td><strong>{{ item.id }}</strong></td><td>{{ item.provider }}</td><td>{{ item.service }}</td><td>{{ formatDate(item.date) }} · {{ item.time }}</td><td>{{ item.mode }}</td><td><span class="lux-status" :class="{ waiting: item.status === 'รอยืนยัน' }">{{ item.status }}</span></td></tr></tbody></table></div><div v-else-if="applications.length" class="lux-admin-table-wrap"><table class="lux-admin-table"><thead><tr><th>ผู้สมัคร</th><th>จังหวัด</th><th>อัตลักษณ์</th><th>บริการ</th><th>LINE ID</th><th>จัดการ</th></tr></thead><tbody><tr v-for="item in applications" :key="item.id"><td><strong>{{ item.name }}</strong></td><td>{{ item.province }}</td><td>{{ item.gender }}</td><td>{{ item.service }}</td><td>{{ item.line }}</td><td><button class="lux-admin-action" @click="approveApplication(item)">อนุมัติ</button><button class="lux-admin-action reject" @click="rejectApplication(item)">ปฏิเสธ</button></td></tr></tbody></table></div><div v-else class="lux-admin-no-pending"><span>✓</span><strong>ไม่มีใบสมัครค้างตรวจสอบ</strong></div></section>
+      <section v-else class="lux-admin-panel lux-admin-detail-panel">
+        <div class="lux-admin-panel-head">
+          <div><h2>{{ selectedTraveler ? `ข้อมูลนักท่องเที่ยว: ${selectedTraveler.traveler.name}` : 'นักท่องเที่ยวทั้งหมด' }}</h2><p>{{ selectedTraveler ? 'ข้อมูลบัญชีและประวัติการใช้งาน' : 'ค้นหาและเปิดดูข้อมูลบัญชี ประวัติการจอง รายการโปรด และรีวิว' }}</p></div>
+          <button v-if="selectedTraveler" type="button" @click="selectedTraveler = null">← กลับไปยังรายชื่อ</button>
+          <span v-else>{{ filteredAdminTravelers.length }} บัญชี</span>
+        </div>
+        <template v-if="selectedTraveler">
+          <div class="lux-admin-traveler-info">
+            <article><span>ชื่อที่ใช้แสดง</span><strong>{{ selectedTraveler.traveler.name }}</strong></article>
+            <article><span>อีเมล</span><strong>{{ selectedTraveler.traveler.email }}</strong></article>
+            <article><span>เบอร์โทรศัพท์</span><strong>{{ selectedTraveler.traveler.phone || 'ไม่ระบุ' }}</strong></article>
+            <article><span>วันที่สมัคร</span><strong>{{ formatDateTime(selectedTraveler.traveler.createdAt) }}</strong></article>
+          </div>
+          <section class="lux-admin-traveler-section">
+            <h3>ประวัติการจอง ({{ selectedTraveler.bookings.length }})</h3>
+            <div v-if="selectedTraveler.bookings.length" class="lux-admin-table-wrap"><table class="lux-admin-table"><thead><tr><th>รหัส / วันที่สร้าง</th><th>ผู้ให้บริการ</th><th>บริการ / รูปแบบ</th><th>วันนัดหมาย</th><th>สถานที่</th><th>ข้อมูลติดต่อขณะจอง</th><th>หมายเหตุ</th><th>ยอด</th><th>สถานะ</th></tr></thead><tbody><tr v-for="item in selectedTraveler.bookings" :key="item.id"><td><strong>{{ item.id }}</strong><small>{{ formatDateTime(item.createdAt) }}</small></td><td>{{ item.provider }}</td><td>{{ item.service }}<small>{{ item.mode }} · {{ item.time }}</small></td><td>{{ formatDate(item.date) }}</td><td>{{ item.venue || 'ไม่ระบุ' }}</td><td>{{ item.guestName || 'ไม่ระบุ' }}<small>{{ item.phone || 'ไม่ระบุ' }}</small></td><td>{{ item.note || 'ไม่มี' }}</td><td>฿{{ item.amount.toLocaleString() }}</td><td><span class="lux-status" :class="{ waiting: item.status === 'รอยืนยัน' }">{{ item.status }}</span></td></tr></tbody></table></div>
+            <p v-else class="lux-admin-traveler-empty">ยังไม่มีประวัติการจอง</p>
+          </section>
+          <section class="lux-admin-traveler-section">
+            <h3>รายการโปรด ({{ selectedTraveler.favorites.length }})</h3>
+            <ul v-if="selectedTraveler.favorites.length" class="lux-admin-traveler-favorites"><li v-for="provider in selectedTraveler.favorites" :key="provider.id">{{ provider.name }} <span>· {{ provider.province }}</span></li></ul>
+            <p v-else class="lux-admin-traveler-empty">ไม่มีรายการโปรด</p>
+          </section>
+          <section class="lux-admin-traveler-section">
+            <h3>รีวิวที่เขียน ({{ selectedTraveler.reviews.length }})</h3>
+            <article v-for="review in selectedTraveler.reviews" :key="review.id" class="lux-admin-traveler-review"><div><strong>{{ review.provider }}</strong><span>บริการ {{ review.serviceRating }} ★ · ความคุ้มค่า {{ review.valueRating }} ★ · {{ formatDateTime(review.createdAt) }}</span></div><p>{{ review.comment }}</p><div v-if="review.media.length" class="lux-admin-traveler-review-media"><img v-for="media in review.media" :key="media.id" :src="media.url" :alt="media.name" loading="lazy" /></div><small>รหัสการจอง {{ review.bookingId }}</small></article>
+            <p v-if="!selectedTraveler.reviews.length" class="lux-admin-traveler-empty">ยังไม่มีรีวิว</p>
+          </section>
+        </template>
+        <div v-else class="lux-admin-traveler-list">
+          <label class="lux-admin-traveler-search"><span>ค้นหาชื่อ อีเมล หรือเบอร์โทรศัพท์</span><input v-model="adminTravelerSearch" type="search" placeholder="พิมพ์ข้อมูลที่ต้องการค้นหา" /></label>
+          <div v-if="filteredAdminTravelers.length" class="lux-admin-table-wrap"><table class="lux-admin-table"><thead><tr><th>ชื่อที่ใช้แสดง</th><th>อีเมล</th><th>เบอร์โทรศัพท์</th><th>วันที่สมัคร</th><th>ประวัติการจอง</th><th>ข้อมูล</th></tr></thead><tbody><tr v-for="traveler in filteredAdminTravelers" :key="traveler.id"><td><strong>{{ traveler.name }}</strong></td><td>{{ traveler.email }}</td><td>{{ traveler.phone || 'ไม่ระบุ' }}</td><td>{{ formatDateTime(traveler.createdAt) }}</td><td>{{ traveler.bookingCount }} รายการ</td><td><button type="button" class="lux-admin-action" :disabled="isAdminTravelerLoading" @click="openAdminTraveler(traveler)">ดูรายละเอียด</button></td></tr></tbody></table></div>
+          <p v-else class="lux-admin-traveler-empty">ไม่พบนักท่องเที่ยว</p>
+        </div>
+      </section>
       <p class="lux-admin-footnote">หน้าจอตัวอย่างสำหรับการออกแบบ · ไม่มีระบบบัญชีผู้ดูแลหรือการชำระเงินจริง</p></main>
 
     <main v-else-if="view === 'design'" class="lux-page lux-design-page"><div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><span>Design system</span></div><div class="lux-page-heading"><div><div class="lux-kicker"><span></span> NUANIA · VISUAL LANGUAGE</div><h1>Design<span>system</span></h1><p>ระบบภาพสำหรับแพลตฟอร์มนัดหมายผู้ให้บริการอิสระ เน้นความชัดเจน ความยินยอม และความเป็นส่วนตัว</p></div></div><section class="lux-design-section"><span class="lux-design-index">01 / COLOR</span><h2>Palette <small>ชุดสีสดใสแบบ full-color พร้อมไล่เฉดม่วง–ชมพู–ส้ม</small></h2><div class="lux-gradient-strip" aria-label="Signature gradient"></div><div class="lux-color-grid"><article v-for="color in [{name:'Violet', hex:'#7C3AED', cls:'swatch-violet'}, {name:'Pink',hex:'#EC4899',cls:'swatch-pink'}, {name:'Orange',hex:'#F97316',cls:'swatch-orange'}, {name:'Teal',hex:'#14B8A6',cls:'swatch-teal'}, {name:'Sky',hex:'#0EA5E9',cls:'swatch-sky'}, {name:'Indigo',hex:'#1E1B4B',cls:'swatch-indigo'}]" :key="color.name"><div :class="color.cls"></div><strong>{{ color.name }}</strong><span>{{ color.hex }}</span></article></div></section><section class="lux-design-section lux-type-samples"><span class="lux-design-index">02 / TYPOGRAPHY</span><h2>Type scale <small>ตัวอักษรชัดเจนและอ่านง่ายทุกหน้าจอ</small></h2><div><span>Display / 64</span><strong>นัดพบในแบบที่คุณเลือก</strong><span>Heading / 32</span><h3>ผู้ให้บริการอิสระ</h3><span>Body / 16</span><p>ดูโปรไฟล์และตกลงรายละเอียดก่อนยืนยันการนัดหมาย</p><span>Caption / 12</span><small>INDEPENDENT PROVIDER · CLEAR TERMS</small></div></section><section class="lux-design-section"><span class="lux-design-index">03 / COMPONENTS</span><h2>UI elements <small>คอมโพเนนต์ที่สม่ำเสมอและเข้าถึงได้บนทุกหน้าจอ</small></h2><div class="lux-component-row"><button class="lux-button lux-button-primary">ปุ่มหลัก ↗</button><button class="lux-button lux-button-light lux-border-button">ปุ่มรอง</button><span class="lux-verified">PROFILE</span><span class="lux-status">ยืนยันแล้ว</span><span class="lux-status waiting">รอยืนยัน</span></div><div class="lux-design-input"><label class="lux-form-label">Input / default<input placeholder="ชื่อหรือพื้นที่ให้บริการ" /></label><label class="lux-form-label">Select / default<select><option>เลือกจังหวัด</option></select></label></div></section><section class="lux-design-section"><span class="lux-design-index">04 / SPACING & SHAPE</span><h2>Layout principles <small>จังหวะพื้นที่และรูปทรง</small></h2><div class="lux-principles"><div><span class="lux-space-swatch space-8"></span><strong>8 px</strong><small>micro spacing</small></div><div><span class="lux-space-swatch space-16"></span><strong>16 px</strong><small>component gap</small></div><div><span class="lux-space-swatch space-24"></span><strong>24 px</strong><small>card padding</small></div><div><span class="lux-space-swatch space-40"></span><strong>40 px</strong><small>section rhythm</small></div><p>ใช้กริด 12 คอลัมน์บน desktop และ single-column flow บนมือถือ ปุ่มและช่องกรอกมีพื้นที่สัมผัสอย่างน้อย 44 px, มุมโค้ง 14–24 px และหลีกเลี่ยงการเปิดเผยข้อมูลที่ไม่จำเป็น</p></div></section></main>

@@ -5,6 +5,8 @@ import { unlink, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { hashPassword, initDb, pool, verifyPassword } from './db.js'
+import { sendVerificationEmail } from './mailer.js'
+import { createHash } from 'node:crypto'
 
 const root = path.dirname(fileURLToPath(import.meta.url))
 const uploadDir = path.join(root, 'uploads')
@@ -54,8 +56,45 @@ async function publicUser(user) {
   return {
     id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role,
     providerId: user.provider_id, roleLabel: rows[0]?.label || '', permissions: rows[0]?.permissions || [],
+    emailVerified: Boolean(user.email_verified_at),
   }
 }
+
+const APP_URL = (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '')
+const sha256 = (value) => createHash('sha256').update(value).digest('hex')
+
+async function issueVerification(user) {
+  const token = randomBytes(32).toString('hex')
+  await pool.query(
+    'UPDATE users SET email_verify_token_hash = $2, email_verify_sent_at = now() WHERE id = $1',
+    [user.id, sha256(token)])
+  try {
+    await sendVerificationEmail({ to: user.email, name: user.name, link: `${APP_URL}/api/verify-email?token=${token}` })
+  } catch (error) {
+    console.error('ส่งอีเมลยืนยันไม่สำเร็จ', error.message)
+  }
+}
+
+// ลบบัญชีนักท่องเที่ยว/ผู้ให้บริการที่ไม่ยืนยันอีเมลภายใน 3 วัน
+async function purgeUnverified() {
+  const { rows } = await pool.query(
+    `DELETE FROM users WHERE email_verified_at IS NULL AND role IN ('buyer', 'seller')
+       AND created_at < now() - interval '3 days' RETURNING provider_id`)
+  const providerIds = rows.map((row) => row.provider_id).filter(Boolean)
+  if (providerIds.length) await pool.query('DELETE FROM providers WHERE id = ANY($1::int[])', [providerIds])
+  if (rows.length) console.log(`ลบบัญชีที่ไม่ยืนยันอีเมล ${rows.length} รายการ`)
+}
+
+const verifyPage = (ok, title, message) => `<!doctype html><html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#eef7f1,#f6f1e4);font-family:'Noto Sans Thai',system-ui,sans-serif;color:#1f2d26}
+.card{max-width:420px;margin:24px;padding:44px 36px;background:#fff;border-radius:24px;text-align:center;box-shadow:0 24px 60px rgba(31,77,58,.15)}
+.icon{width:84px;height:84px;margin:0 auto 22px;border-radius:50%;display:grid;place-items:center;font-size:44px;color:#fff;background:${ok ? 'linear-gradient(135deg,#2e9d6a,#1f6f4a)' : 'linear-gradient(135deg,#d9822b,#b85c1c)'};animation:pop .5s ease}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+h1{margin:0 0 10px;font-size:26px}p{margin:0 0 28px;color:#5b6b63;line-height:1.7}
+a{display:inline-block;padding:13px 30px;border-radius:999px;background:#1f4d3a;color:#fff;text-decoration:none;font-weight:600}</style></head>
+<body><div class="card"><div class="icon">${ok ? '✓' : '!'}</div><h1>${title}</h1><p>${message}</p><a href="${APP_URL}/">กลับสู่ NuaNia</a></div></body></html>`
+
 
 async function startSession(res, userId) {
   const token = randomBytes(32).toString('hex')
@@ -105,7 +144,7 @@ const bookingSql = `
 
 const reviewSql = `
   SELECT r.id, r.booking_id, r.provider_id, r.user_id, r.service_rating, r.value_rating, r.comment, r.created_at,
-    u.name AS user_name,
+    u.name AS user_name, (SELECT p.name FROM providers p WHERE p.id = r.provider_id) AS provider,
     COALESCE(json_agg(json_build_object('id', rm.id, 'name', rm.name, 'type', 'image', 'url', '/uploads/' || rm.file) ORDER BY rm.id)
       FILTER (WHERE rm.id IS NOT NULL), '[]') AS media
   FROM reviews r
@@ -116,7 +155,7 @@ function toBooking(row) {
   return {
     id: row.id, providerId: row.provider_id, provider: row.provider, service: row.service, date: row.date,
     time: row.time, mode: row.mode, venue: row.venue, amount: row.amount, status: row.status,
-    guestName: row.guest_name, phone: row.phone, note: row.note,
+    guestName: row.guest_name, phone: row.phone, note: row.note, createdAt: row.created_at,
   }
 }
 
@@ -172,6 +211,7 @@ app.post('/api/register', wrap(async (req, res) => {
       'INSERT INTO users (name, email, phone, password_hash, role, provider_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
       [name, email, phone, await hashPassword(password), role, providerId])
     await client.query('COMMIT')
+    await issueVerification(created.rows[0])
     await startSession(res, created.rows[0].id)
     res.status(201).json({ user: await publicUser(created.rows[0]) })
   } catch (error) {
@@ -191,6 +231,30 @@ app.post('/api/logout', wrap(async (req, res) => {
 }))
 
 app.get('/api/me', (req, res) => res.json({ user: req.user || null }))
+
+app.get('/api/verify-email', wrap(async (req, res) => {
+  const token = String(req.query.token ?? '')
+  res.type('html')
+  if (!/^[0-9a-f]{64}$/.test(token)) return res.status(400).send(verifyPage(false, 'ลิงก์ไม่ถูกต้อง', 'ลิงก์ยืนยันอีเมลไม่ถูกต้องหรือหมดอายุแล้ว'))
+  const hash = sha256(token)
+  const { rows } = await pool.query(
+    `UPDATE users SET email_verified_at = COALESCE(email_verified_at, now()), email_verify_token_hash = NULL
+     WHERE email_verify_token_hash = $1 AND created_at > now() - interval '3 days' RETURNING id`, [hash])
+  if (!rows.length) return res.status(400).send(verifyPage(false, 'ลิงก์หมดอายุหรือใช้ไปแล้ว', 'กรุณาเข้าสู่ระบบแล้วกดขอส่งลิงก์ยืนยันใหม่อีกครั้ง'))
+  res.send(verifyPage(true, 'คุณยืนยันอีเมลแล้ว', 'ขอบคุณที่ยืนยันอีเมล บัญชีของคุณพร้อมใช้งานเต็มรูปแบบแล้ว'))
+}))
+
+app.post('/api/resend-verification', wrap(async (req, res) => {
+  if (!req.user) return fail(res, 401, 'กรุณาเข้าสู่ระบบ')
+  const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id])
+  const user = rows[0]
+  if (user.email_verified_at) return res.json({ ok: true, alreadyVerified: true })
+  if (user.email_verify_sent_at && Date.now() - new Date(user.email_verify_sent_at).getTime() < 60000) {
+    return fail(res, 429, 'ส่งอีเมลบ่อยเกินไป กรุณารอ 1 นาทีแล้วลองใหม่')
+  }
+  await issueVerification(user)
+  res.json({ ok: true })
+}))
 
 // ---------- providers ----------
 app.get('/api/providers', wrap(async (req, res) => {
@@ -409,6 +473,59 @@ app.get('/api/bookings', wrap(async (req, res) => {
   res.json(rows.map(toBooking))
 }))
 
+app.get('/api/admin/travelers', requirePermission('user:view'), wrap(async (_req, res) => {
+  const { rows } = await pool.query(
+    `SELECT u.id, u.name, u.email, u.phone, u.created_at,
+      COUNT(b.id)::int AS booking_count
+     FROM users u
+     LEFT JOIN bookings b ON b.user_id = u.id
+     WHERE u.role = 'buyer'
+     GROUP BY u.id
+     ORDER BY u.created_at DESC, u.id DESC`,
+  )
+  res.json(rows.map((row) => ({
+    id: row.id, name: row.name, email: row.email, phone: row.phone,
+    createdAt: row.created_at, bookingCount: row.booking_count,
+  })))
+}))
+
+app.get('/api/admin/travelers/:id', requirePermission('user:view'), wrap(async (req, res) => {
+  const travelerId = Number(req.params.id)
+  if (!Number.isSafeInteger(travelerId) || travelerId <= 0) return fail(res, 400, 'รหัสนักท่องเที่ยวไม่ถูกต้อง')
+  const { rows: travelerRows } = await pool.query(
+    `SELECT id, name, email, phone, created_at
+     FROM users WHERE id = $1 AND role = 'buyer'`,
+    [travelerId],
+  )
+  const traveler = travelerRows[0]
+  if (!traveler) return fail(res, 404, 'ไม่พบนักท่องเที่ยว')
+
+  const [bookingResult, favoriteResult, reviewResult] = await Promise.all([
+    pool.query(`${bookingSql} WHERE b.user_id = $1 ORDER BY b.created_at DESC`, [travelerId]),
+    pool.query(
+      `SELECT p.id, p.name, p.province
+       FROM favorites f JOIN providers p ON p.id = f.provider_id
+       WHERE f.user_id = $1 ORDER BY p.name`,
+      [travelerId],
+    ),
+    pool.query(`${reviewSql} WHERE r.user_id = $1 GROUP BY r.id, u.name ORDER BY r.created_at DESC`, [travelerId]),
+  ])
+
+  res.json({
+    traveler: {
+      id: traveler.id, name: traveler.name, email: traveler.email, phone: traveler.phone,
+      createdAt: traveler.created_at,
+    },
+    bookings: bookingResult.rows.map(toBooking),
+    favorites: favoriteResult.rows.map((row) => ({ id: row.id, name: row.name, province: row.province })),
+    reviews: reviewResult.rows.map((row) => ({
+      id: row.id, bookingId: row.booking_id, providerId: row.provider_id, provider: row.provider,
+      serviceRating: row.service_rating, valueRating: row.value_rating, comment: row.comment,
+      createdAt: row.created_at, media: row.media,
+    })),
+  })
+}))
+
 app.post('/api/bookings', requirePermission('booking:create'), wrap(async (req, res) => {
   const { rows: found } = await pool.query(
     'SELECT * FROM providers WHERE id = $1 AND active AND membership_active', [Number(req.body.providerId)])
@@ -523,4 +640,6 @@ app.use((error, _req, res, _next) => {
 
 const port = Number(process.env.PORT) || 3001
 await initDb()
+await purgeUnverified()
+setInterval(() => purgeUnverified().catch((error) => console.error(error)), 60 * 60 * 1000)
 app.listen(port, () => console.log(`API ready on http://localhost:${port}`))

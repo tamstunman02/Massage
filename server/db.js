@@ -151,6 +151,15 @@ export async function initDb() {
   await pool.query('ALTER TABLE providers ADD COLUMN IF NOT EXISTS height_cm SMALLINT')
   await pool.query('ALTER TABLE providers ADD COLUMN IF NOT EXISTS weight_kg SMALLINT')
   await pool.query("ALTER TABLE providers ADD COLUMN IF NOT EXISTS measurements TEXT NOT NULL DEFAULT ''")
+  const { rows: verifyColumn } = await pool.query(
+    `SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'email_verified_at'`)
+  if (!verifyColumn.length) {
+    await pool.query('ALTER TABLE users ADD COLUMN email_verified_at TIMESTAMPTZ')
+    await pool.query('UPDATE users SET email_verified_at = now()')
+  }
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token_hash TEXT')
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_sent_at TIMESTAMPTZ')
+  await pool.query('CREATE INDEX IF NOT EXISTS users_verify_token_idx ON users(email_verify_token_hash)')
   const roles = JSON.parse(readFileSync(new URL('./roles.json', import.meta.url), 'utf8'))
   for (const [name, role] of Object.entries(roles)) {
     await pool.query(
@@ -210,7 +219,7 @@ export async function initDb() {
     const ids = {}
     for (const u of seed.users) {
       const res = await pool.query(
-        'INSERT INTO users (name, email, password_hash, role, provider_id) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+        'INSERT INTO users (name, email, password_hash, role, provider_id, email_verified_at) VALUES ($1,$2,$3,$4,$5, now()) RETURNING id',
         [u.name, u.email, await hashPassword(u.password), u.role, u.providerId ?? null],
       )
       ids[u.role] = res.rows[0].id
