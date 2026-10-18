@@ -1,15 +1,12 @@
-try { process.loadEnvFile() } catch { /* ไม่มีไฟล์ .env */ }
-
 import express from 'express'
 import { EventEmitter } from 'node:events'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, createHash } from 'node:crypto'
 import { mkdirSync, existsSync } from 'node:fs'
 import { unlink, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { hashPassword, initDb, pool, verifyPassword } from './db.js'
 import { sendVerificationEmail } from './mailer.js'
-import { createHash } from 'node:crypto'
 
 const seekRealtime = new EventEmitter()
 seekRealtime.setMaxListeners(0)

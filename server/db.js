@@ -1,8 +1,14 @@
 import { randomBytes, scrypt as scryptCb, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 import * as seed from './seed.js'
+
+// โหลด .env ก่อนสร้าง pool (import ใน index.js ถูก hoist มาก่อน loadEnvFile)
+const envPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env')
+try { process.loadEnvFile(envPath) } catch { /* ไม่มีไฟล์ .env */ }
 
 const scrypt = promisify(scryptCb)
 
