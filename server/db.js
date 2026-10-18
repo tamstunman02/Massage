@@ -121,17 +121,6 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS reviews_provider_created_idx ON reviews(provider_id, created_at DESC);
-CREATE TABLE IF NOT EXISTS demo_reviews (
-  id SERIAL PRIMARY KEY,
-  provider_id INT NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
-  sample_index SMALLINT NOT NULL,
-  user_name TEXT NOT NULL,
-  service_rating SMALLINT NOT NULL CHECK (service_rating BETWEEN 1 AND 5),
-  value_rating SMALLINT NOT NULL CHECK (value_rating BETWEEN 1 AND 5),
-  comment TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (provider_id, sample_index)
-);
 CREATE TABLE IF NOT EXISTS review_media (
   id SERIAL PRIMARY KEY,
   review_id INT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
@@ -139,6 +128,32 @@ CREATE TABLE IF NOT EXISTS review_media (
   file TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS seek_posts (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  province TEXT NOT NULL DEFAULT '',
+  venue TEXT NOT NULL DEFAULT '',
+  budget TEXT NOT NULL DEFAULT '',
+  duration TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'open',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS seek_posts_status_created_idx ON seek_posts(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS seek_posts_user_idx ON seek_posts(user_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS seek_comments (
+  id SERIAL PRIMARY KEY,
+  post_id INT NOT NULL REFERENCES seek_posts(id) ON DELETE CASCADE,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider_id INT REFERENCES providers(id) ON DELETE SET NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS seek_comments_post_idx ON seek_comments(post_id, created_at ASC);
 CREATE TABLE IF NOT EXISTS app_settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -151,6 +166,11 @@ export async function initDb() {
   await pool.query('ALTER TABLE providers ADD COLUMN IF NOT EXISTS height_cm SMALLINT')
   await pool.query('ALTER TABLE providers ADD COLUMN IF NOT EXISTS weight_kg SMALLINT')
   await pool.query("ALTER TABLE providers ADD COLUMN IF NOT EXISTS measurements TEXT NOT NULL DEFAULT ''")
+  await pool.query("ALTER TABLE providers ADD COLUMN IF NOT EXISTS facebook TEXT NOT NULL DEFAULT ''")
+  await pool.query("ALTER TABLE seek_posts ADD COLUMN IF NOT EXISTS venue TEXT NOT NULL DEFAULT ''")
+  await pool.query("ALTER TABLE seek_posts ADD COLUMN IF NOT EXISTS duration TEXT NOT NULL DEFAULT ''")
+  await pool.query("ALTER TABLE seek_posts ALTER COLUMN description SET DEFAULT ''")
+  await pool.query('ALTER TABLE providers ADD COLUMN IF NOT EXISTS membership_expires_at TIMESTAMPTZ')
   const { rows: verifyColumn } = await pool.query(
     `SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'email_verified_at'`)
   if (!verifyColumn.length) {
@@ -233,6 +253,14 @@ export async function initDb() {
       )
     }
     await pool.query('INSERT INTO favorites (user_id, provider_id) VALUES ($1, 3)', [ids.buyer])
+    for (const review of seed.reviews) {
+      await pool.query(
+        `INSERT INTO reviews (booking_id, provider_id, user_id, service_rating, value_rating, comment, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         ON CONFLICT (booking_id) DO NOTHING`,
+        [review.bookingId, review.providerId, ids.buyer, review.serviceRating, review.valueRating, review.comment, review.createdAt],
+      )
+    }
   }
 
   await pool.query(`
@@ -244,27 +272,196 @@ export async function initDb() {
         (30 + (id % 8))::text || '-' || (23 + (id % 7))::text || '-' || (33 + (id % 9))::text
         ELSE measurements END`)
 
+  await pool.query('DROP TABLE IF EXISTS demo_reviews')
+
+  // ลบคำที่บ่งบอกว่าเป็นข้อมูลทดสอบออกจากโปรไฟล์ที่ seed ไว้แล้ว
+  await pool.query(`
+    UPDATE providers
+    SET tags = array_remove(tags, 'โปรไฟล์ตัวอย่าง')
+    WHERE 'โปรไฟล์ตัวอย่าง' = ANY(tags)`)
+  await pool.query(`
+    UPDATE providers
+    SET line = regexp_replace(line, '^demo\\.', 'nn.')
+    WHERE line LIKE 'demo.%'`)
+
+  await ensureSeedBuyerReviews()
+  await seedTravelerReviewsIfNeeded()
+  await seedProvinceExtraProvidersIfNeeded()
+}
+
+async function ensureSeedBuyerReviews() {
+  const { rows: buyers } = await pool.query(
+    `SELECT id FROM users WHERE email = 'somchai@example.com' AND role = 'buyer' LIMIT 1`)
+  if (!buyers[0]) return
+  for (const review of seed.reviews) {
+    await pool.query(
+      `INSERT INTO reviews (booking_id, provider_id, user_id, service_rating, value_rating, comment, created_at)
+       SELECT $1, $2, $3, $4, $5, $6, $7
+       WHERE EXISTS (
+         SELECT 1 FROM bookings b
+         WHERE b.id = $1 AND b.provider_id = $2 AND b.user_id = $3 AND b.status = 'เสร็จสิ้น'
+       )
+       ON CONFLICT (booking_id) DO NOTHING`,
+      [review.bookingId, review.providerId, buyers[0].id, review.serviceRating, review.valueRating, review.comment, review.createdAt],
+    )
+  }
+}
+
+async function seedTravelerReviewsIfNeeded() {
+  const { rows: flag } = await pool.query("SELECT 1 FROM app_settings WHERE key = 'traveler-reviews-v1'")
+  if (flag.length) return
+
+  const { rows: providers } = await pool.query(
+    'SELECT id, venue FROM providers WHERE active AND membership_active ORDER BY id')
+  if (!providers.length) return
+
+  const hash = await hashPassword('buyer123')
+  const first = ['สมชาย', 'สมหญิง', 'ธนพล', 'กมล', 'วรเชษฐ์', 'ปรีชา', 'นภัส', 'ศุภกร', 'อรุณ', 'พิมพ์ชนก', 'ชยพล', 'ณัฐวุฒิ', 'กานต์', 'พงศกร', 'ธีรภัทร', 'สุรชัย', 'ปวีณา', 'ภูมิ', 'รัตนา', 'อนุชา']
+  const last = ['ใจดี', 'รักไทย', 'สุขสวัสดิ์', 'แสงทอง', 'ศรีสุข', 'มั่นคง', 'วงศ์ไทย', 'เพชรรัตน์', 'บุญมา', 'ทองดี', 'จันทร์เพ็ญ', 'พรหมมา', 'สายสุวรรณ', 'คงเจริญ', 'ลิ้มสกุล']
+  const services = [
+    { label: 'พบปะพูดคุย · 60 นาที', amount: 900 },
+    { label: 'ร่วมกิจกรรม · 90 นาที', amount: 1500 },
+    { label: 'ไลฟ์สไตล์ · 120 นาที', amount: 1800 },
+    { label: 'งานอีเวนต์ · 180 นาที', amount: 2400 },
+  ]
+  const modes = ['ที่ร้าน', 'นอกสถานที่']
+  const comments = [
+    'บริการดีมาก ตรงเวลา ประทับใจครับ',
+    'คุ้มค่า แนะนำเลยค่ะ',
+    'พูดคุยสนุก เป็นกันเอง',
+    'ทุกอย่างราบรื่น จะกลับมาใช้บริการอีก',
+    'สุภาพ เป็นมืออาชีพ คุยรายละเอียดชัดเจน',
+    'โดยรวมดีมาก บรรยากาศสบายใจ',
+  ]
+  const pad = (n) => String(n).padStart(2, '0')
+
+  for (let i = 1; i <= 60; i++) {
+    const email = `traveler${String(i).padStart(3, '0')}@example.com`
+    const name = `${first[(i * 3) % first.length]} ${last[(i * 7) % last.length]}`
+    const phone = `08${String(10000000 + ((i * 137) % 90000000)).slice(0, 8)}`
+    const user = await pool.query(
+      `INSERT INTO users (name, email, phone, password_hash, role, email_verified_at)
+       VALUES ($1,$2,$3,$4,'buyer', now())
+       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
+       RETURNING id`,
+      [name, email, phone, hash],
+    )
+    const userId = user.rows[0].id
+    const bookingCount = 1 + (i % 4)
+    for (let k = 0; k < bookingCount; k++) {
+      const provider = providers[(i + k * 11) % providers.length]
+      const bookingId = `ND-T${String(i).padStart(3, '0')}${k}`
+      const service = services[(i + k) % services.length]
+      const daysAgo = 8 + ((i * 5 + k * 13) % 140)
+      const date = new Date(Date.now() - daysAgo * 86400000)
+      const dateText = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+      const time = `${pad(10 + ((i + k) % 11))}:00`
+      const mode = modes[(i + k) % modes.length]
+      await pool.query(
+        `INSERT INTO bookings (id, provider_id, user_id, service, date, time, mode, venue, amount, status, guest_name, phone, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'เสร็จสิ้น',$10,$11,$12)
+         ON CONFLICT (id) DO NOTHING`,
+        [bookingId, provider.id, userId, service.label, dateText, time, mode, provider.venue || '', service.amount, name, phone, new Date(date.getTime() - 2 * 86400000)],
+      )
+      if ((i + k) % 5 !== 0) {
+        await pool.query(
+          `INSERT INTO reviews (booking_id, provider_id, user_id, service_rating, value_rating, comment, created_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)
+           ON CONFLICT (booking_id) DO NOTHING`,
+          [bookingId, provider.id, userId, 3 + ((i + k) % 3), 3 + ((i * 2 + k) % 3), comments[(i + k) % comments.length], date],
+        )
+      }
+    }
+  }
+
   await pool.query(
-    `INSERT INTO demo_reviews (provider_id, sample_index, user_name, service_rating, value_rating, comment, created_at)
-     SELECT p.id, sample.sample_index,
-       CASE sample.sample_index
-         WHEN 1 THEN $1
-         WHEN 2 THEN $2
-         ELSE $3
-       END,
-       (5 - ((p.id + sample.sample_index) % 2))::smallint, 5::smallint,
-       CASE ((p.id + sample.sample_index) % 3)
-         WHEN 0 THEN $4
-         WHEN 1 THEN $5
-         ELSE $6
-       END,
-       now() - (sample.sample_index * 15 * interval '1 day')
-     FROM providers p CROSS JOIN generate_series(1, 3) AS sample(sample_index)
-     WHERE p.active AND p.membership_active
-     ON CONFLICT (provider_id, sample_index) DO NOTHING`,
-    ['นักท่องเที่ยวตัวอย่าง', 'คุณผู้ใช้ตัวอย่าง', 'ผู้จองตัวอย่าง',
-      'นัดหมายสะดวก พูดคุยรายละเอียดและขอบเขตกันชัดเจน ประทับใจการสื่อสารครับ',
-      'บรรยากาศเป็นกันเอง ตรงต่อเวลา และดูแลการนัดหมายได้ดีค่ะ',
-      'รายละเอียดบริการชัดเจน คุยกันเข้าใจง่าย โดยรวมประทับใจค่ะ'],
+    `INSERT INTO app_settings (key, value) VALUES ('traveler-reviews-v1', 'complete')
+     ON CONFLICT (key) DO NOTHING`,
   )
+}
+
+async function seedProvinceExtraProvidersIfNeeded() {
+  const { rows: flag } = await pool.query("SELECT 1 FROM app_settings WHERE key = 'province-providers-v2-10'")
+  if (flag.length) return
+
+  for (const p of seed.provinceExtraProviders) {
+    await pool.query(
+      `INSERT INTO providers (id, name, age, province, area, gender, line, price, rating, reviews, initials,
+         visual, category, description, tags, venue, modes, active, membership_active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,TRUE,TRUE)
+       ON CONFLICT (id) DO NOTHING`,
+      [p.id, p.name, p.age, p.province, p.area, p.gender, p.line, p.price, p.rating, p.reviews, p.initials,
+        p.visual, p.category, p.description, p.tags, p.venue, p.modes],
+    )
+  }
+  await pool.query(
+    `SELECT setval(pg_get_serial_sequence('providers', 'id'), GREATEST((SELECT max(id) FROM providers), 1))`,
+  )
+
+  await seedReviewsForProviders(
+    seed.provinceExtraProviders.map((p) => p.id),
+    'ND-P',
+  )
+
+  await pool.query(
+    `INSERT INTO app_settings (key, value) VALUES ('province-providers-v2-10', 'complete')
+     ON CONFLICT (key) DO NOTHING`,
+  )
+}
+
+async function seedReviewsForProviders(providerIds, bookingPrefix) {
+  if (!providerIds.length) return
+  const { rows: travelers } = await pool.query(
+    `SELECT id, name, phone FROM users WHERE role = 'buyer' ORDER BY id LIMIT 120`)
+  if (!travelers.length) return
+
+  const services = [
+    { label: 'พบปะพูดคุย · 60 นาที', amount: 900 },
+    { label: 'ร่วมกิจกรรม · 90 นาที', amount: 1500 },
+    { label: 'ไลฟ์สไตล์ · 120 นาที', amount: 1800 },
+    { label: 'งานอีเวนต์ · 180 นาที', amount: 2400 },
+  ]
+  const modes = ['ที่ร้าน', 'นอกสถานที่']
+  const comments = [
+    'บริการดีมาก ตรงเวลา ประทับใจครับ',
+    'คุ้มค่า แนะนำเลยค่ะ',
+    'พูดคุยสนุก เป็นกันเอง',
+    'ทุกอย่างราบรื่น จะกลับมาใช้บริการอีก',
+    'สุภาพ เป็นมืออาชีพ คุยรายละเอียดชัดเจน',
+    'โดยรวมดีมาก บรรยากาศสบายใจ',
+    'นัดหมายชัดเจน ดูแลดีตลอดการพบ',
+    'รายละเอียดครบ คุยง่าย ประทับใจค่ะ',
+  ]
+  const pad = (n) => String(n).padStart(2, '0')
+  const { rows: venues } = await pool.query(
+    'SELECT id, venue FROM providers WHERE id = ANY($1::int[])', [providerIds])
+  const venueById = new Map(venues.map((row) => [row.id, row.venue || '']))
+
+  for (let i = 0; i < providerIds.length; i++) {
+    const providerId = providerIds[i]
+    const reviewCount = 2 + (i % 4)
+    for (let k = 0; k < reviewCount; k++) {
+      const traveler = travelers[(i * 3 + k * 7) % travelers.length]
+      const bookingId = `${bookingPrefix}${String(providerId).padStart(5, '0')}${k}`
+      const service = services[(i + k) % services.length]
+      const daysAgo = 5 + ((i * 4 + k * 9) % 120)
+      const date = new Date(Date.now() - daysAgo * 86400000)
+      const dateText = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+      await pool.query(
+        `INSERT INTO bookings (id, provider_id, user_id, service, date, time, mode, venue, amount, status, guest_name, phone, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'เสร็จสิ้น',$10,$11,$12)
+         ON CONFLICT (id) DO NOTHING`,
+        [bookingId, providerId, traveler.id, service.label, dateText, `${pad(10 + ((i + k) % 11))}:00`,
+          modes[(i + k) % 2], venueById.get(providerId) || '', service.amount, traveler.name, traveler.phone || '',
+          new Date(date.getTime() - 2 * 86400000)],
+      )
+      await pool.query(
+        `INSERT INTO reviews (booking_id, provider_id, user_id, service_rating, value_rating, comment, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         ON CONFLICT (booking_id) DO NOTHING`,
+        [bookingId, providerId, traveler.id, 3 + ((i + k) % 3), 3 + ((i * 2 + k) % 3),
+          comments[(i + k) % comments.length], date],
+      )
+    }
+  }
 }

@@ -4,7 +4,7 @@ export const providers = [
     gender: 'ผู้หญิง', line: 'mali.relax', price: 1200, rating: '4.98', reviews: 128,
     initials: 'ม', visual: 'visual-sand', category: 'Social companion',
     description: 'ผู้ให้บริการอิสระสำหรับนัดพบและร่วมกิจกรรม พูดคุยรายละเอียดและขอบเขตที่สบายใจกันได้ก่อนนัดหมาย',
-    tags: ['พบปะพูดคุย', 'ร่วมกิจกรรม', 'โปรไฟล์ตัวอย่าง'], venue: 'สถานที่นัดพบ · สุขุมวิท 39',
+    tags: ['พบปะพูดคุย', 'ร่วมกิจกรรม', 'ไลฟ์สไตล์'], venue: 'สถานที่นัดพบ · สุขุมวิท 39',
     modes: ['ที่ร้าน', 'นอกสถานที่'],
   },
   {
@@ -12,7 +12,7 @@ export const providers = [
     gender: 'ผู้ชาย', line: 'nonthetherapist', price: 1000, rating: '5.00', reviews: 96,
     initials: 'น', visual: 'visual-olive', category: 'Local companion',
     description: 'รับนัดพบและร่วมกิจกรรมในพื้นที่เชียงใหม่ แจ้งรายละเอียด ราคา และขอบเขตบริการให้ชัดเจนก่อนยืนยัน',
-    tags: ['ร่วมกิจกรรม', 'พบปะพูดคุย', 'โปรไฟล์ตัวอย่าง'], venue: 'สถานที่นัดพบ · นิมมาน',
+    tags: ['ร่วมกิจกรรม', 'พบปะพูดคุย', 'ไลฟ์สไตล์'], venue: 'สถานที่นัดพบ · นิมมาน',
     modes: ['ที่ร้าน', 'นอกสถานที่'],
   },
   {
@@ -20,7 +20,7 @@ export const providers = [
     gender: 'LGBTQ+', line: 'rain.sabai', price: 1400, rating: '4.96', reviews: 74,
     initials: 'ร', visual: 'visual-lilac', category: 'Inclusive companion',
     description: 'ผู้ให้บริการอิสระที่ต้อนรับทุกอัตลักษณ์ นัดพบและร่วมกิจกรรมได้โดยเคารพความยินยอมและขอบเขตของกันและกัน',
-    tags: ['พบปะพูดคุย', 'Inclusive', 'โปรไฟล์ตัวอย่าง'], venue: 'สถานที่นัดพบ · ป่าตอง',
+    tags: ['พบปะพูดคุย', 'Inclusive', 'ไลฟ์สไตล์'], venue: 'สถานที่นัดพบ · ป่าตอง',
     modes: ['ที่ร้าน', 'นอกสถานที่'],
   },
   {
@@ -28,7 +28,7 @@ export const providers = [
     gender: 'ผู้หญิง', line: 'praew.events', price: 950, rating: '4.95', reviews: 52,
     initials: 'พ', visual: 'visual-clay', category: 'Event companion',
     description: 'รับงานอิสระสำหรับงานสังคมและกิจกรรมในชลบุรี นัดหมายล่วงหน้า พร้อมตกลงเวลาและรายละเอียดให้ตรงกัน',
-    tags: ['งานอีเวนต์', 'ร่วมกิจกรรม', 'โปรไฟล์ตัวอย่าง'], venue: 'สถานที่นัดพบ · บางแสน',
+    tags: ['งานอีเวนต์', 'ร่วมกิจกรรม', 'ไลฟ์สไตล์'], venue: 'สถานที่นัดพบ · บางแสน',
     modes: ['ที่ร้าน', 'นอกสถานที่'],
   },
   {
@@ -36,7 +36,7 @@ export const providers = [
     gender: 'LGBTQ+', line: 'kim.kindtouch', price: 1250, rating: '4.97', reviews: 83,
     initials: 'ค', visual: 'visual-moss', category: 'Personal companion',
     description: 'ผู้ให้บริการส่วนตัวสำหรับนัดพบและกิจกรรมไลฟ์สไตล์ เลือกรูปแบบที่สะดวกและพูดคุยข้อตกลงก่อนนัดได้',
-    tags: ['ไลฟ์สไตล์', 'พบปะพูดคุย', 'โปรไฟล์ตัวอย่าง'], venue: 'สถานที่นัดพบ · อารีย์',
+    tags: ['ไลฟ์สไตล์', 'พบปะพูดคุย', 'ร่วมกิจกรรม'], venue: 'สถานที่นัดพบ · อารีย์',
     modes: ['ที่ร้าน', 'นอกสถานที่'],
   },
   {
@@ -44,7 +44,7 @@ export const providers = [
     gender: 'ผู้หญิง', line: 'fah.connect', price: 850, rating: '4.91', reviews: 41,
     initials: 'ฟ', visual: 'visual-honey', category: 'Lifestyle companion',
     description: 'รับนัดพบและร่วมกิจกรรมในขอนแก่น เป็นกันเอง สื่อสารตรงไปตรงมา และเคารพความเป็นส่วนตัว',
-    tags: ['ไลฟ์สไตล์', 'ร่วมกิจกรรม', 'โปรไฟล์ตัวอย่าง'], venue: 'สถานที่นัดพบ · ในเมือง',
+    tags: ['ไลฟ์สไตล์', 'ร่วมกิจกรรม', 'พบปะพูดคุย'], venue: 'สถานที่นัดพบ · ในเมือง',
     modes: ['ที่ร้าน'],
   },
 ]
@@ -68,12 +68,41 @@ const demoNames = [
   'แพร', 'มิน', 'ฟ้า', 'ใบเฟิร์น', 'พิม', 'เมย์', 'น้ำ', 'อิง', 'พลอย', 'มุก',
   'นนท์', 'คิม', 'เจ', 'เรน', 'นัท', 'วิน', 'ข้าวหอม', 'ออม', 'ต้น', 'ปัน',
   'ดาว', 'เจน', 'พีช', 'กานต์', 'ริว', 'โบนัส', 'โฟกัส', 'ไอซ์', 'ภู', 'มีนา',
+  'หลิน', 'เฌอ', 'มิ้นต์', 'บลู', 'น้ำตาล', 'เฟิร์น', 'ทราย', 'เอม', 'ปริม', 'เนย',
+  'ตูน', 'บาส', 'เก้า', 'เติ้ล', 'ปอ', 'แซม', 'นุ๊ก', 'เอิร์ธ', 'กอล์ฟ', 'บีม',
 ]
 const demoServices = [
-  ['พบปะพูดคุย', 'ร่วมกิจกรรม', 'โปรไฟล์ตัวอย่าง'],
-  ['ร่วมกิจกรรม', 'ไลฟ์สไตล์', 'โปรไฟล์ตัวอย่าง'],
-  ['งานอีเวนต์', 'พบปะพูดคุย', 'โปรไฟล์ตัวอย่าง'],
+  ['พบปะพูดคุย', 'ร่วมกิจกรรม', 'ไลฟ์สไตล์'],
+  ['ร่วมกิจกรรม', 'ไลฟ์สไตล์', 'งานอีเวนต์'],
+  ['งานอีเวนต์', 'พบปะพูดคุย', 'ร่วมกิจกรรม'],
 ]
+const genders = ['ผู้หญิง', 'ผู้ชาย', 'LGBTQ+', 'ผู้หญิง', 'ผู้ชาย', 'LGBTQ+', 'ผู้หญิง', 'ผู้ชาย', 'ผู้หญิง', 'LGBTQ+']
+const visuals = ['visual-sand', 'visual-olive', 'visual-lilac', 'visual-clay', 'visual-moss', 'visual-honey']
+
+function buildProvinceProvider(province, provinceIndex, slot, idBase, linePrefix) {
+  const id = idBase + provinceIndex * 10 + slot
+  const name = demoNames[(provinceIndex * 10 + slot) % demoNames.length]
+  const price = 800 + ((provinceIndex * 10 + slot) % 13) * 100
+  return {
+    id,
+    name,
+    age: 21 + ((provinceIndex + slot * 3) % 14),
+    province,
+    area: `ในเมือง · ${province}`,
+    gender: genders[slot % genders.length],
+    line: `${linePrefix}.${provinceIndex + 1}.${slot + 1}`,
+    price,
+    rating: 'ใหม่',
+    reviews: 0,
+    initials: name.slice(0, 1),
+    visual: visuals[(provinceIndex + slot) % visuals.length],
+    category: 'เด็กเอนเตอร์เทรน',
+    description: `เด็กเอนเตอร์เทรนใน${province} · นัดพบและร่วมกิจกรรมได้ตามที่ตกลง`,
+    tags: demoServices[slot % demoServices.length],
+    venue: `สถานที่นัดพบ · ${province}`,
+    modes: ['ที่ร้าน', 'นอกสถานที่'],
+  }
+}
 
 export const provinceDemoProviders = provinces.flatMap((province, provinceIndex) =>
   Array.from({ length: 3 }, (_, slot) => {
@@ -86,20 +115,26 @@ export const provinceDemoProviders = provinces.flatMap((province, provinceIndex)
       age: 22 + ((provinceIndex + slot) % 13),
       province,
       area: `ในเมือง · ${province}`,
-      gender: ['ผู้หญิง', 'ผู้ชาย', 'LGBTQ+'][slot],
-      line: `demo.${provinceIndex + 1}.${slot + 1}`,
+      gender: genders[slot],
+      line: `nn.${provinceIndex + 1}.${slot + 1}`,
       price,
       rating: 'ใหม่',
       reviews: 0,
       initials: name.slice(0, 1),
-      visual: ['visual-sand', 'visual-olive', 'visual-lilac', 'visual-clay', 'visual-moss', 'visual-honey'][(provinceIndex + slot) % 6],
-      category: 'โปรไฟล์ตัวอย่าง · 18+',
-      description: `โปรไฟล์สมมติสำหรับทดลองใช้งานใน${province} ไม่ใช่ผู้ให้บริการจริง · ผู้ใหญ่ 18+`,
-      tags: demoServices[slot],
+      visual: visuals[(provinceIndex + slot) % visuals.length],
+      category: 'เด็กเอนเตอร์เทรน',
+      description: `เด็กเอนเตอร์เทรนใน${province} · นัดพบและร่วมกิจกรรมได้ตามที่ตกลง`,
+      tags: demoServices[slot % demoServices.length],
       venue: `สถานที่นัดพบ · ${province}`,
       modes: ['ที่ร้าน', 'นอกสถานที่'],
     }
   }),
+)
+
+/** ชุดเพิ่มเติม จังหวัดละ 10 คน (id 20000+) */
+export const provinceExtraProviders = provinces.flatMap((province, provinceIndex) =>
+  Array.from({ length: 10 }, (_, slot) =>
+    buildProvinceProvider(province, provinceIndex, slot, 20000, 'prov')),
 )
 
 export const bookings = [
@@ -115,7 +150,18 @@ export const bookings = [
   },
 ]
 
-// Demo accounts; passwords are hashed before being stored.
+export const reviews = [
+  {
+    bookingId: 'ND-260774',
+    providerId: 1,
+    serviceRating: 5,
+    valueRating: 5,
+    comment: 'นัดหมายชัดเจน พูดคุยรายละเอียดก่อนพบ ประทับใจการบริการครับ',
+    createdAt: '2026-10-12T10:30:00+07:00',
+  },
+]
+
+// Seed accounts; passwords are hashed before being stored.
 export const users = [
   { name: 'Admin', email: 'admin@example.com', password: 'admin123', role: 'admin' },
   { name: 'มะลิ', email: 'mali@example.com', password: 'seller123', role: 'seller', providerId: 1 },

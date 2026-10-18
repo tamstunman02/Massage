@@ -1,4 +1,7 @@
+try { process.loadEnvFile() } catch { /* ไม่มีไฟล์ .env */ }
+
 import express from 'express'
+import { EventEmitter } from 'node:events'
 import { randomBytes } from 'node:crypto'
 import { mkdirSync, existsSync } from 'node:fs'
 import { unlink, writeFile } from 'node:fs/promises'
@@ -7,6 +10,14 @@ import path from 'node:path'
 import { hashPassword, initDb, pool, verifyPassword } from './db.js'
 import { sendVerificationEmail } from './mailer.js'
 import { createHash } from 'node:crypto'
+
+const seekRealtime = new EventEmitter()
+seekRealtime.setMaxListeners(0)
+
+function publishSeekEvent(postId, type, payload = {}) {
+  seekRealtime.emit(`post:${Number(postId)}`, { type, postId: Number(postId), at: Date.now(), ...payload })
+  seekRealtime.emit('board', { type, postId: Number(postId), at: Date.now(), ...payload })
+}
 
 const root = path.dirname(fileURLToPath(import.meta.url))
 const uploadDir = path.join(root, 'uploads')
@@ -21,6 +32,41 @@ app.use('/uploads', express.static(uploadDir, { setHeaders: (res) => res.setHead
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch(next)
 const fail = (res, status, message) => res.status(status).json({ error: message })
 const text = (value, max = 500) => String(value ?? '').trim().slice(0, max)
+
+function normalizeLineId(value) {
+  let raw = text(value, 200)
+  if (!raw) return ''
+  try {
+    const asUrl = /^https?:\/\//i.test(raw) ? raw : /line\.me/i.test(raw) ? `https://${raw.replace(/^\/+/, '')}` : ''
+    if (asUrl) {
+      const parsed = new URL(asUrl)
+      const path = decodeURIComponent(parsed.pathname)
+      const match = path.match(/\/(?:ti\/p\/~?|R\/ti\/p\/@?)([^/?#]+)/i)
+      if (match?.[1]) return match[1].replace(/^@+/, '').slice(0, 80)
+    }
+  } catch { /* keep raw */ }
+  return raw.replace(/^@+/, '').replace(/^https?:\/\/line\.me\/ti\/p\/~?/i, '').slice(0, 80)
+}
+
+function normalizeFacebookUrl(value) {
+  let facebook = text(value, 300)
+  if (!facebook) return { ok: true, value: '' }
+  const asUrl = /^https?:\/\//i.test(facebook)
+    ? facebook
+    : /facebook\.com|fb\.com|fb\.me/i.test(facebook)
+      ? `https://${facebook.replace(/^\/+/, '')}`
+      : `https://www.facebook.com/${facebook.replace(/^@+/, '').replace(/^\/+/, '')}`
+  try {
+    const parsed = new URL(asUrl)
+    const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
+    if (!['facebook.com', 'm.facebook.com', 'fb.com', 'fb.me'].includes(host)) {
+      return { ok: false }
+    }
+    return { ok: true, value: parsed.toString() }
+  } catch {
+    return { ok: false }
+  }
+}
 const defaultServices = [
   { name: 'พบปะพูดคุย', duration: '60 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 0 },
   { name: 'ร่วมกิจกรรม', duration: '90 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 300 },
@@ -63,15 +109,24 @@ async function publicUser(user) {
 const APP_URL = (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '')
 const sha256 = (value) => createHash('sha256').update(value).digest('hex')
 
+const isLocalApp = /localhost|127\.0\.0\.1/i.test(APP_URL)
+
 async function issueVerification(user) {
   const token = randomBytes(32).toString('hex')
+  const link = `${APP_URL}/api/verify-email?token=${token}`
+  // บันทึกโทเคนก่อนส่งเมล เพื่อให้ยืนยันด้วยลิงก์ได้แม้ SMTP พลาด
   await pool.query(
     'UPDATE users SET email_verify_token_hash = $2, email_verify_sent_at = now() WHERE id = $1',
     [user.id, sha256(token)])
+  console.log(`[mail] ลิงก์ยืนยันของ ${user.email}: ${link}`)
   try {
-    await sendVerificationEmail({ to: user.email, name: user.name, link: `${APP_URL}/api/verify-email?token=${token}` })
+    const sent = await sendVerificationEmail({ to: user.email, name: user.name, link })
+    return { sent, link, to: user.email }
   } catch (error) {
-    console.error('ส่งอีเมลยืนยันไม่สำเร็จ', error.message)
+    console.error(`[mail] ส่งยืนยันถึง ${user.email} ไม่สำเร็จ:`, error.code || '', error.response || error.message)
+    // local: ไม่บล็อกผู้ใช้ — ส่งลิงก์กลับไปกดยืนยันบนหน้าเว็บได้
+    if (isLocalApp) return { sent: false, link, to: user.email, mailError: error.message }
+    throw error
   }
 }
 
@@ -121,22 +176,47 @@ const requirePermission = (permission) => (req, res, next) => {
 }
 
 const providerSql = `
-  SELECT p.*, COALESCE((
-    SELECT json_agg(json_build_object('id', m.id, 'name', m.name, 'type', m.type, 'url', '/uploads/' || m.file) ORDER BY m.id)
-    FROM media m WHERE m.provider_id = p.id), '[]') AS media
+  SELECT p.id, p.name, p.age, p.height_cm, p.weight_kg, p.measurements, p.province, p.area, p.gender,
+    p.line, p.facebook, p.price, p.initials, p.visual, p.category, p.description, p.tags, p.venue, p.modes,
+    p.services, p.active, p.membership_active, p.membership_expires_at,
+    COALESCE((
+      SELECT json_agg(json_build_object('id', m.id, 'name', m.name, 'type', m.type, 'url', '/uploads/' || m.file) ORDER BY m.id)
+      FROM media m WHERE m.provider_id = p.id), '[]') AS media,
+    COALESCE((SELECT COUNT(*)::int FROM reviews r WHERE r.provider_id = p.id), 0) AS review_count,
+    (
+      SELECT ROUND(AVG((r.service_rating + r.value_rating) / 2.0)::numeric, 2)
+      FROM reviews r WHERE r.provider_id = p.id
+    ) AS rating_avg
   FROM providers p`
 
 function toProvider(row) {
   const services = Array.isArray(row.services) && row.services.length
     ? row.services
     : defaultServices.map(({ add, ...service }) => ({ ...service, price: Number(row.price) + add }))
+  const reviewCount = Number(row.review_count) || 0
+  const rating = row.rating_avg != null ? String(row.rating_avg) : 'ใหม่'
   return {
     id: row.id, name: row.name, age: row.age, heightCm: row.height_cm, weightKg: row.weight_kg,
     measurements: row.measurements, province: row.province, area: row.area, gender: row.gender,
-    line: row.line, price: row.price, rating: row.rating, reviews: row.reviews, initials: row.initials,
+    line: row.line, facebook: row.facebook || '', price: row.price, rating, reviews: reviewCount, initials: row.initials,
     visual: row.visual, category: row.category, description: row.description, tags: row.tags, venue: row.venue,
-    modes: row.modes, services, active: row.active, membershipActive: row.membership_active, media: row.media,
+    modes: row.modes, services, active: row.active, membershipActive: row.membership_active,
+    membershipExpiresAt: row.membership_expires_at || null, media: row.media,
   }
+}
+
+function isMembershipCurrent(row) {
+  if (!row.active || !row.membership_active) return false
+  if (!row.membership_expires_at) return true
+  return new Date(row.membership_expires_at).getTime() > Date.now()
+}
+
+function parseExpiresAt(value) {
+  if (value === null || value === '') return { ok: true, value: null }
+  if (value === undefined) return { ok: true, value: undefined }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return { ok: false }
+  return { ok: true, value: date.toISOString() }
 }
 
 const bookingSql = `
@@ -163,6 +243,10 @@ function toApplication(row) {
   return {
     id: row.id, providerId: row.provider_id, name: row.name, line: row.line, province: row.province,
     gender: row.gender, service: row.service, status: row.status,
+    email: row.email || '',
+    emailVerified: row.email_verified_at != null ? Boolean(row.email_verified_at) : null,
+    profilePhotoUrl: row.profile_photo_url || '',
+    hasProfilePhoto: Boolean(row.has_profile_photo),
   }
 }
 
@@ -173,7 +257,7 @@ app.post('/api/login', wrap(async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM users WHERE lower(email) = $1', [email])
   const user = rows[0]
   const valid = user && await verifyPassword(password, user.password_hash)
-  if (!valid || (req.body.role && req.body.role !== user.role)) return fail(res, 401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง')
+  if (!valid) return fail(res, 401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง')
   await startSession(res, user.id)
   res.json({ user: await publicUser(user) })
 }))
@@ -187,31 +271,60 @@ app.post('/api/register', wrap(async (req, res) => {
   if (!name || !/^\S+@\S+\.\S+$/.test(email)) return fail(res, 400, 'กรุณากรอกชื่อและอีเมลให้ถูกต้อง')
   if (password.length < 6) return fail(res, 400, 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร')
 
+  let sellerProfile = null
+  if (role === 'seller') {
+    const province = text(req.body.province, 100)
+    const description = text(req.body.service, 1000)
+    const price = Math.max(0, Math.min(1000000, Number(req.body.price) || 0))
+    const age = Number(req.body.age)
+    const weightKg = Number(req.body.weightKg)
+    const measurements = text(req.body.measurements, 80)
+    const line = normalizeLineId(req.body.line)
+    const facebookResult = normalizeFacebookUrl(req.body.facebook)
+    if (!province || !description) return fail(res, 400, 'กรุณากรอกจังหวัดและรายละเอียดบริการ')
+    if (!Number.isInteger(age) || age < 18 || age > 100) return fail(res, 400, 'กรุณากรอกอายุระหว่าง 18–100 ปี')
+    if (!Number.isFinite(weightKg) || weightKg < 30 || weightKg > 250) return fail(res, 400, 'กรุณากรอกน้ำหนักระหว่าง 30–250 กก.')
+    if (!measurements) return fail(res, 400, 'กรุณากรอกสัดส่วน')
+    if (!facebookResult.ok) return fail(res, 400, 'กรุณากรอกลิงก์ Facebook ให้ถูกต้อง')
+    if (!line && !facebookResult.value) return fail(res, 400, 'กรุณากรอก LINE หรือ Facebook อย่างน้อย 1 ช่อง')
+    sellerProfile = {
+      province, description, price, age, weightKg: Math.round(weightKg),
+      measurements, line: line || '', facebook: facebookResult.value || '',
+    }
+  }
+
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
     let providerId = null
-    const phone = text(req.body.phone, 50)
-    if (role === 'seller') {
-      const province = text(req.body.province, 100)
-      const description = text(req.body.service, 1000)
-      const price = Math.max(0, Math.min(1000000, Number(req.body.price) || 0))
+    if (sellerProfile) {
       const created = await client.query(
-        `INSERT INTO providers (name, province, area, gender, line, price, initials, description, venue, modes, tags, active)
-         VALUES ($1,$2,$2,'ไม่ประสงค์ระบุ',$3,$4,$5,$6,$7,'{ที่ร้าน}','{ผู้ให้บริการใหม่}',FALSE) RETURNING id`,
-        [name, province, phone, price, name.slice(0, 1), description,
-          text(req.body.businessName, 200) || `สถานที่ตามที่ผู้ให้บริการระบุ · ${province}`])
+        `INSERT INTO providers (
+           name, age, province, area, gender, line, facebook, price, initials, description,
+           venue, modes, tags, active, weight_kg, measurements
+         ) VALUES ($1,$2,$3,$3,'ไม่ประสงค์ระบุ',$4,$5,$6,$7,$8,'','{ที่ร้าน}','{ผู้ให้บริการใหม่}',FALSE,$9,$10)
+         RETURNING id`,
+        [
+          name, sellerProfile.age, sellerProfile.province, sellerProfile.line, sellerProfile.facebook,
+          sellerProfile.price, name.slice(0, 1), sellerProfile.description, sellerProfile.weightKg,
+          sellerProfile.measurements,
+        ])
       providerId = created.rows[0].id
       await populateMockProviderDetails(client, providerId)
       await client.query(
         'INSERT INTO applications (provider_id, name, line, province, gender, service) VALUES ($1,$2,$3,$4,$5,$6)',
-        [providerId, name, phone, province, 'ไม่ประสงค์ระบุ', description])
+        [providerId, name, sellerProfile.line, sellerProfile.province, 'ไม่ประสงค์ระบุ', sellerProfile.description])
     }
     const created = await client.query(
       'INSERT INTO users (name, email, phone, password_hash, role, provider_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [name, email, phone, await hashPassword(password), role, providerId])
+      [name, email, '', await hashPassword(password), role, providerId])
     await client.query('COMMIT')
-    await issueVerification(created.rows[0])
+    try {
+      await issueVerification(created.rows[0])
+    } catch {
+      // บัญชีสร้างแล้ว แต่ส่งเมลไม่สำเร็จ — ให้ผู้ใช้กดส่งใหม่จากแบนเนอร์ได้
+      console.error(`[mail] สมัครสำเร็จแต่ส่งเมลยืนยันไม่ถึง ${created.rows[0].email}`)
+    }
     await startSession(res, created.rows[0].id)
     res.status(201).json({ user: await publicUser(created.rows[0]) })
   } catch (error) {
@@ -232,16 +345,39 @@ app.post('/api/logout', wrap(async (req, res) => {
 
 app.get('/api/me', (req, res) => res.json({ user: req.user || null }))
 
-app.get('/api/verify-email', wrap(async (req, res) => {
-  const token = String(req.query.token ?? '')
-  res.type('html')
-  if (!/^[0-9a-f]{64}$/.test(token)) return res.status(400).send(verifyPage(false, 'ลิงก์ไม่ถูกต้อง', 'ลิงก์ยืนยันอีเมลไม่ถูกต้องหรือหมดอายุแล้ว'))
-  const hash = sha256(token)
+function readVerifyToken(value) {
+  const raw = String(Array.isArray(value) ? value[0] : value ?? '').trim()
+  return (raw.match(/[0-9a-f]{64}/i) || [])[0]?.toLowerCase() || ''
+}
+
+async function applyEmailVerification(token) {
+  if (!token) return { ok: false, reason: 'invalid' }
   const { rows } = await pool.query(
     `UPDATE users SET email_verified_at = COALESCE(email_verified_at, now()), email_verify_token_hash = NULL
-     WHERE email_verify_token_hash = $1 AND created_at > now() - interval '3 days' RETURNING id`, [hash])
-  if (!rows.length) return res.status(400).send(verifyPage(false, 'ลิงก์หมดอายุหรือใช้ไปแล้ว', 'กรุณาเข้าสู่ระบบแล้วกดขอส่งลิงก์ยืนยันใหม่อีกครั้ง'))
+     WHERE email_verify_token_hash = $1 AND created_at > now() - interval '3 days' RETURNING id`,
+    [sha256(token)])
+  if (!rows.length) return { ok: false, reason: 'expired' }
+  return { ok: true, userId: rows[0].id }
+}
+
+app.get('/api/verify-email', wrap(async (req, res) => {
+  res.type('html')
+  const result = await applyEmailVerification(readVerifyToken(req.query.token))
+  if (!result.ok && result.reason === 'invalid') {
+    return res.status(400).send(verifyPage(false, 'ลิงก์ไม่ถูกต้อง', 'ลิงก์ยืนยันอีเมลไม่ถูกต้องหรือหมดอายุแล้ว กรุณากดส่งลิงก์ใหม่จากหน้าเว็บ'))
+  }
+  if (!result.ok) {
+    return res.status(400).send(verifyPage(false, 'ลิงก์หมดอายุหรือใช้ไปแล้ว', 'กรุณาเข้าสู่ระบบแล้วกดขอส่งลิงก์ยืนยันใหม่อีกครั้ง'))
+  }
   res.send(verifyPage(true, 'คุณยืนยันอีเมลแล้ว', 'ขอบคุณที่ยืนยันอีเมล บัญชีของคุณพร้อมใช้งานเต็มรูปแบบแล้ว'))
+}))
+
+app.post('/api/verify-email', wrap(async (req, res) => {
+  const result = await applyEmailVerification(readVerifyToken(req.body?.token))
+  if (!result.ok && result.reason === 'invalid') return fail(res, 400, 'ลิงก์ไม่ถูกต้อง')
+  if (!result.ok) return fail(res, 400, 'ลิงก์หมดอายุหรือใช้ไปแล้ว')
+  const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [result.userId])
+  res.json({ ok: true, user: rows[0] ? await publicUser(rows[0]) : null })
 }))
 
 app.post('/api/resend-verification', wrap(async (req, res) => {
@@ -252,15 +388,41 @@ app.post('/api/resend-verification', wrap(async (req, res) => {
   if (user.email_verify_sent_at && Date.now() - new Date(user.email_verify_sent_at).getTime() < 60000) {
     return fail(res, 429, 'ส่งอีเมลบ่อยเกินไป กรุณารอ 1 นาทีแล้วลองใหม่')
   }
-  await issueVerification(user)
-  res.json({ ok: true })
+  try {
+    const result = await issueVerification(user)
+    if (!result.sent && !isLocalApp) {
+      return fail(res, 503, 'ยังไม่ได้ตั้งค่า SMTP หรือส่งอีเมลไม่สำเร็จ')
+    }
+    res.json({
+      ok: true,
+      to: result.to,
+      sent: Boolean(result.sent),
+      // ตอนรัน local โชว์ลิงก์บนหน้าเว็บด้วย เพราะ Gmail มักกรองเมลที่มีลิงก์ localhost
+      verifyLink: isLocalApp ? result.link : undefined,
+      mailError: isLocalApp ? result.mailError : undefined,
+    })
+  } catch (error) {
+    console.error('[mail] resend failed:', error.code || '', error.response || error.message)
+    const detail = error.response || error.message || ''
+    const hint = /Invalid login|EAUTH|535/i.test(detail)
+      ? 'รหัส App Password ไม่ถูกต้องหรือยังไม่เปิด 2FA — สร้างรหัสใหม่ที่ myaccount.google.com/apppasswords'
+      : `ส่งอีเมลไม่สำเร็จ: ${detail || 'ตรวจ SMTP ใน .env แล้วรีสตาร์ทเซิร์ฟเวอร์'}`
+    return fail(res, 502, hint)
+  }
 }))
 
 // ---------- providers ----------
 app.get('/api/providers', wrap(async (req, res) => {
   const isAdmin = req.user?.role === 'admin'
   const { rows } = await pool.query(
-    `${providerSql} WHERE ($1 OR (p.active AND p.membership_active) OR p.id = $2) ORDER BY p.id`,
+    `${providerSql} WHERE (
+       $1
+       OR (
+         p.active AND p.membership_active
+         AND (p.membership_expires_at IS NULL OR p.membership_expires_at > now())
+       )
+       OR p.id = $2
+     ) ORDER BY p.id`,
     [isAdmin, req.user?.role === 'seller' ? req.user.providerId : null])
   res.json(rows.map(toProvider))
 }))
@@ -310,12 +472,25 @@ app.patch('/api/providers/:id', requirePermission('profile:edit:own'), wrap(asyn
   if (age === undefined || heightCm === undefined || weightKg === undefined || measurements === undefined) {
     return fail(res, 400, 'กรุณากรอกอายุ ส่วนสูง น้ำหนัก และสัดส่วนให้ถูกต้อง')
   }
+  let line = null
+  if (req.body.line !== undefined) {
+    if (typeof req.body.line !== 'string') return fail(res, 400, 'LINE ID ไม่ถูกต้อง')
+    line = normalizeLineId(req.body.line)
+  }
+  let facebook = null
+  if (req.body.facebook !== undefined) {
+    if (typeof req.body.facebook !== 'string') return fail(res, 400, 'ลิงก์ Facebook ไม่ถูกต้อง')
+    const facebookResult = normalizeFacebookUrl(req.body.facebook)
+    if (!facebookResult.ok) return fail(res, 400, 'กรุณาใส่ลิงก์ Facebook ที่ถูกต้อง')
+    facebook = facebookResult.value
+  }
   const { rows } = await pool.query(
     `UPDATE providers SET
        name = COALESCE($2, name), price = COALESCE($3, price), description = COALESCE($4, description),
        venue = COALESCE($5, venue), province = COALESCE($6, province), modes = COALESCE($7, modes),
        services = COALESCE($8, services), age = COALESCE($9, age), height_cm = COALESCE($10, height_cm),
-       weight_kg = COALESCE($11, weight_kg), measurements = COALESCE($12, measurements)
+       weight_kg = COALESCE($11, weight_kg), measurements = COALESCE($12, measurements),
+       line = COALESCE($13, line), facebook = COALESCE($14, facebook)
      WHERE id = $1 RETURNING id`,
     [id, req.body.name === undefined ? null : text(req.body.name, 100) || null,
       Number.isFinite(Number(req.body.price)) && req.body.price !== '' && req.body.price != null
@@ -324,7 +499,8 @@ app.patch('/api/providers/:id', requirePermission('profile:edit:own'), wrap(asyn
         : typeof req.body.description === 'string' ? req.body.description.slice(0, 1000) : '',
       req.body.venue === undefined ? null : text(req.body.venue, 200),
       req.body.province === undefined ? null : text(req.body.province, 100), modes,
-      services === null ? null : JSON.stringify(services), age, heightCm, weightKg, measurements])
+      services === null ? null : JSON.stringify(services), age, heightCm, weightKg, measurements,
+      line, facebook])
   if (!rows[0]) return fail(res, 404, 'ไม่พบโปรไฟล์')
   const result = await pool.query(`${providerSql} WHERE p.id = $1`, [id])
   res.json(toProvider(result.rows[0]))
@@ -332,13 +508,115 @@ app.patch('/api/providers/:id', requirePermission('profile:edit:own'), wrap(asyn
 
 app.patch('/api/admin/providers/:id', requirePermission('provider:suspend'), wrap(async (req, res) => {
   const { active, membershipActive } = req.body
+  const expires = Object.hasOwn(req.body, 'membershipExpiresAt')
+    ? parseExpiresAt(req.body.membershipExpiresAt)
+    : { ok: true, value: undefined }
+  if (!expires.ok) return fail(res, 400, 'วันหมดอายุสมาชิกไม่ถูกต้อง')
   const { rows } = await pool.query(
-    `UPDATE providers SET active = COALESCE($2, active), membership_active = COALESCE($3, membership_active)
+    `UPDATE providers SET
+       active = COALESCE($2, active),
+       membership_active = COALESCE($3, membership_active),
+       membership_expires_at = CASE
+         WHEN $4::boolean THEN $5::timestamptz
+         ELSE membership_expires_at
+       END
      WHERE id = $1 RETURNING id`,
-    [Number(req.params.id), typeof active === 'boolean' ? active : null, typeof membershipActive === 'boolean' ? membershipActive : null])
+    [
+      Number(req.params.id),
+      typeof active === 'boolean' ? active : null,
+      typeof membershipActive === 'boolean' ? membershipActive : null,
+      expires.value !== undefined,
+      expires.value === undefined ? null : expires.value,
+    ])
   if (!rows[0]) return fail(res, 404, 'ไม่พบโปรไฟล์')
   const result = await pool.query(`${providerSql} WHERE p.id = $1`, [rows[0].id])
   res.json(toProvider(result.rows[0]))
+}))
+
+async function collectProviderFiles(db, providerId) {
+  const { rows } = await db.query('SELECT file FROM media WHERE provider_id = $1', [providerId])
+  const { rows: reviewFiles } = await db.query(
+    `SELECT rm.file FROM review_media rm
+     JOIN reviews r ON r.id = rm.review_id
+     WHERE r.provider_id = $1`, [providerId])
+  return [...rows, ...reviewFiles].map((row) => row.file)
+}
+
+async function unlinkUploadFiles(files) {
+  for (const file of files) {
+    await unlink(path.join(uploadDir, file)).catch(() => {})
+  }
+}
+
+app.delete('/api/admin/users/:id', requirePermission('user:delete'), wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  if (!Number.isSafeInteger(id) || id <= 0) return fail(res, 400, 'รหัสบัญชีไม่ถูกต้อง')
+  if (req.user.id === id) return fail(res, 400, 'ไม่สามารถลบบัญชีของตนเองได้')
+
+  const client = await pool.connect()
+  let files = []
+  try {
+    await client.query('BEGIN')
+    const { rows } = await client.query(
+      `SELECT id, role, provider_id, name, email FROM users WHERE id = $1 FOR UPDATE`, [id])
+    const user = rows[0]
+    if (!user) {
+      await client.query('ROLLBACK')
+      return fail(res, 404, 'ไม่พบบัญชี')
+    }
+    if (!['buyer', 'seller'].includes(user.role)) {
+      await client.query('ROLLBACK')
+      return fail(res, 400, 'ลบได้เฉพาะบัญชีนักท่องเที่ยวหรือผู้ขาย')
+    }
+
+    const providerId = user.provider_id
+    if (providerId) files = await collectProviderFiles(client, providerId)
+    await client.query('DELETE FROM users WHERE id = $1', [id])
+    if (providerId) await client.query('DELETE FROM providers WHERE id = $1', [providerId])
+    await client.query('COMMIT')
+    await unlinkUploadFiles(files)
+    res.json({ ok: true, id: user.id, role: user.role, name: user.name, email: user.email, providerId })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+}))
+
+app.delete('/api/admin/providers/:id', requirePermission('user:delete'), wrap(async (req, res) => {
+  const providerId = Number(req.params.id)
+  if (!Number.isSafeInteger(providerId) || providerId <= 0) return fail(res, 400, 'รหัสผู้ขายไม่ถูกต้อง')
+
+  const client = await pool.connect()
+  let files = []
+  try {
+    await client.query('BEGIN')
+    const { rows: providerRows } = await client.query(
+      'SELECT id, name FROM providers WHERE id = $1 FOR UPDATE', [providerId])
+    if (!providerRows[0]) {
+      await client.query('ROLLBACK')
+      return fail(res, 404, 'ไม่พบผู้ขาย')
+    }
+
+    files = await collectProviderFiles(client, providerId)
+    const { rows: sellerRows } = await client.query(
+      `DELETE FROM users WHERE provider_id = $1 AND role = 'seller' RETURNING id, name, email`, [providerId])
+    await client.query('DELETE FROM providers WHERE id = $1', [providerId])
+    await client.query('COMMIT')
+    await unlinkUploadFiles(files)
+    res.json({
+      ok: true,
+      providerId,
+      name: providerRows[0].name,
+      deletedUsers: sellerRows.map((row) => ({ id: row.id, name: row.name, email: row.email })),
+    })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
 }))
 
 // ---------- media ----------
@@ -377,17 +655,8 @@ app.get('/api/providers/:id/reviews', wrap(async (req, res) => {
   const reviewRows = rows.map((row) => ({
     id: row.id, bookingId: row.user_id === req.user?.id ? row.booking_id : null,
     userName: row.user_name, serviceRating: row.service_rating, valueRating: row.value_rating,
-    comment: row.comment, createdAt: row.created_at, media: row.media, isDemo: false,
+    comment: row.comment, createdAt: row.created_at, media: row.media,
   }))
-  const { rows: demoRows } = await pool.query(
-    `SELECT id, user_name, service_rating, value_rating, comment, created_at
-     FROM demo_reviews WHERE provider_id = $1 ORDER BY created_at DESC, id DESC`, [providerId])
-  reviewRows.push(...demoRows.map((row) => ({
-    id: `demo-${row.id}`, bookingId: null, userName: row.user_name,
-    serviceRating: row.service_rating, valueRating: row.value_rating,
-    comment: row.comment, createdAt: row.created_at, media: [], isDemo: true,
-  })))
-  reviewRows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   const canReviewBookings = req.user?.role === 'buyer'
     ? (await pool.query(
       `SELECT b.id FROM bookings b
@@ -475,7 +744,7 @@ app.get('/api/bookings', wrap(async (req, res) => {
 
 app.get('/api/admin/travelers', requirePermission('user:view'), wrap(async (_req, res) => {
   const { rows } = await pool.query(
-    `SELECT u.id, u.name, u.email, u.phone, u.created_at,
+    `SELECT u.id, u.name, u.email, u.phone, u.created_at, u.email_verified_at,
       COUNT(b.id)::int AS booking_count
      FROM users u
      LEFT JOIN bookings b ON b.user_id = u.id
@@ -486,6 +755,7 @@ app.get('/api/admin/travelers', requirePermission('user:view'), wrap(async (_req
   res.json(rows.map((row) => ({
     id: row.id, name: row.name, email: row.email, phone: row.phone,
     createdAt: row.created_at, bookingCount: row.booking_count,
+    emailVerified: Boolean(row.email_verified_at),
   })))
 }))
 
@@ -493,7 +763,7 @@ app.get('/api/admin/travelers/:id', requirePermission('user:view'), wrap(async (
   const travelerId = Number(req.params.id)
   if (!Number.isSafeInteger(travelerId) || travelerId <= 0) return fail(res, 400, 'รหัสนักท่องเที่ยวไม่ถูกต้อง')
   const { rows: travelerRows } = await pool.query(
-    `SELECT id, name, email, phone, created_at
+    `SELECT id, name, email, phone, created_at, email_verified_at
      FROM users WHERE id = $1 AND role = 'buyer'`,
     [travelerId],
   )
@@ -514,7 +784,7 @@ app.get('/api/admin/travelers/:id', requirePermission('user:view'), wrap(async (
   res.json({
     traveler: {
       id: traveler.id, name: traveler.name, email: traveler.email, phone: traveler.phone,
-      createdAt: traveler.created_at,
+      createdAt: traveler.created_at, emailVerified: Boolean(traveler.email_verified_at),
     },
     bookings: bookingResult.rows.map(toBooking),
     favorites: favoriteResult.rows.map((row) => ({ id: row.id, name: row.name, province: row.province })),
@@ -526,25 +796,8 @@ app.get('/api/admin/travelers/:id', requirePermission('user:view'), wrap(async (
   })
 }))
 
-app.post('/api/bookings', requirePermission('booking:create'), wrap(async (req, res) => {
-  const { rows: found } = await pool.query(
-    'SELECT * FROM providers WHERE id = $1 AND active AND membership_active', [Number(req.body.providerId)])
-  const provider = found[0]
-  if (!provider) return fail(res, 404, 'ไม่พบผู้ให้บริการ')
-  const mode = text(req.body.mode, 60)
-  if (!provider.modes.includes(mode)) return fail(res, 400, 'รูปแบบนัดหมายนี้ไม่มีให้บริการแล้ว')
-  const service = toProvider(provider).services.find((item) => item.name === text(req.body.service, 60))
-  if (!service) return fail(res, 400, 'รูปแบบบริการนี้ไม่มีให้จองแล้ว')
-  const amount = service.price + (mode === 'นอกสถานที่' ? 250 : 0)
-  const reference = `ND-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 10)}`
-  const { rows } = await pool.query(
-    `INSERT INTO bookings (id, provider_id, user_id, service, date, time, mode, venue, amount, guest_name, phone, note)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
-    [reference, provider.id, req.user.id, `${service.name} · ${service.duration}`, text(req.body.date, 20), text(req.body.time, 10), mode,
-      mode === 'ที่ร้าน' ? provider.venue : text(req.body.address, 300), amount,
-      text(req.body.guestName, 100), text(req.body.phone, 50), text(req.body.note, 1000)])
-  const result = await pool.query(`${bookingSql} WHERE b.id = $1`, [rows[0].id])
-  res.status(201).json(toBooking(result.rows[0]))
+app.post('/api/bookings', requirePermission('booking:create'), wrap(async (_req, res) => {
+  return fail(res, 410, 'ระบบนี้ไม่รองรับการนัดหมายผ่านเว็บ กรุณาติดต่อผู้ให้บริการโดยตรงผ่าน LINE หรือ Facebook')
 }))
 
 app.patch('/api/bookings/:id', wrap(async (req, res) => {
@@ -585,6 +838,293 @@ app.put('/api/favorites/:providerId', requirePermission('favorite:manage'), wrap
   res.json(rows.map((row) => row.provider_id))
 }))
 
+// ---------- seek posts ----------
+const seekCommentDetailSql = `
+  SELECT sc.*, u.name AS author_name,
+    p.name AS provider_name, p.line AS provider_line, p.facebook AS provider_facebook,
+    p.province AS provider_province, p.initials AS provider_initials,
+    (
+      SELECT '/uploads/' || m.file FROM media m
+      WHERE m.provider_id = sc.provider_id AND m.type = 'image'
+      ORDER BY m.id ASC LIMIT 1
+    ) AS provider_photo_url
+  FROM seek_comments sc
+  JOIN users u ON u.id = sc.user_id
+  LEFT JOIN providers p ON p.id = sc.provider_id`
+
+function toSeekComment(row) {
+  return {
+    id: row.id,
+    postId: row.post_id,
+    body: row.body,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    canEdit: Boolean(row.can_edit),
+    author: {
+      id: row.user_id,
+      name: row.author_name || 'ผู้ให้บริการ',
+      providerId: row.provider_id || null,
+      providerName: row.provider_name || '',
+      line: row.provider_line || '',
+      facebook: row.provider_facebook || '',
+      province: row.provider_province || '',
+      initials: row.provider_initials || (row.author_name || 'ผ').slice(0, 1),
+      photoUrl: row.provider_photo_url || '',
+    },
+  }
+}
+
+function toSeekPost(row, comments = undefined) {
+  const post = {
+    id: row.id,
+    title: row.title,
+    province: row.province,
+    venue: row.venue || '',
+    budget: row.budget,
+    duration: row.duration || '',
+    description: row.description || '',
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    closedAt: row.closed_at,
+    commentCount: Number(row.comment_count) || 0,
+    author: {
+      id: row.user_id,
+      name: row.author_name || 'นักท่องเที่ยว',
+    },
+    isOwner: Boolean(row.is_owner),
+  }
+  if (comments !== undefined) post.comments = comments
+  return post
+}
+
+const seekPostListSql = `
+  SELECT sp.*, u.name AS author_name,
+    COALESCE((SELECT COUNT(*)::int FROM seek_comments sc WHERE sc.post_id = sp.id), 0) AS comment_count
+  FROM seek_posts sp
+  JOIN users u ON u.id = sp.user_id`
+
+app.get('/api/seek-posts', requirePermission('seek:view'), wrap(async (req, res) => {
+  const mine = String(req.query.mine || '') === '1'
+  const status = text(req.query.status, 20)
+  const province = text(req.query.province, 100)
+  const clauses = []
+  const params = []
+  if (mine) {
+    if (!req.user.permissions.includes('seek:manage:own') && req.user.role !== 'admin') {
+      return fail(res, 403, 'ไม่มีสิทธิ์ดูโพสของตัวเอง')
+    }
+    params.push(req.user.id)
+    clauses.push(`sp.user_id = $${params.length}`)
+  } else if (req.user.role !== 'admin') {
+    clauses.push(`sp.status = 'open'`)
+  }
+  if (status === 'open' || status === 'closed') {
+    params.push(status)
+    clauses.push(`sp.status = $${params.length}`)
+  }
+  if (province) {
+    params.push(province)
+    clauses.push(`sp.province = $${params.length}`)
+  }
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
+  const { rows } = await pool.query(
+    `${seekPostListSql} ${where} ORDER BY sp.created_at DESC LIMIT 100`,
+    params,
+  )
+  res.json(rows.map((row) => toSeekPost({ ...row, is_owner: row.user_id === req.user.id })))
+}))
+
+app.get('/api/seek-posts/:id', requirePermission('seek:view'), wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  const { rows } = await pool.query(`${seekPostListSql} WHERE sp.id = $1`, [id])
+  if (!rows.length) return fail(res, 404, 'ไม่พบโพส')
+  const row = rows[0]
+  const isOwner = row.user_id === req.user.id || req.user.role === 'admin'
+  if (row.status !== 'open' && !isOwner) return fail(res, 404, 'โพสนี้ปิดรับแล้ว')
+  const { rows: commentRows } = await pool.query(
+    `${seekCommentDetailSql}
+     WHERE sc.post_id = $1
+     ORDER BY sc.created_at ASC`,
+    [id],
+  )
+  const comments = commentRows.map((comment) => toSeekComment({
+    ...comment,
+    can_edit: comment.user_id === req.user.id || req.user.role === 'admin',
+  }))
+  res.json(toSeekPost({ ...row, is_owner: isOwner }, comments))
+}))
+
+app.get('/api/seek-posts/:id/stream', requirePermission('seek:view'), wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  if (!Number.isFinite(id)) return fail(res, 400, 'โพสไม่ถูกต้อง')
+  const { rows } = await pool.query('SELECT id, user_id, status FROM seek_posts WHERE id = $1', [id])
+  if (!rows.length) return fail(res, 404, 'ไม่พบโพส')
+  const isOwner = rows[0].user_id === req.user.id || req.user.role === 'admin'
+  if (rows[0].status !== 'open' && !isOwner) return fail(res, 404, 'โพสนี้ปิดรับแล้ว')
+
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-Accel-Buffering', 'no')
+  if (typeof res.flushHeaders === 'function') res.flushHeaders()
+
+  const channel = `post:${id}`
+  const send = (event, data) => {
+    res.write(`event: ${event}\n`)
+    res.write(`data: ${JSON.stringify(data)}\n\n`)
+  }
+  send('ready', { postId: id })
+  const onEvent = (payload) => send('seek', payload)
+  seekRealtime.on(channel, onEvent)
+  const heartbeat = setInterval(() => {
+    res.write(': ping\n\n')
+  }, 15000)
+  req.on('close', () => {
+    clearInterval(heartbeat)
+    seekRealtime.off(channel, onEvent)
+  })
+}))
+
+app.post('/api/seek-posts', requirePermission('seek:create'), wrap(async (req, res) => {
+  const title = text(req.body.title, 120)
+  const province = text(req.body.province, 100)
+  const venue = text(req.body.venue, 120)
+  const budget = text(req.body.budget, 80)
+  const duration = text(req.body.duration, 80)
+  const description = text(req.body.description, 1000)
+  if (!title) return fail(res, 400, 'กรุณาระบุหัวข้อโพส')
+  if (!province) return fail(res, 400, 'กรุณาเลือกจังหวัด')
+  if (!venue) return fail(res, 400, 'กรุณาระบุร้าน')
+  if (!budget) return fail(res, 400, 'กรุณาระบุงบประมาณ')
+  if (!duration) return fail(res, 400, 'กรุณาระบุระยะเวลา')
+  const { rows } = await pool.query(
+    `INSERT INTO seek_posts (user_id, title, province, venue, budget, duration, description)
+     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    [req.user.id, title, province, venue, budget, duration, description],
+  )
+  const created = rows[0]
+  publishSeekEvent(created.id, 'post:created')
+  res.status(201).json(toSeekPost({
+    ...created,
+    author_name: req.user.name,
+    comment_count: 0,
+    is_owner: true,
+  }, []))
+}))
+
+app.patch('/api/seek-posts/:id', requirePermission('seek:manage:own'), wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  const { rows } = await pool.query('SELECT * FROM seek_posts WHERE id = $1', [id])
+  if (!rows.length) return fail(res, 404, 'ไม่พบโพส')
+  const post = rows[0]
+  if (post.user_id !== req.user.id && req.user.role !== 'admin') return fail(res, 403, 'แก้ไขได้เฉพาะโพสของตัวเอง')
+  if (post.status === 'closed' && req.body.status !== 'open') return fail(res, 400, 'โพสนี้ปิดรับแล้ว')
+  const title = req.body.title !== undefined ? text(req.body.title, 120) : post.title
+  const province = req.body.province !== undefined ? text(req.body.province, 100) : post.province
+  const venue = req.body.venue !== undefined ? text(req.body.venue, 120) : (post.venue || '')
+  const budget = req.body.budget !== undefined ? text(req.body.budget, 80) : post.budget
+  const duration = req.body.duration !== undefined ? text(req.body.duration, 80) : (post.duration || '')
+  const description = req.body.description !== undefined ? text(req.body.description, 1000) : (post.description || '')
+  if (!title || !province || !venue || !budget || !duration) {
+    return fail(res, 400, 'กรุณากรอกหัวข้อ จังหวัด ร้าน งบประมาณ และระยะเวลาให้ครบ')
+  }
+  const { rows: updated } = await pool.query(
+    `UPDATE seek_posts
+     SET title = $2, province = $3, venue = $4, budget = $5, duration = $6, description = $7, updated_at = now()
+     WHERE id = $1 RETURNING *`,
+    [id, title, province, venue, budget, duration, description],
+  )
+  res.json(toSeekPost({
+    ...updated[0],
+    author_name: req.user.name,
+    comment_count: 0,
+    is_owner: true,
+  }))
+}))
+
+app.post('/api/seek-posts/:id/close', requirePermission('seek:manage:own'), wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  const { rows } = await pool.query(
+    `UPDATE seek_posts
+     SET status = 'closed', closed_at = now(), updated_at = now()
+     WHERE id = $1 AND user_id = $2 AND status = 'open'
+     RETURNING *`,
+    [id, req.user.id],
+  )
+  if (!rows.length && req.user.role === 'admin') {
+    const adminClose = await pool.query(
+      `UPDATE seek_posts
+       SET status = 'closed', closed_at = now(), updated_at = now()
+       WHERE id = $1 AND status = 'open' RETURNING *`,
+      [id],
+    )
+    if (!adminClose.rows.length) return fail(res, 404, 'ไม่พบโพสที่เปิดรับอยู่')
+    publishSeekEvent(id, 'post:closed')
+    return res.json(toSeekPost({ ...adminClose.rows[0], author_name: '', comment_count: 0, is_owner: true }))
+  }
+  if (!rows.length) return fail(res, 404, 'ไม่พบโพสที่เปิดรับอยู่')
+  publishSeekEvent(id, 'post:closed')
+  res.json(toSeekPost({ ...rows[0], author_name: req.user.name, comment_count: 0, is_owner: true }))
+}))
+
+app.post('/api/seek-posts/:id/comments', requirePermission('seek:comment'), wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  const body = text(req.body.body, 1000)
+  if (!body || body.length < 2) return fail(res, 400, 'กรุณากรอกข้อความคอมเมนต์')
+  const { rows: posts } = await pool.query('SELECT * FROM seek_posts WHERE id = $1', [id])
+  if (!posts.length) return fail(res, 404, 'ไม่พบโพส')
+  if (posts[0].status !== 'open') return fail(res, 400, 'โพสนี้ปิดรับแล้ว ไม่สามารถคอมเมนต์ได้')
+  if (!req.user.providerId) return fail(res, 403, 'บัญชีผู้ให้บริการเท่านั้นที่คอมเมนต์ได้')
+  const { rows } = await pool.query(
+    `INSERT INTO seek_comments (post_id, user_id, provider_id, body)
+     VALUES ($1,$2,$3,$4) RETURNING *`,
+    [id, req.user.id, req.user.providerId, body],
+  )
+  const { rows: detail } = await pool.query(
+    `${seekCommentDetailSql} WHERE sc.id = $1`,
+    [rows[0].id],
+  )
+  const comment = toSeekComment({ ...detail[0], can_edit: true })
+  publishSeekEvent(id, 'comment:created', { commentId: comment.id })
+  res.status(201).json(comment)
+}))
+
+app.patch('/api/seek-comments/:id', wrap(async (req, res) => {
+  if (!req.user) return fail(res, 401, 'กรุณาเข้าสู่ระบบ')
+  const id = Number(req.params.id)
+  const body = text(req.body.body, 1000)
+  if (!body || body.length < 2) return fail(res, 400, 'กรุณากรอกข้อความคอมเมนต์')
+  const { rows } = await pool.query('SELECT * FROM seek_comments WHERE id = $1', [id])
+  if (!rows.length) return fail(res, 404, 'ไม่พบคอมเมนต์')
+  if (rows[0].user_id !== req.user.id && req.user.role !== 'admin') return fail(res, 403, 'แก้ไขได้เฉพาะคอมเมนต์ของตัวเอง')
+  const { rows: postRows } = await pool.query('SELECT status FROM seek_posts WHERE id = $1', [rows[0].post_id])
+  if (!postRows.length || postRows[0].status !== 'open') return fail(res, 400, 'โพสนี้ปิดรับแล้ว')
+  const updated = await pool.query(
+    `UPDATE seek_comments SET body = $2, updated_at = now() WHERE id = $1 RETURNING *`,
+    [id, body],
+  )
+  const { rows: detail } = await pool.query(
+    `${seekCommentDetailSql} WHERE sc.id = $1`,
+    [updated.rows[0].id],
+  )
+  const comment = toSeekComment({ ...detail[0], can_edit: true })
+  publishSeekEvent(rows[0].post_id, 'comment:updated', { commentId: comment.id })
+  res.json(comment)
+}))
+
+app.delete('/api/seek-comments/:id', wrap(async (req, res) => {
+  if (!req.user) return fail(res, 401, 'กรุณาเข้าสู่ระบบ')
+  const id = Number(req.params.id)
+  const { rows } = await pool.query('SELECT * FROM seek_comments WHERE id = $1', [id])
+  if (!rows.length) return fail(res, 404, 'ไม่พบคอมเมนต์')
+  if (rows[0].user_id !== req.user.id && req.user.role !== 'admin') return fail(res, 403, 'ลบได้เฉพาะคอมเมนต์ของตัวเอง')
+  const postId = rows[0].post_id
+  await pool.query('DELETE FROM seek_comments WHERE id = $1', [id])
+  publishSeekEvent(postId, 'comment:deleted', { commentId: id })
+  res.json({ ok: true })
+}))
+
 // ---------- applications ----------
 app.post('/api/applications', wrap(async (req, res) => {
   const name = text(req.body.name, 100)
@@ -596,27 +1136,47 @@ app.post('/api/applications', wrap(async (req, res) => {
 }))
 
 app.get('/api/applications', requirePermission('provider:approve'), wrap(async (_req, res) => {
-  const { rows } = await pool.query(`SELECT * FROM applications WHERE status = 'รอตรวจสอบ' ORDER BY id`)
+  const { rows } = await pool.query(
+    `SELECT a.*, u.email, u.email_verified_at,
+       (
+         SELECT '/uploads/' || m.file FROM media m
+         WHERE m.provider_id = a.provider_id AND m.type = 'image'
+         ORDER BY m.id ASC LIMIT 1
+       ) AS profile_photo_url,
+       EXISTS (
+         SELECT 1 FROM media m
+         WHERE m.provider_id = a.provider_id AND m.type = 'image'
+       ) AS has_profile_photo
+     FROM applications a
+     LEFT JOIN users u ON u.provider_id = a.provider_id AND u.role = 'seller'
+     WHERE a.status = 'รอตรวจสอบ'
+     ORDER BY a.id`)
   res.json(rows.map(toApplication))
 }))
 
 app.post('/api/applications/:id/approve', requirePermission('provider:approve'), wrap(async (req, res) => {
-  const { rows } = await pool.query(
-    `UPDATE applications SET status = 'อนุมัติแล้ว' WHERE id = $1 AND status = 'รอตรวจสอบ' RETURNING *`, [Number(req.params.id)])
-  const item = rows[0]
+  const expires = parseExpiresAt(req.body.membershipExpiresAt)
+  if (!expires.ok) return fail(res, 400, 'กรุณาระบุวันหมดอายุสมาชิกให้ถูกต้อง')
+  if (!expires.value) return fail(res, 400, 'กรุณาระบุวันและเวลาหมดอายุสมาชิกก่อนอนุมัติ')
+  const { rows: pending } = await pool.query(
+    `SELECT * FROM applications WHERE id = $1 AND status = 'รอตรวจสอบ'`, [Number(req.params.id)])
+  const item = pending[0]
   if (!item) return fail(res, 404, 'ไม่พบใบสมัคร')
-  if (item.provider_id) {
-    await pool.query('UPDATE providers SET active = TRUE WHERE id = $1', [item.provider_id])
-  } else {
-    const createdProvider = await pool.query(
-      `INSERT INTO providers (name, age, province, area, gender, line, price, initials, category, description, tags, venue, modes, active)
-       VALUES ($1,0,$2,$2,$3,$4,1000,$5,'New provider',$6,'{ผู้ให้บริการใหม่,โปรไฟล์ตัวอย่าง}','สถานที่นัดพบตามที่ระบุ','{ที่ร้าน,นอกสถานที่}',TRUE)
-       RETURNING id`,
-      [item.name, item.province, item.gender, item.line, item.name.slice(0, 1),
-        item.service || 'ผู้ให้บริการอิสระ · กรุณาตกลงรายละเอียดและขอบเขตก่อนนัดหมาย'])
-    await populateMockProviderDetails(pool, createdProvider.rows[0].id)
+  if (!item.provider_id) {
+    return fail(res, 400, 'ใบสมัครนี้ยังไม่มีโปรไฟล์/รูปภาพ — ต้องสมัครเป็นผู้ให้บริการพร้อมอัปโหลดรูปก่อน')
   }
-  res.json({ ok: true })
+  const { rows: photoRows } = await pool.query(
+    `SELECT 1 FROM media WHERE provider_id = $1 AND type = 'image' LIMIT 1`, [item.provider_id])
+  if (!photoRows[0]) {
+    return fail(res, 400, 'ยังไม่มีรูปโปรไฟล์ — ต้องให้ผู้สมัครอัปโหลดอย่างน้อย 1 รูปก่อนอนุมัติ')
+  }
+  const { rows } = await pool.query(
+    `UPDATE applications SET status = 'อนุมัติแล้ว' WHERE id = $1 AND status = 'รอตรวจสอบ' RETURNING *`, [item.id])
+  if (!rows[0]) return fail(res, 404, 'ไม่พบใบสมัคร')
+  await pool.query(
+    `UPDATE providers SET active = TRUE, membership_active = TRUE, membership_expires_at = $2 WHERE id = $1`,
+    [item.provider_id, expires.value])
+  res.json({ ok: true, membershipExpiresAt: expires.value })
 }))
 
 app.post('/api/applications/:id/reject', requirePermission('provider:approve'), wrap(async (req, res) => {

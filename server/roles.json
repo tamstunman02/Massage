@@ -7,7 +7,8 @@
       "service:view", "service:edit", "service:delete",
       "booking:view:all", "booking:cancel:all",
       "membership:manage",
-      "report:view", "dashboard:admin"
+      "report:view", "dashboard:admin",
+      "seek:view", "seek:moderate"
     ]
   },
   "seller": {
@@ -17,7 +18,8 @@
       "service:create", "service:edit:own", "service:delete:own", "service:view",
       "booking:view:own", "booking:accept", "booking:reject", "booking:complete",
       "review:view:own", "review:reply",
-      "income:view:own", "dashboard:seller"
+      "income:view:own", "dashboard:seller",
+      "seek:view", "seek:comment"
     ]
   },
   "buyer": {
@@ -27,7 +29,8 @@
       "provider:view", "service:view",
       "booking:create", "booking:view:own", "booking:cancel:own",
       "favorite:manage",
-      "review:create", "payment:create"
+      "review:create", "payment:create",
+      "seek:view", "seek:create", "seek:manage:own"
     ]
   }
 }

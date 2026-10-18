@@ -16,9 +16,12 @@ export const api = {
   register: (payload) => request('POST', '/api/register', payload),
   logout: () => request('POST', '/api/logout'),
   resendVerification: () => request('POST', '/api/resend-verification'),
+  verifyEmail: (token) => request('POST', '/api/verify-email', { token }),
   providers: () => request('GET', '/api/providers'),
   updateProvider: (id, payload) => request('PATCH', `/api/providers/${id}`, payload),
   setProviderStatus: (id, payload) => request('PATCH', `/api/admin/providers/${id}`, payload),
+  deleteAdminUser: (id) => request('DELETE', `/api/admin/users/${id}`),
+  deleteAdminProvider: (id) => request('DELETE', `/api/admin/providers/${id}`),
   uploadMedia: (id, file) => request('POST', `/api/providers/${id}/media`, file, {
     raw: true,
     headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name) },
@@ -39,6 +42,22 @@ export const api = {
   toggleFavorite: (providerId) => request('PUT', `/api/favorites/${providerId}`),
   applications: () => request('GET', '/api/applications'),
   submitApplication: (payload) => request('POST', '/api/applications', payload),
-  approveApplication: (id) => request('POST', `/api/applications/${id}/approve`),
+  approveApplication: (id, payload = {}) => request('POST', `/api/applications/${id}/approve`, payload),
   rejectApplication: (id) => request('POST', `/api/applications/${id}/reject`),
+  seekPosts: (params = {}) => {
+    const query = new URLSearchParams()
+    if (params.mine) query.set('mine', '1')
+    if (params.status) query.set('status', params.status)
+    if (params.province) query.set('province', params.province)
+    const suffix = query.toString() ? `?${query}` : ''
+    return request('GET', `/api/seek-posts${suffix}`)
+  },
+  seekPost: (id) => request('GET', `/api/seek-posts/${id}`),
+  seekPostStreamUrl: (id) => `/api/seek-posts/${id}/stream`,
+  createSeekPost: (payload) => request('POST', '/api/seek-posts', payload),
+  updateSeekPost: (id, payload) => request('PATCH', `/api/seek-posts/${id}`, payload),
+  closeSeekPost: (id) => request('POST', `/api/seek-posts/${id}/close`),
+  createSeekComment: (id, payload) => request('POST', `/api/seek-posts/${id}/comments`, payload),
+  updateSeekComment: (id, payload) => request('PATCH', `/api/seek-comments/${id}`, payload),
+  deleteSeekComment: (id) => request('DELETE', `/api/seek-comments/${id}`),
 }
