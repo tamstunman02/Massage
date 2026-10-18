@@ -27,6 +27,10 @@ function createTransport() {
     port,
     secure: port === 465,
     auth: user ? { user, pass } : undefined,
+    // ป้องกันค้างจน Nginx 504 เมื่อ VPS บล็อกพอร์ต SMTP
+    connectionTimeout: 8_000,
+    greetingTimeout: 8_000,
+    socketTimeout: 12_000,
   })
 }
 

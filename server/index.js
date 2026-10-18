@@ -121,9 +121,8 @@ async function issueVerification(user) {
     return { sent, link, to: user.email }
   } catch (error) {
     console.error(`[mail] ส่งยืนยันถึง ${user.email} ไม่สำเร็จ:`, error.code || '', error.response || error.message)
-    // local: ไม่บล็อกผู้ใช้ — ส่งลิงก์กลับไปกดยืนยันบนหน้าเว็บได้
-    if (isLocalApp) return { sent: false, link, to: user.email, mailError: error.message }
-    throw error
+    // ไม่ให้สมัคร/ยืนยันค้างจน Nginx 504 เมื่อ SMTP ถูกบล็อกหรือล้มเหลว
+    return { sent: false, link, to: user.email, mailError: error.message }
   }
 }
 
