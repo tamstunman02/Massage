@@ -8,7 +8,7 @@ User=massage
 Group=massage
 WorkingDirectory=/var/www/nuania
 Environment=NODE_ENV=production
-EnvironmentFile=/var/www/nuania/.env
+EnvironmentFile=-/var/www/nuania/.env
 ExecStart=/usr/bin/node server/index.js
 Restart=on-failure
 RestartSec=5

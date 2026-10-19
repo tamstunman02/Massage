@@ -114,6 +114,26 @@ jobs:
             export NODE_OPTIONS="--max-old-space-size=512"
             npm ci --no-audit --no-fund --foreground-scripts
             npm run build
+            app_dir="${APP_DIR:-/var/www/nuania}"
+            node_bin=$(command -v node)
+            service_user=$(id -un)
+            service_group=$(id -gn)
+            if [ "$service_user" = root ] && id massage >/dev/null 2>&1; then
+              service_user=massage
+              service_group=massage
+            fi
+            unit_tmp=$(mktemp)
+            sed \
+              -e "s|^User=.*|User=${service_user}|" \
+              -e "s|^Group=.*|Group=${service_group}|" \
+              -e "s|^WorkingDirectory=.*|WorkingDirectory=${app_dir}|" \
+              -e "s|^EnvironmentFile=.*|EnvironmentFile=-${app_dir}/.env|" \
+              -e "s|^ExecStart=.*|ExecStart=${node_bin} server/index.js|" \
+              deploy/massage.service > "$unit_tmp"
+            run_root cp "$unit_tmp" /etc/systemd/system/massage.service
+            rm -f "$unit_tmp"
+            run_root systemctl daemon-reload
+            run_root systemctl enable massage
             run_root systemctl restart massage
             for _ in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:3001/api/me >/dev/null; then
