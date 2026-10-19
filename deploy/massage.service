@@ -6,9 +6,9 @@ After=network.target postgresql.service
 Type=simple
 User=massage
 Group=massage
-WorkingDirectory=/var/www/massage
+WorkingDirectory=/var/www/nuania
 Environment=NODE_ENV=production
-EnvironmentFile=/var/www/massage/.env
+EnvironmentFile=/var/www/nuania/.env
 ExecStart=/usr/bin/node server/index.js
 Restart=on-failure
 RestartSec=5
