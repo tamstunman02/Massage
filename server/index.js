@@ -6,7 +6,7 @@ import { unlink, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { hashPassword, initDb, pool, verifyPassword } from './db.js'
-import { sendVerificationEmail } from './mailer.js'
+import { describeMailSetup, sendVerificationEmail } from './mailer.js'
 
 const seekRealtime = new EventEmitter()
 seekRealtime.setMaxListeners(0)
@@ -391,12 +391,12 @@ app.post('/api/resend-verification', wrap(async (req, res) => {
     if (!result.sent) {
       const detail = result.mailError || ''
       const hint = /Invalid login|EAUTH|535/i.test(detail)
-        ? 'รหัส App Password ไม่ถูกต้องหรือยังไม่เปิด 2FA — สร้างรหัสใหม่ที่ myaccount.google.com/apppasswords'
+        ? 'รหัส SMTP ไม่ถูกต้อง — ตรวจ SMTP_USER / SMTP_PASS ใน .env'
         : /ETIMEDOUT|ECONNREFUSED|ESOCKET/i.test(detail)
-          ? 'ต่อ SMTP ไม่ได้ — Gmail ใช้พอร์ต 587 หรือ 465 (ไม่รองรับ 2525) หรือใช้ผู้ให้บริการที่รองรับพอร์ต 2525'
+          ? 'ต่อ SMTP ไม่ได้ — ตั้ง SMTP_PORT=2525 (เซิร์ฟเวอร์อนุญาตแค่พอร์ตนี้)'
           : detail
             ? `ส่งอีเมลไม่สำเร็จ: ${detail}`
-            : 'ยังไม่ได้ตั้งค่า SMTP หรือส่งอีเมลไม่สำเร็จ'
+            : 'ยังไม่ได้ตั้งค่า SMTP พอร์ต 2525 ใน .env'
       return fail(res, 503, hint)
     }
     res.json({
@@ -410,8 +410,10 @@ app.post('/api/resend-verification', wrap(async (req, res) => {
     console.error('[mail] resend failed:', error.code || '', error.response || error.message)
     const detail = error.response || error.message || ''
     const hint = /Invalid login|EAUTH|535/i.test(detail)
-      ? 'รหัส App Password ไม่ถูกต้องหรือยังไม่เปิด 2FA — สร้างรหัสใหม่ที่ myaccount.google.com/apppasswords'
-      : `ส่งอีเมลไม่สำเร็จ: ${detail || 'ตรวจ SMTP ใน .env แล้วรีสตาร์ทเซิร์ฟเวอร์'}`
+      ? 'รหัส SMTP ไม่ถูกต้อง — ตรวจ SMTP_USER / SMTP_PASS ใน .env'
+      : /ETIMEDOUT|ECONNREFUSED|ESOCKET/i.test(detail)
+        ? 'ต่อ SMTP ไม่ได้ — ตั้ง SMTP_PORT=2525 (เซิร์ฟเวอร์อนุญาตแค่พอร์ตนี้)'
+        : `ส่งอีเมลไม่สำเร็จ: ${detail || 'ตรวจ SMTP ใน .env แล้วรีสตาร์ทเซิร์ฟเวอร์'}`
     return fail(res, 502, hint)
   }
 }))
@@ -1207,4 +1209,7 @@ const port = Number(process.env.PORT) || 3001
 await initDb()
 await purgeUnverified()
 setInterval(() => purgeUnverified().catch((error) => console.error(error)), 60 * 60 * 1000)
-app.listen(port, () => console.log(`API ready on http://localhost:${port}`))
+app.listen(port, () => {
+  console.log(`API ready on http://localhost:${port}`)
+  console.log(`[mail] ช่องทางส่งเมล: ${describeMailSetup()}`)
+})
