@@ -56,3 +56,12 @@ npm run dev
 ```sh
 npm run build
 ```
+
+## CI/CD
+
+Workflow อยู่ที่ `.github/workflows/ci-cd.yml`
+
+- **CI** รันเมื่อเปิด pull request หรือ push เข้า `main`: ติดตั้งแพ็กเกจ, build หน้าเว็บ, แล้วเปิด API กับ PostgreSQL ชั่วคราวเพื่อตรวจว่า `/api/me` ตอบกลับ
+- **CD** รันเฉพาะตอน push เข้า `main` และเปิดตัวแปร `DEPLOY_ENABLED=true` แล้วเท่านั้น เซิร์ฟเวอร์จะ `git pull`, build แล้ว restart service `massage`
+
+ไฟล์ตัวอย่างสำหรับเซิร์ฟเวอร์อยู่ใน `deploy/` (`massage.service`, `nginx.conf.example`, `env.example`)

@@ -1,0 +1,17 @@
+[Unit]
+Description=NuaNia web and API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=massage
+Group=massage
+WorkingDirectory=/var/www/massage
+Environment=NODE_ENV=production
+EnvironmentFile=/var/www/massage/.env
+ExecStart=/usr/bin/node server/index.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

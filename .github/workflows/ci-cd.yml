@@ -1,0 +1,108 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: massage-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    name: Build and smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: massage
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d massage"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Boot API against Postgres
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/massage
+          APP_URL: http://127.0.0.1:3001
+          PORT: 3001
+        run: |
+          set -euo pipefail
+          node server/index.js > server.log 2>&1 &
+          echo $! > server.pid
+          for _ in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:3001/api/me >/dev/null; then
+              echo "API is up"
+              kill "$(cat server.pid)" || true
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not become ready in time"
+          cat server.log
+          exit 1
+
+  deploy:
+    name: Deploy
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Update server and restart
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          APP_DIR: ${{ secrets.APP_DIR }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          envs: APP_DIR
+          script_stop: true
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+            cd "${APP_DIR:-/var/www/massage}"
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci
+            npm run build
+            sudo systemctl restart massage
+            for _ in $(seq 1 30); do
+              if curl -fsS http://127.0.0.1:3001/api/me >/dev/null; then
+                echo "Deployed and API is up"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "Service did not become ready"
+            sudo systemctl status massage --no-pager || true
+            exit 1
