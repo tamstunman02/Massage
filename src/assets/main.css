@@ -96,6 +96,9 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-topline-right { display: flex; align-items: center; gap: 7px; color: #cfcec2; }
 .lux-topline-right i { width: 6px; height: 6px; display: inline-block; background: #b6c29c; border-radius: 50%; }
 .lux-topline-sep { opacity: .5; }
+.lux-topline-line { padding: 0; color: #d8f5e3; background: transparent; border: 0; border-bottom: 1px solid rgba(216,245,227,.45); font: inherit; font-weight: 700; letter-spacing: inherit; cursor: pointer; }
+.lux-topline-line:hover { color: #fff; }
+.lux-topline .lux-topline-line { color: inherit; border-bottom-color: rgba(255,255,255,.45); }
 .lux-header { position: relative; z-index: 5; height: 80px; display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 0 max(calc((100vw - 1280px) / 2), 5.5%); background: var(--s-paper); border-bottom: 1px solid rgba(36,58,50,.09); }
 .lux-logo { display: inline-flex; flex-shrink: 0; align-items: center; gap: 10px; }
 .lux-logo-symbol { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--s-brass); border-radius: 50%; color: var(--s-forest); font-family: var(--s-serif); font-size: 24px; font-style: italic; }
@@ -247,12 +250,13 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-footer-main { display: grid; grid-template-columns: 1.2fr .8fr 1.2fr 1fr; align-items: start; gap: 40px; padding: 0 0 34px; }
 .lux-footer-main > p { margin: 3px 0 0; color: #808176; font-size: 12px; line-height: 1.9; }
 .lux-footer-links { display: grid; justify-items: start; gap: 8px; }
-.lux-footer-links button, .lux-footer-contact button { padding: 0; color: #666c61; background: transparent; border: 0; font-size: 11px; cursor: pointer; }
-.lux-footer-links button:hover, .lux-footer-contact button:hover { color: var(--s-forest); }
+.lux-footer-links button, .lux-footer-contact button, .lux-footer-contact a { padding: 0; color: #666c61; background: transparent; border: 0; font-size: 11px; cursor: pointer; }
+.lux-footer-links button:hover, .lux-footer-contact button:hover, .lux-footer-contact a:hover { color: var(--s-forest); }
 .lux-footer-contact > span, .lux-footer-contact strong { display: block; }
 .lux-footer-contact > span { color: #939181; font-size: 9px; letter-spacing: 1.4px; }
 .lux-footer-contact strong { margin: 5px 0 8px; color: var(--s-forest); font-family: var(--s-serif); font-size: 17px; font-weight: 400; }
-.lux-footer-contact button { border-bottom: 1px solid #bcb6a3; }
+.lux-footer-contact button, .lux-footer-contact a { border-bottom: 1px solid #bcb6a3; }
+.lux-footer-line { display: inline-flex; align-items: center; gap: 6px; }
 .lux-footer-bottom { display: flex; justify-content: space-between; gap: 16px; padding-top: 14px; border-top: 1px solid #dbd8ce; color: #939387; font-size: 9px; letter-spacing: .5px; }
 
 .lux-page { max-width: 1360px; min-height: 600px; margin: 0 auto; padding: 34px 40px 84px; }
@@ -735,6 +739,7 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-apply-fee { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 3px; margin: 14px 0; padding: 11px; background: #f0eee7; color: #73766d; font-size: 10px; }
 .lux-apply-fee strong { grid-row: span 2; color: var(--s-forest); font-family: var(--s-serif); font-size: 21px; font-weight: 400; }
 .lux-apply-fee small { color: #85867a; font-family: var(--s-sans); font-size: 10px; }
+.lux-apply-line { grid-column: 1 / -1; justify-self: start; margin-top: 6px; padding: 0; color: var(--s-olive); background: transparent; border: 0; border-bottom: 1px solid rgba(124,58,237,.35); font-size: 11px; font-weight: 700; cursor: pointer; }
 .lux-apply-note { display: block; margin-top: 8px; color: #929388; font-size: 9px; text-align: center; }
 
 .lux-admin-page { max-width: 1440px; }
@@ -1374,7 +1379,7 @@ body { background: var(--s-ivory); }
 
 .lux-footer { background: #f1eaff; border-top: 1px solid #e4d8fb; }
 .lux-footer-contact strong { font-weight: 700; color: var(--s-ink); }
-.lux-footer-contact button { color: var(--s-olive); border-bottom-color: #d9c8fa; font-weight: 600; }
+.lux-footer-contact button, .lux-footer-contact a { color: var(--s-olive); border-bottom-color: #d9c8fa; font-weight: 600; }
 .lux-footer-links button:hover { color: var(--s-pink); }
 .lux-footer-bottom { border-top-color: #dccff6; }
 
@@ -1618,9 +1623,25 @@ body { background: var(--s-ivory); }
 .lux-membership-nav .lux-button-primary { margin-left: auto; }
 .lux-role-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin: 0 0 24px; padding: 0; border: 0; }
 .lux-role-picker legend { grid-column: 1 / -1; margin: 0 0 12px; color: var(--s-ink); font-size: 17px; font-weight: 700; }
-.lux-role-option { position: relative; min-height: 112px; display: flex; align-items: center; gap: 13px; padding: 18px; border: 1px solid var(--s-line); border-radius: 16px; cursor: pointer; }
+.lux-role-option { position: relative; min-height: 112px; display: flex; align-items: center; gap: 13px; padding: 18px; border: 1px solid var(--s-line); border-radius: 16px; cursor: pointer; overflow: hidden; }
 .lux-role-option.active { border-color: var(--s-olive); background: linear-gradient(135deg, #f4edff, #fff4f9); box-shadow: 0 0 0 2px rgba(124,58,237,.09); }
 .lux-role-option > input { position: absolute; opacity: 0; }
+.lux-role-free {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  z-index: 1;
+  padding: 2px 7px;
+  color: #9a3412;
+  background: #ffedd5;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  line-height: 1.3;
+  pointer-events: none;
+}
+.lux-role-option:has(.lux-role-free) { padding-top: 28px; }
 .lux-role-icon { width: 42px; height: 42px; display: grid; flex: 0 0 auto; place-items: center; color: #fff; background: var(--s-gradient); border-radius: 13px; font-size: 23px; }
 .lux-role-copy { display: grid; gap: 4px; }
 .lux-role-copy strong { color: var(--s-ink); font-size: 16px; font-weight: 700; }
@@ -1718,7 +1739,9 @@ body { background: var(--s-ivory); }
 .lux-seller-review-note { display: grid; gap: 5px; margin-bottom: 18px; padding: 17px 19px; color: #775500; background: #fff8e5; border: 1px solid #f6e5b0; border-radius: 14px; }
 .lux-seller-review-note strong { font-size: 15px; }
 .lux-seller-review-note span { font-size: 13px; line-height: 1.6; }
+.lux-seller-review-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
 .lux-seller-review-note button, .lux-seller-panel-head button { justify-self: start; margin-top: 5px; padding: 0; color: var(--s-olive); background: transparent; border: 0; font-size: 13px; font-weight: 600; cursor: pointer; }
+.lux-seller-review-actions button { margin-top: 0; border-bottom: 1px solid rgba(124,58,237,.28); }
 .lux-seller-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 19px; }
 .lux-seller-metrics article { display: grid; gap: 7px; padding: 18px; background: #fff; border: 1px solid var(--s-line); border-radius: 15px; }
 .lux-seller-metrics article span { color: var(--s-muted); font-size: 13px; }
