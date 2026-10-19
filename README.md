@@ -62,6 +62,8 @@ npm run build
 Workflow อยู่ที่ `.github/workflows/ci-cd.yml`
 
 - **CI** รันเมื่อเปิด pull request หรือ push เข้า `main`: ติดตั้งแพ็กเกจ, build หน้าเว็บ, แล้วเปิด API กับ PostgreSQL ชั่วคราวเพื่อตรวจว่า `/api/me` ตอบกลับ
-- **CD** รันเฉพาะตอน push เข้า `main` และเปิดตัวแปร `DEPLOY_ENABLED=true` แล้วเท่านั้น เซิร์ฟเวอร์จะ `git pull`, build แล้ว restart service `massage`
+- **CD** รันเฉพาะตอน push เข้า `main` และเปิดตัวแปร `DEPLOY_ENABLED=true` แล้วเท่านั้น ระบบเข้าเซิร์ฟเวอร์ด้วยชื่อผู้ใช้และรหัสผ่าน แล้ว `git pull`, build และ restart service `massage`
+
+Secrets ที่ต้องใส่: `SSH_HOST`, `SSH_USER`, `SSH_PASSWORD` และถ้าพอร์ตไม่ใช่ 22 ให้ใส่ `SSH_PORT` ถ้าโฟลเดอร์แอปไม่ใช่ `/var/www/massage` ให้ใส่ `APP_DIR`
 
 ไฟล์ตัวอย่างสำหรับเซิร์ฟเวอร์อยู่ใน `deploy/` (`massage.service`, `nginx.conf.example`, `env.example`)

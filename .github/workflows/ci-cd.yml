@@ -80,12 +80,13 @@ jobs:
         uses: appleboy/ssh-action@v1.2.2
         env:
           APP_DIR: ${{ secrets.APP_DIR }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: APP_DIR
+          envs: APP_DIR,SSH_PASSWORD
           script_stop: true
           command_timeout: 15m
           script: |
@@ -95,7 +96,11 @@ jobs:
             git reset --hard origin/main
             npm ci
             npm run build
-            sudo systemctl restart massage
+            if [ "$(id -u)" -eq 0 ]; then
+              systemctl restart massage
+            else
+              printf '%s\n' "$SSH_PASSWORD" | sudo -S -p '' systemctl restart massage
+            fi
             for _ in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:3001/api/me >/dev/null; then
                 echo "Deployed and API is up"
@@ -104,5 +109,9 @@ jobs:
               sleep 2
             done
             echo "Service did not become ready"
-            sudo systemctl status massage --no-pager || true
+            if [ "$(id -u)" -eq 0 ]; then
+              systemctl status massage --no-pager || true
+            else
+              printf '%s\n' "$SSH_PASSWORD" | sudo -S -p '' systemctl status massage --no-pager || true
+            fi
             exit 1
