@@ -386,16 +386,23 @@ app.post('/api/resend-verification', wrap(async (req, res) => {
   }
   try {
     const result = await issueVerification(user)
-    if (!result.sent && !isLocalApp) {
-      return fail(res, 503, 'ยังไม่ได้ตั้งค่า SMTP หรือส่งอีเมลไม่สำเร็จ')
+    if (!result.sent) {
+      const detail = result.mailError || ''
+      const hint = /Invalid login|EAUTH|535/i.test(detail)
+        ? 'รหัส App Password ไม่ถูกต้องหรือยังไม่เปิด 2FA — สร้างรหัสใหม่ที่ myaccount.google.com/apppasswords'
+        : /ETIMEDOUT|ECONNREFUSED|ESOCKET/i.test(detail)
+          ? 'ต่อ SMTP ไม่ได้ — Gmail ใช้พอร์ต 587 หรือ 465 (ไม่รองรับ 2525) หรือใช้ผู้ให้บริการที่รองรับพอร์ต 2525'
+          : detail
+            ? `ส่งอีเมลไม่สำเร็จ: ${detail}`
+            : 'ยังไม่ได้ตั้งค่า SMTP หรือส่งอีเมลไม่สำเร็จ'
+      return fail(res, 503, hint)
     }
     res.json({
       ok: true,
       to: result.to,
-      sent: Boolean(result.sent),
+      sent: true,
       // ตอนรัน local โชว์ลิงก์บนหน้าเว็บด้วย เพราะ Gmail มักกรองเมลที่มีลิงก์ localhost
       verifyLink: isLocalApp ? result.link : undefined,
-      mailError: isLocalApp ? result.mailError : undefined,
     })
   } catch (error) {
     console.error('[mail] resend failed:', error.code || '', error.response || error.message)

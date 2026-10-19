@@ -29,35 +29,83 @@ function createTransport() {
     secure: port === 465,
     requireTLS: port === 587 || port === 2525,
     auth: user ? { user, pass } : undefined,
-    // ป้องกันค้างจน Nginx 504 เมื่อ VPS บล็อกพอร์ต SMTP
-    connectionTimeout: 8_000,
-    greetingTimeout: 8_000,
-    socketTimeout: 12_000,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   })
 }
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 
-export async function sendVerificationEmail({ to, name, link }) {
-  const transport = createTransport()
-  if (!transport) {
-    console.log(`[mail] SMTP ยังไม่ได้ตั้งค่า — ลิงก์ยืนยันอีเมลของ ${to}: ${link}`)
-    return false
-  }
-  try {
-    const info = await transport.sendMail({
-      from: env('MAIL_FROM') || env('SMTP_USER'),
-      to,
-      subject: 'NuaNia: ยืนยันอีเมลของคุณ',
-      text: `สวัสดีคุณ ${name},\n\nกรุณายืนยันอีเมลสำหรับบัญชี NuaNia ภายใน 3 วัน:\n${link}\n\nหากคุณไม่ได้สมัครบัญชีนี้ สามารถละเว้นข้อความนี้ได้`,
-      html: `<div style="font-family:'Prompt','Noto Sans Thai',Arial,sans-serif;max-width:480px;margin:auto;padding:24px;color:#222">
+function buildVerificationContent({ name, link }) {
+  const text = `สวัสดีคุณ ${name},\n\nกรุณายืนยันอีเมลสำหรับบัญชี NuaNia ภายใน 3 วัน:\n${link}\n\nหากคุณไม่ได้สมัครบัญชีนี้ สามารถละเว้นข้อความนี้ได้`
+  const html = `<div style="font-family:'Prompt','Noto Sans Thai',Arial,sans-serif;max-width:480px;margin:auto;padding:24px;color:#222">
       <h2 style="margin:0 0 12px">ยืนยันอีเมลของคุณ</h2>
       <p>สวัสดีคุณ ${escapeHtml(name)},</p>
       <p>กรุณายืนยันอีเมลนี้สำหรับบัญชี NuaNia ภายใน <b>3 วัน</b></p>
       <p><a href="${escapeHtml(link)}" style="display:inline-block;padding:12px 24px;background:#1f4d3a;color:#fff;border-radius:8px;text-decoration:none">ยืนยันอีเมล</a></p>
       <p style="color:#777;font-size:12px;word-break:break-all">${escapeHtml(link)}</p>
       <p style="color:#999;font-size:12px;margin-top:20px">หากคุณไม่ได้สมัครบัญชีนี้ สามารถละเว้นข้อความนี้ได้</p>
-    </div>`,
+    </div>`
+  return { text, html }
+}
+
+/** Resend API (HTTPS :443) — เลี่ยงการบล็อก SMTP ของ VPS */
+async function sendWithResendApi({ to, name, link }) {
+  const apiKey = env('RESEND_API_KEY')
+  if (!apiKey) return null
+  const from = env('MAIL_FROM') || 'NuaNia <onboarding@resend.dev>'
+  const { text, html } = buildVerificationContent({ name, link })
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject: 'NuaNia: ยืนยันอีเมลของคุณ',
+      text,
+      html,
+    }),
+  })
+  const body = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const detail = body?.message || body?.error || JSON.stringify(body) || response.statusText
+    const error = new Error(detail)
+    error.code = 'RESEND_API'
+    error.response = detail
+    throw error
+  }
+  console.log(`[mail] ส่งยืนยันถึง ${to} แล้วผ่าน Resend (${body.id || 'ok'})`)
+  return true
+}
+
+export async function sendVerificationEmail({ to, name, link }) {
+  // ใช้ Resend API ก่อนถ้ามีคีย์ — ไม่พึ่งพอร์ต SMTP
+  if (env('RESEND_API_KEY')) {
+    try {
+      return await sendWithResendApi({ to, name, link })
+    } catch (error) {
+      console.error(`[mail] Resend error: ${error.code || ''} ${error.response || error.message}`)
+      throw error
+    }
+  }
+
+  const transport = createTransport()
+  if (!transport) {
+    console.log(`[mail] SMTP/Resend ยังไม่ได้ตั้งค่า — ลิงก์ยืนยันอีเมลของ ${to}: ${link}`)
+    return false
+  }
+  try {
+    const { text, html } = buildVerificationContent({ name, link })
+    const info = await transport.sendMail({
+      from: env('MAIL_FROM') || env('SMTP_USER'),
+      to,
+      subject: 'NuaNia: ยืนยันอีเมลของคุณ',
+      text,
+      html,
     })
     console.log(`[mail] ส่งยืนยันถึง ${to} แล้ว (${info.response})`)
     return true
