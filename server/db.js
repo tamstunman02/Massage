@@ -290,6 +290,18 @@ export async function initDb() {
     SET line = regexp_replace(line, '^demo\\.', 'nn.')
     WHERE line LIKE 'demo.%'`)
 
+  // เติมแท็กหมวดใหม่ให้โปรไฟล์เดิมบางส่วน (เพื่อให้ตัวกรองใช้งานได้ทันที)
+  await pool.query(`
+    UPDATE providers
+    SET tags = array_append(tags, 'ดื่มสังสรรค์')
+    WHERE active
+      AND NOT ('ดื่มสังสรรค์' = ANY(tags))
+      AND (
+        'พบปะพูดคุย' = ANY(tags)
+        OR 'ร่วมกิจกรรม' = ANY(tags)
+      )
+      AND (id % 3 = 0)`)
+
   await ensureSeedBuyerReviews()
   await seedTravelerReviewsIfNeeded()
   await seedProvinceExtraProvidersIfNeeded()
@@ -326,6 +338,7 @@ async function seedTravelerReviewsIfNeeded() {
   const last = ['ใจดี', 'รักไทย', 'สุขสวัสดิ์', 'แสงทอง', 'ศรีสุข', 'มั่นคง', 'วงศ์ไทย', 'เพชรรัตน์', 'บุญมา', 'ทองดี', 'จันทร์เพ็ญ', 'พรหมมา', 'สายสุวรรณ', 'คงเจริญ', 'ลิ้มสกุล']
   const services = [
     { label: 'พบปะพูดคุย · 60 นาที', amount: 900 },
+    { label: 'ดื่มสังสรรค์ · 90 นาที', amount: 1200 },
     { label: 'ร่วมกิจกรรม · 90 นาที', amount: 1500 },
     { label: 'ไลฟ์สไตล์ · 120 นาที', amount: 1800 },
     { label: 'งานอีเวนต์ · 180 นาที', amount: 2400 },
@@ -423,6 +436,7 @@ async function seedReviewsForProviders(providerIds, bookingPrefix) {
 
   const services = [
     { label: 'พบปะพูดคุย · 60 นาที', amount: 900 },
+    { label: 'ดื่มสังสรรค์ · 90 นาที', amount: 1200 },
     { label: 'ร่วมกิจกรรม · 90 นาที', amount: 1500 },
     { label: 'ไลฟ์สไตล์ · 120 นาที', amount: 1800 },
     { label: 'งานอีเวนต์ · 180 นาที', amount: 2400 },

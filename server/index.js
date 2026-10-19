@@ -65,9 +65,11 @@ function normalizeFacebookUrl(value) {
   }
 }
 const defaultServices = [
-  { name: 'พบปะพูดคุย', duration: '60 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 0 },
-  { name: 'ร่วมกิจกรรม', duration: '90 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 300 },
-  { name: 'งานอีเวนต์', duration: '90 นาที', description: 'ตกลงรายละเอียดก่อนนัดหมาย', add: 500 },
+  { name: 'พบปะพูดคุย', duration: '60 นาที', description: 'ทำความรู้จักและพูดคุยตามขอบเขตที่ตกลง', add: 0 },
+  { name: 'ดื่มสังสรรค์', duration: '90 นาที', description: 'เป็นเพื่อนดื่มหรือสังสรรค์ตามร้านที่ตกลง', add: 200 },
+  { name: 'ร่วมกิจกรรม', duration: '90 นาที', description: 'ร่วมกิจกรรมสั้นๆ ตามแผนที่ตกลง', add: 300 },
+  { name: 'งานอีเวนต์', duration: '180 นาที', description: 'ร่วมงานเลี้ยงหรืออีเวนต์ตามนัด', add: 500 },
+  { name: 'ไลฟ์สไตล์', duration: '120 นาที', description: 'ถ่ายรูป คอนเทนต์ หรือไลฟ์สไตล์ตามตกลง', add: 400 },
 ]
 
 async function populateMockProviderDetails(db, providerId) {
