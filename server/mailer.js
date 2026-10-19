@@ -18,6 +18,10 @@ function mailgunConfig() {
   const apiKey = env('MAILGUN_API_KEY') || env('API_KEY')
   const domain = env('MAILGUN_DOMAIN')
   if (!apiKey || !domain) return null
+  // Private API key ของ Mailgun ยาวมาก — ถ้าน้อยกว่า 20 ตัวมักคัดลอกไม่ครบ
+  if (apiKey.length < 20) {
+    console.warn(`[mail] MAILGUN_API_KEY สั้นเกินไป (${apiKey.length} ตัว) — ไปคัดลอก Private API key ทั้งก้อนที่ app.mailgun.com/settings/api_security`)
+  }
   const baseUrl = env('MAILGUN_API_URL') || 'https://api.mailgun.net'
   return { apiKey, domain, baseUrl }
 }
@@ -111,9 +115,19 @@ async function sendWithMailgunApi({ to, name, link }) {
     },
     body,
   })
-  const payload = await response.json().catch(() => ({}))
+  const raw = await response.text()
+  let payload = {}
+  try { payload = raw ? JSON.parse(raw) : {} } catch { payload = { raw } }
   if (!response.ok) {
-    const detail = payload?.message || payload?.error || JSON.stringify(payload) || response.statusText
+    let detail = payload?.message || payload?.error || payload?.raw || raw || response.statusText
+    if (typeof detail === 'object') detail = JSON.stringify(detail)
+    if (!detail || detail === '{}' || detail === '[]') {
+      detail = response.status === 401
+        ? 'API key ไม่ถูกต้องหรือคัดลอกไม่ครบ — ใช้ Private API key ทั้งก้อนจาก Settings → API Security'
+        : response.status === 403 || /unverified/i.test(raw)
+          ? 'โดเมนยังไม่ verified — ตรวจ DNS ใน Mailgun ให้ครบก่อน'
+          : `Mailgun ตอบ ${response.status} ${response.statusText}`
+    }
     const error = new Error(detail)
     error.code = 'MAILGUN_API'
     error.response = detail
