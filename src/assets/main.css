@@ -289,11 +289,11 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-search-filter-header > button { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; color: #686179; background: #fff; border: 1px solid #e9e2f2; border-radius: 50%; font-size: 22px; cursor: pointer; }
 .lux-search-modal-query { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 0 12px; color: #7139c7; background: #fff; border: 1px solid #e7def5; border-radius: 12px; box-shadow: 0 5px 14px rgba(76,29,149,.04); }
 .lux-search-modal-query > span { font-size: 20px; }
-.lux-search-modal-query input { width: 100%; min-width: 0; height: 42px; color: var(--s-ink); background: transparent; border: 0; outline: 0; font-size: 13px; }
+.lux-search-modal-query input { width: 100%; min-width: 0; height: 42px; color: var(--s-ink); background: transparent; border: 0; outline: 0; font-size: 16px; }
 .lux-search-modal-query input::placeholder { color: #a19bb3; }
 .lux-search-modal-selects { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-bottom: 10px; }
 .lux-search-filter-dialog .lux-filter-select { gap: 5px; padding: 0; color: #5d5872; border: 0; font-size: 10px; font-weight: 700; }
-.lux-search-filter-dialog .lux-filter-select select { width: 100%; height: 40px; padding: 0 10px; color: #57516d; background: #fff; border: 1px solid #e7def5; border-radius: 11px; font-size: 12px; }
+.lux-search-filter-dialog .lux-filter-select select { width: 100%; height: 40px; padding: 0 10px; color: #57516d; background: #fff; border: 1px solid #e7def5; border-radius: 11px; font-size: 16px; }
 .lux-search-filter-dialog .lux-filter-select select:focus { border-color: #a78bfa; outline: 3px solid rgba(124,58,237,.12); }
 .lux-search-filter-dialog .lux-filter-group { min-width: 0; margin: 0; padding: 10px 0 0; border: 0; border-top: 1px solid #e8e1f2; }
 .lux-search-filter-dialog .lux-filter-group legend { width: 100%; padding: 0 0 7px; color: #484263; font-size: 11px; font-weight: 750; }
@@ -1815,10 +1815,10 @@ body { background: var(--s-ivory); }
   .lux-search-filter-header { margin-bottom: 10px; }
   .lux-search-filter-header h2 { font-size: 18px; }
   .lux-search-modal-query { margin-bottom: 8px; }
-  .lux-search-modal-query input { height: 40px; font-size: 12px; }
+  .lux-search-modal-query input { height: 40px; font-size: 16px; }
   .lux-search-modal-selects { gap: 8px; margin-bottom: 8px; }
   .lux-search-filter-dialog .lux-filter-select { font-size: 10px; }
-  .lux-search-filter-dialog .lux-filter-select select { height: 38px; padding: 0 8px; font-size: 11px; }
+  .lux-search-filter-dialog .lux-filter-select select { height: 38px; padding: 0 8px; font-size: 16px; }
   .lux-search-modal-mode-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
   .lux-search-filter-dialog .lux-filter-mode .lux-check-row { padding: 7px 8px; font-size: 10px; }
   .lux-search-filter-dialog .lux-filter-services .lux-check-row { padding: 6px 9px; font-size: 10px; }
@@ -1837,6 +1837,8 @@ body { background: var(--s-ivory); }
   .lux-seller-service-row .lux-form-label { font-size: 12px; }
   .lux-seller-service-row .lux-form-label input,
   .lux-seller-service-row .lux-form-label textarea { min-height: 44px; padding: 9px 10px; font-size: 13px; }
+  .lux-membership-fields .lux-form-label input[type="number"],
+  .lux-seller-service-row .lux-form-label input[type="number"] { font-size: 16px; }
   .lux-seller-service-row .lux-form-label:last-of-type textarea { min-height: 100px; }
   .lux-seller-services .lux-seller-panel-head .lux-button { width: 100%; min-height: 44px; margin-top: 12px; }
   .lux-seller-media-manager { padding: 14px; }
