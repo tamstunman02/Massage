@@ -19,13 +19,15 @@ function smtpPass() {
 function createTransport() {
   const host = env('SMTP_HOST')
   if (!host) return null
-  const port = Number(env('SMTP_PORT')) || 587
+  const port = Number(env('SMTP_PORT')) || 2525
   const user = env('SMTP_USER')
   const pass = smtpPass()
   return nodemailer.createTransport({
     host,
     port,
+    // 465 = SSL ตรง, 587/2525 = STARTTLS
     secure: port === 465,
+    requireTLS: port === 587 || port === 2525,
     auth: user ? { user, pass } : undefined,
     // ป้องกันค้างจน Nginx 504 เมื่อ VPS บล็อกพอร์ต SMTP
     connectionTimeout: 8_000,
