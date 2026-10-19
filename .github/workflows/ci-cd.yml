@@ -87,20 +87,34 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
           envs: APP_DIR,SSH_PASSWORD
-          script_stop: true
-          command_timeout: 15m
+          command_timeout: 18m
           script: |
             set -euo pipefail
+            run_root() {
+              if [ "$(id -u)" -eq 0 ]; then
+                "$@"
+              else
+                printf '%s\n' "$SSH_PASSWORD" | sudo -S -p '' "$@"
+              fi
+            }
+            mem_kb=$(awk '/MemTotal:/ {print $2}' /proc/meminfo)
+            swap_kb=$(awk '/SwapTotal:/ {print $2}' /proc/meminfo)
+            if [ "$mem_kb" -lt 2000000 ] && [ "$swap_kb" -lt 800000 ]; then
+              echo "Memory is ${mem_kb} kB with ${swap_kb} kB swap; adding 1G swap so npm is not killed"
+              if [ ! -f /swapfile ]; then
+                run_root fallocate -l 1G /swapfile || run_root dd if=/dev/zero of=/swapfile bs=1M count=1024
+                run_root chmod 600 /swapfile
+                run_root mkswap /swapfile
+              fi
+              run_root swapon /swapfile || true
+            fi
             cd "${APP_DIR:-/var/www/nuania}"
             git fetch origin main
             git reset --hard origin/main
-            npm ci
+            export NODE_OPTIONS="--max-old-space-size=512"
+            npm ci --no-audit --no-fund --foreground-scripts
             npm run build
-            if [ "$(id -u)" -eq 0 ]; then
-              systemctl restart massage
-            else
-              printf '%s\n' "$SSH_PASSWORD" | sudo -S -p '' systemctl restart massage
-            fi
+            run_root systemctl restart massage
             for _ in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:3001/api/me >/dev/null; then
                 echo "Deployed and API is up"
