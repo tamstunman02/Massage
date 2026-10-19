@@ -7,7 +7,22 @@ const envPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 try { process.loadEnvFile(envPath) } catch { /* ไม่มีไฟล์ .env */ }
 
 function env(name) {
-  return String(process.env[name] ?? '').trim()
+  let value = String(process.env[name] ?? '').trim()
+  // รองรับค่าที่ห่อด้วย "..." หรือ '...' ใน .env
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    value = value.slice(1, -1).trim()
+  }
+  return value
+}
+
+function mailFrom() {
+  const raw = env('MAIL_FROM') || 'NuaNia <onboarding@resend.dev>'
+  // รูปแบบที่ถูกต้อง: email@domain หรือ Name <email@domain>
+  if (/^[^<>\s@]+@[^<>\s@]+\.[^<>\s@]+$/.test(raw)) return raw
+  if (/^[^<>]+<[^<>\s@]+@[^<>\s@]+\.[^<>\s@]+>$/.test(raw)) return raw
+  // ถ้า .env ไม่มี quotes ค่าอาจเหลือแค่ชื่อ เช่น "NuaNia"
+  if (raw && !raw.includes('@')) return `NuaNia <onboarding@resend.dev>`
+  return raw
 }
 
 // Gmail App Password มักมีช่องว่าง — ตัดออกให้เหลือ 16 ตัวอักษร
@@ -54,7 +69,7 @@ function buildVerificationContent({ name, link }) {
 async function sendWithResendApi({ to, name, link }) {
   const apiKey = env('RESEND_API_KEY')
   if (!apiKey) return null
-  const from = env('MAIL_FROM') || 'NuaNia <onboarding@resend.dev>'
+  const from = mailFrom()
   const { text, html } = buildVerificationContent({ name, link })
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -101,7 +116,7 @@ export async function sendVerificationEmail({ to, name, link }) {
   try {
     const { text, html } = buildVerificationContent({ name, link })
     const info = await transport.sendMail({
-      from: env('MAIL_FROM') || env('SMTP_USER'),
+      from: mailFrom() || env('SMTP_USER'),
       to,
       subject: 'NuaNia: ยืนยันอีเมลของคุณ',
       text,
