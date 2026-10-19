@@ -1457,7 +1457,7 @@ function scrollToProviders() {
     </div>
 
     <header class="lux-header">
-      <button class="lux-mobile-menu" type="button" aria-label="เปิดเมนู" @click="isCompactMenuOpen = !isCompactMenuOpen">☰</button>
+      <button class="lux-mobile-menu" type="button" aria-label="เปิดเมนู" @click="isCompactMenuOpen = !isCompactMenuOpen"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
       <a class="lux-logo" href="#" @click.prevent="navigate('home')">
         <span class="lux-logo-symbol">N</span><span class="lux-logo-word">NuaNia<span>.</span><small>CONNECT ON YOUR TERMS</small></span>
       </a>
@@ -1476,13 +1476,13 @@ function scrollToProviders() {
         </template>
         <template v-else>
           <span class="lux-role-badge" :class="`role-${currentRole}`">{{ roleLabel }}</span>
-          <button v-if="currentRole === 'buyer'" class="lux-icon-button" aria-label="รายการโปรด" title="รายการโปรด" @click="accountTab = 'favorites'; navigate('account')">♡</button>
-          <button class="lux-account-button" @click="openOwnArea"><span class="lux-user-avatar" :class="`role-${currentRole}`">{{ currentUser.name.slice(0, 1) }}</span><span>{{ accountMenuLabel }}</span><span class="lux-chevron">⌄</span></button>
+          <button v-if="currentRole === 'buyer'" class="lux-icon-button" aria-label="รายการโปรด" title="รายการโปรด" @click="accountTab = 'favorites'; navigate('account')"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
+          <button class="lux-account-button" @click="openOwnArea"><span class="lux-user-avatar" :class="`role-${currentRole}`">{{ currentUser.name.slice(0, 1) }}</span><span>{{ accountMenuLabel }}</span><span class="lux-chevron"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span></button>
           <button class="lux-login-shortcut" @click="logout">ออกจากระบบ</button>
         </template>
       </div>
     </header>
-    <div v-if="currentUser && currentUser.emailVerified === false && currentRole !== 'admin'" class="lux-verify-banner" role="status"><span>✉ กรุณายืนยันอีเมล <strong>{{ currentUser.email }}</strong> ภายใน 3 วัน มิฉะนั้นบัญชีจะถูกลบอัตโนมัติ</span><button type="button" @click="resendVerification">ส่งลิงก์ยืนยันอีกครั้ง</button><button v-if="devVerifyLink" type="button" class="lux-verify-direct" @click="confirmDevVerification">ยืนยันอีเมลเลย</button></div>
+    <div v-if="currentUser && currentUser.emailVerified === false && currentRole !== 'admin'" class="lux-verify-banner" role="status"><span><i class="fa-solid fa-envelope" aria-hidden="true"></i> กรุณายืนยันอีเมล <strong>{{ currentUser.email }}</strong> ภายใน 3 วัน มิฉะนั้นบัญชีจะถูกลบอัตโนมัติ</span><button type="button" @click="resendVerification">ส่งลิงก์ยืนยันอีกครั้ง</button><button v-if="devVerifyLink" type="button" class="lux-verify-direct" @click="confirmDevVerification">ยืนยันอีเมลเลย</button></div>
 
     <main v-if="view === 'home'" class="lux-home">
       <section class="lux-hero">
@@ -1490,12 +1490,12 @@ function scrollToProviders() {
           <div class="lux-kicker"><span></span> MEET ON YOUR TERMS</div>
           <h1>ค้นหาคนที่ใช่<br />ในแบบ<span>ที่คุณเลือก</span></h1>
           <p>เว็บไซต์รวมเด็กเอนเตอร์เทรน ทั่วประเทศไทย<br class="lux-desktop-only" />ดูราคาแล้วติดต่อนัดหมายโดยตรงผ่าน LINE หรือ Facebook — ไม่จองผ่านเว็บ</p>
-          <button class="lux-button lux-button-primary lux-hero-cta" @click="scrollToProviders">ค้นหาผู้ให้บริการ <span>↗</span></button>
-          <div class="lux-hero-proof"><div class="lux-proof-seal">✳</div><div><strong>ติดต่อกันเองนอกเว็บ</strong><span>เว็บนี้แสดงข้อมูลและราคาเท่านั้น</span></div></div>
+          <button class="lux-button lux-button-primary lux-hero-cta" @click="scrollToProviders">ค้นหาผู้ให้บริการ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
+          <div class="lux-hero-proof"><div class="lux-proof-seal"><i class="fa-solid fa-handshake" aria-hidden="true"></i></div><div><strong>ติดต่อกันเองนอกเว็บ</strong><span>เว็บนี้แสดงข้อมูลและราคาเท่านั้น</span></div></div>
         </div>
         <div class="lux-hero-visual" aria-label="ภาพบรรยากาศพื้นที่พักผ่อน">
           <div class="lux-visual-arch"><div class="lux-arch-window"></div><div class="lux-plant plant-left"></div><div class="lux-plant plant-right"></div><div class="lux-visual-table"></div></div>
-          <div class="lux-floating-card"><span class="lux-floating-icon">✦</span><div><small>LISTING ONLY</small><strong>ดูโปรไฟล์แล้วติดต่อเอง</strong></div></div>
+          <div class="lux-floating-card"><span class="lux-floating-icon"><i class="fa-solid fa-star" aria-hidden="true"></i></span><div><small>LISTING ONLY</small><strong>ดูโปรไฟล์แล้วติดต่อเอง</strong></div></div>
           <div class="lux-visual-index">01 <span></span> CONNECT WITH CONFIDENCE</div>
         </div>
         <div class="lux-hero-vertical">NUANIA · THAILAND</div>
@@ -1507,10 +1507,10 @@ function scrollToProviders() {
           <p>เลือกพื้นที่และรูปแบบที่สนใจ<br />แล้วติดต่อผู้ให้บริการโดยตรง</p>
         </div>
         <div class="lux-quick-search" data-reveal>
-          <label><span>⌕</span><div><small>ค้นหาผู้ให้บริการหรือพื้นที่</small><input v-model="searchName" placeholder="เช่น ร่วมกิจกรรม, สุขุมวิท" @focus="view = 'home'" /></div></label>
-          <label><span>⌖</span><div><small>เลือกจังหวัด</small><select v-model="selectedProvince"><option value="">เลือกจังหวัด</option><option v-for="province in provinces" :key="province">{{ province }}</option></select></div></label>
-          <label><span>◷</span><div><small>รูปแบบการนัดพบ</small><select v-model="selectedMode"><option value="">ทุกรูปแบบ</option><option v-for="mode in availableAppointmentModes" :key="mode">{{ mode }}</option></select></div></label>
-          <button class="lux-button lux-button-olive lux-quick-search-cta" @click="scrollToProviders">ค้นหา <span>→</span></button>
+          <label><span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><div><small>ค้นหาผู้ให้บริการหรือพื้นที่</small><input v-model="searchName" placeholder="เช่น ร่วมกิจกรรม, สุขุมวิท" @focus="view = 'home'" /></div></label>
+          <label><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span><div><small>เลือกจังหวัด</small><select v-model="selectedProvince"><option value="">เลือกจังหวัด</option><option v-for="province in provinces" :key="province">{{ province }}</option></select></div></label>
+          <label><span><i class="fa-regular fa-clock" aria-hidden="true"></i></span><div><small>รูปแบบการนัดพบ</small><select v-model="selectedMode"><option value="">ทุกรูปแบบ</option><option v-for="mode in availableAppointmentModes" :key="mode">{{ mode }}</option></select></div></label>
+          <button class="lux-button lux-button-olive lux-quick-search-cta" @click="scrollToProviders">ค้นหา <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
         </div>
         <div class="lux-category-row" data-reveal><span>สำรวจรูปแบบ</span><button @click="searchWithFilters({ service: 'พบปะพูดคุย' })">พบปะพูดคุย</button><button @click="searchWithFilters({ service: 'ร่วมกิจกรรม' })">ร่วมกิจกรรม</button><button @click="searchWithFilters({ service: 'งานอีเวนต์' })">งานอีเวนต์</button><button @click="searchWithFilters({ service: 'ไลฟ์สไตล์' })">ไลฟ์สไตล์</button></div>
       </section>
@@ -1518,48 +1518,48 @@ function scrollToProviders() {
       <section class="lux-home-guide" aria-labelledby="home-guide-heading">
         <div class="lux-home-guide-heading" data-reveal>
           <div><div class="lux-kicker"><span></span> CHOOSE YOUR EXPERIENCE</div><h2 id="home-guide-heading">เลือกรูปแบบที่<span>เหมาะกับคุณ</span></h2><p>ทำความรู้จักรูปแบบบริการก่อนค้นหา แล้วติดต่อผู้ให้บริการเพื่อตกลงรายละเอียดเอง</p></div>
-          <button class="lux-text-link" @click="navigate('search')">ค้นหาบริการ <span>↗</span></button>
+          <button class="lux-text-link" @click="navigate('search')">ค้นหาบริการ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
         </div>
         <div class="lux-home-guide-grid">
           <article class="lux-home-guide-card" data-reveal>
-            <span class="lux-home-guide-number">01</span><span class="lux-home-guide-icon" aria-hidden="true">◎</span>
+            <span class="lux-home-guide-number">01</span><span class="lux-home-guide-icon" aria-hidden="true"><i class="fa-solid fa-comments" aria-hidden="true"></i></span>
             <h3>พบปะพูดคุย</h3><p>เลือกเวลาพูดคุยและทำความรู้จัก โดยตกลงหัวข้อและขอบเขตที่สบายใจทั้งสองฝ่าย</p>
-            <button @click="searchWithFilters({ service: 'พบปะพูดคุย' })">ดูรูปแบบนี้ <span>↗</span></button>
+            <button @click="searchWithFilters({ service: 'พบปะพูดคุย' })">ดูรูปแบบนี้ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
           </article>
           <article class="lux-home-guide-card" data-reveal>
-            <span class="lux-home-guide-number">02</span><span class="lux-home-guide-icon" aria-hidden="true">◇</span>
+            <span class="lux-home-guide-number">02</span><span class="lux-home-guide-icon" aria-hidden="true"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span>
             <h3>ร่วมกิจกรรม</h3><p>วางแผนกิจกรรมและระยะเวลาให้ชัดเจน พร้อมเลือกสถานที่และรูปแบบที่เหมาะกับคุณ</p>
-            <button @click="searchWithFilters({ service: 'ร่วมกิจกรรม' })">ดูรูปแบบนี้ <span>↗</span></button>
+            <button @click="searchWithFilters({ service: 'ร่วมกิจกรรม' })">ดูรูปแบบนี้ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
           </article>
           <article class="lux-home-guide-card" data-reveal>
-            <span class="lux-home-guide-number">03</span><span class="lux-home-guide-icon" aria-hidden="true">✳</span>
+            <span class="lux-home-guide-number">03</span><span class="lux-home-guide-icon" aria-hidden="true"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
             <h3>งานอีเวนต์</h3><p>นัดหมายล่วงหน้าและพูดคุยวัน เวลา สถานที่ รวมถึงรายละเอียดที่คาดหวังให้ครบถ้วน</p>
-            <button @click="searchWithFilters({ service: 'งานอีเวนต์' })">ดูรูปแบบนี้ <span>↗</span></button>
+            <button @click="searchWithFilters({ service: 'งานอีเวนต์' })">ดูรูปแบบนี้ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
           </article>
         </div>
         <p class="lux-home-guide-note">รายละเอียดและเงื่อนไขขึ้นอยู่กับแต่ละบริการ โปรดตรวจสอบและตกลงกันก่อนนัดหมาย</p>
       </section>
 
       <section class="lux-experience" data-reveal>
-        <div class="lux-experience-art"><div class="lux-experience-circle">N<span>✳</span></div><div class="lux-experience-caption">NUANIA · CONNECT ON YOUR TERMS</div></div>
-        <div class="lux-experience-copy"><div class="lux-kicker"><span></span> CLEAR TERMS, BETTER CONNECTIONS</div><h2>ค้นหาอย่างมั่นใจ<br />ติดต่อ<span>กันเอง</span></h2><p>NuaNia เป็นพื้นที่ลงโปรไฟล์และราคาสำหรับผู้ให้บริการอิสระ นักท่องเที่ยวติดต่อนัดหมายโดยตรงผ่านช่องทางในโปรไฟล์ — ไม่มีการจองผ่านเว็บ</p><div class="lux-value-list"><span><i>01</i> อ่านโปรไฟล์และราคา</span><span><i>02</i> ติดต่อ LINE / Facebook โดยตรง</span><span><i>03</i> ตกลงรายละเอียดกันเองนอกเว็บ</span></div><button class="lux-text-link" @click="navigate('search')">ค้นหาผู้ให้บริการ <span>↗</span></button></div>
+        <div class="lux-experience-art"><div class="lux-experience-circle">N<span><i class="fa-solid fa-star" aria-hidden="true"></i></span></div><div class="lux-experience-caption">NUANIA · CONNECT ON YOUR TERMS</div></div>
+        <div class="lux-experience-copy"><div class="lux-kicker"><span></span> CLEAR TERMS, BETTER CONNECTIONS</div><h2>ค้นหาอย่างมั่นใจ<br />ติดต่อ<span>กันเอง</span></h2><p>NuaNia เป็นพื้นที่ลงโปรไฟล์และราคาสำหรับผู้ให้บริการอิสระ นักท่องเที่ยวติดต่อนัดหมายโดยตรงผ่านช่องทางในโปรไฟล์ — ไม่มีการจองผ่านเว็บ</p><div class="lux-value-list"><span><i>01</i> อ่านโปรไฟล์และราคา</span><span><i>02</i> ติดต่อ LINE / Facebook โดยตรง</span><span><i>03</i> ตกลงรายละเอียดกันเองนอกเว็บ</span></div><button class="lux-text-link" @click="navigate('search')">ค้นหาผู้ให้บริการ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button></div>
       </section>
 
-      <section class="lux-partner-banner" data-reveal><div class="lux-partner-mark">N</div><div><small>FOR INDEPENDENT PROVIDERS</small><h2>ให้โปรไฟล์ของคุณ<br />เข้าถึงคนที่ใช่</h2><p>กำหนดรูปแบบบริการ ราคา และขอบเขตได้ด้วยตัวเอง</p></div><button class="lux-button lux-button-light" @click="membership.role = 'seller'; navigate('membership')">ลงโปรไฟล์ผู้ให้บริการ <span>↗</span></button><span class="lux-partner-bg">NUANIA</span></section>
+      <section class="lux-partner-banner" data-reveal><div class="lux-partner-mark">N</div><div><small>FOR INDEPENDENT PROVIDERS</small><h2>ให้โปรไฟล์ของคุณ<br />เข้าถึงคนที่ใช่</h2><p>กำหนดรูปแบบบริการ ราคา และขอบเขตได้ด้วยตัวเอง</p></div><button class="lux-button lux-button-light" @click="membership.role = 'seller'; navigate('membership')">ลงโปรไฟล์ผู้ให้บริการ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button><span class="lux-partner-bg">NUANIA</span></section>
     </main>
 
     <main v-else-if="view === 'search'" class="lux-page lux-search-page">
       <div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><span>ค้นหาผู้ให้บริการ</span></div>
       <div class="lux-search-filter-trigger">
         <button ref="searchFilterTrigger" class="lux-search-filter-main" type="button" @click="openSearchFilters">
-          <span class="lux-search-filter-icon">⌕</span>
+          <span class="lux-search-filter-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
           <span class="lux-search-filter-copy">
             <strong>ค้นหาบริการ</strong>
             <small>{{ searchFilterSummary }}</small>
           </span>
         </button>
         <button v-if="searchHasFilters" class="lux-search-filter-active" type="button" @click="clearSearchFilters">ล้างค่า</button>
-        <button class="lux-search-filter-cta" type="button" @click="openSearchFilters">ค้นหาบริการ <span aria-hidden="true">→</span></button>
+        <button class="lux-search-filter-cta" type="button" @click="openSearchFilters">ค้นหาบริการ <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
       </div>
       <div class="lux-page-heading">
         <div>
@@ -1569,7 +1569,7 @@ function scrollToProviders() {
         </div>
         <div v-if="searchHasFilters" class="lux-heading-meta">
           <span v-if="activeSearchProvince" class="lux-province-active" aria-live="polite">
-            <span aria-hidden="true">⌖</span>
+            <span aria-hidden="true"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
             <small>จังหวัดที่เลือก</small>
             <strong>{{ activeSearchProvince }}</strong>
           </span>
@@ -1592,9 +1592,9 @@ function scrollToProviders() {
                 <video v-else-if="providerPreviewMedia(provider)" class="lux-card-photo" :src="providerPreviewMedia(provider).url" muted autoplay loop playsinline :aria-label="`วิดีโอแนะนำของ ${provider.name}`"></video>
                 <span v-else class="lux-scene-symbol">{{ provider.initials }}</span>
                 <div class="lux-card-badges">
-                  <span class="lux-card-badge is-check" title="โปรไฟล์เผยแพร่">✓</span>
-                  <span v-if="providerHasVideo(provider)" class="lux-card-badge is-video" title="มีวิดีโอ">▶</span>
-                  <button type="button" class="lux-card-badge is-heart" :class="{ loved: favorites.includes(provider.id) }" :aria-label="favorites.includes(provider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click.stop="toggleFavorite(provider)">{{ favorites.includes(provider.id) ? '♥' : '♡' }}</button>
+                  <span class="lux-card-badge is-check" title="โปรไฟล์เผยแพร่"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+                  <span v-if="providerHasVideo(provider)" class="lux-card-badge is-video" title="มีวิดีโอ"><i class="fa-solid fa-play" aria-hidden="true"></i></span>
+                  <button type="button" class="lux-card-badge is-heart" :class="{ loved: favorites.includes(provider.id) }" :aria-label="favorites.includes(provider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click.stop="toggleFavorite(provider)"><i :class="favorites.includes(provider.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i></button>
                 </div>
                 <div class="lux-card-caption">
                   <strong>{{ provider.name }}</strong>
@@ -1603,7 +1603,7 @@ function scrollToProviders() {
               </div>
               <div class="lux-card-panel">
                 <div class="lux-card-panel-row">
-                  <span>✦ {{ provider.rating }}</span>
+                  <span><i class="fa-solid fa-star" aria-hidden="true"></i> {{ provider.rating }}</span>
                   <span>{{ provider.reviews || 0 }} รีวิว</span>
                 </div>
                 <div class="lux-card-panel-row">
@@ -1612,7 +1612,7 @@ function scrollToProviders() {
                 </div>
               </div>
             </article>
-            <div v-if="!visibleProviders.length" class="lux-empty"><span>✳</span>
+            <div v-if="!visibleProviders.length" class="lux-empty"><span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
                 <h3>ยังไม่พบโปรไฟล์ที่ตรงใจ</h3>
                 <p>ลองปรับการค้นหาบริการหรือค้นหาด้วยคำอื่น</p>
                 <button class="lux-button lux-button-primary" type="button" @click="clearSearchFilters">ล้างการค้นหา</button>
@@ -1626,7 +1626,7 @@ function scrollToProviders() {
             <p>{{ activeSearchProvince ? `ตอนนี้เลือก ${activeSearchProvince} · แตะจังหวัดอื่นเพื่อเปลี่ยนพื้นที่` : (searchHasFilters ? 'จำนวนตามเงื่อนไขที่ค้นหาอยู่ · แตะจังหวัดเพื่อเปลี่ยนพื้นที่' : 'แตะจังหวัดเพื่อดูรายชื่อผู้ให้บริการในพื้นที่นั้น') }}</p>
           </div>
           <span v-if="activeSearchProvince" class="lux-province-active is-compact" aria-live="polite">
-            <span aria-hidden="true">⌖</span>
+            <span aria-hidden="true"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
             <strong>{{ activeSearchProvince }}</strong>
           </span>
         </div>
@@ -1641,43 +1641,43 @@ function scrollToProviders() {
             :aria-pressed="appliedSearchFilters.province === item.province"
             @click="searchWithFilters({ province: item.province })"
           >
-            <span class="lux-province-chip-pin" aria-hidden="true">⌖</span>
+            <span class="lux-province-chip-pin" aria-hidden="true"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
             <span class="lux-province-chip-name">{{ item.province }}</span>
             <span class="lux-province-chip-count">{{ item.count }}</span>
           </button>
         </div>
-        <div v-else class="lux-empty"><span>✳</span><h3>{{ searchHasFilters ? 'ไม่พบผู้ให้บริการตามเงื่อนไขนี้' : 'ยังไม่มีผู้ให้บริการที่เผยแพร่' }}</h3><p>{{ searchHasFilters ? 'ลองปรับการค้นหาบริการหรือเลือกเงื่อนไขอื่น' : 'เมื่อมีโปรไฟล์ที่เปิดใช้งาน จำนวนจะแสดงตามจังหวัดที่นี่' }}</p></div>
+        <div v-else class="lux-empty"><span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><h3>{{ searchHasFilters ? 'ไม่พบผู้ให้บริการตามเงื่อนไขนี้' : 'ยังไม่มีผู้ให้บริการที่เผยแพร่' }}</h3><p>{{ searchHasFilters ? 'ลองปรับการค้นหาบริการหรือเลือกเงื่อนไขอื่น' : 'เมื่อมีโปรไฟล์ที่เปิดใช้งาน จำนวนจะแสดงตามจังหวัดที่นี่' }}</p></div>
       </section>
       <div v-if="isSearchFilterOpen" class="lux-search-filter-modal" role="dialog" aria-modal="true" aria-labelledby="search-filter-title" @click.self="closeSearchFilters">
         <section class="lux-search-filter-dialog">
           <header class="lux-search-filter-header">
             <h2 id="search-filter-title">ค้นหาบริการ</h2>
-            <button type="button" aria-label="ปิดหน้าค้นหาบริการ" @click="closeSearchFilters">×</button>
+            <button type="button" aria-label="ปิดหน้าค้นหาบริการ" @click="closeSearchFilters"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
           </header>
-          <label class="lux-filter-search lux-search-modal-query"><span>⌕</span><input ref="searchFilterInput" v-model="searchName" placeholder="ค้นหาชื่อ บริการ หรือพื้นที่" /></label>
+          <label class="lux-filter-search lux-search-modal-query"><span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><input ref="searchFilterInput" v-model="searchName" placeholder="ค้นหาชื่อ บริการ หรือพื้นที่" /></label>
           <div class="lux-search-modal-selects">
             <label class="lux-filter-select"><span>จังหวัด</span><select v-model="selectedProvince"><option value="">เลือกจังหวัด</option><option v-for="province in provinces" :key="province">{{ province }}</option></select></label>
             <label class="lux-filter-select"><span>อัตลักษณ์ทางเพศ</span><select v-model="selectedGender"><option value="">ทั้งหมด</option><option>ผู้หญิง</option><option>ผู้ชาย</option><option>นอนไบนารี</option><option>ทรานส์เจนเดอร์</option><option>เควียร์</option><option>LGBTQ+</option><option>ไม่ประสงค์ระบุ</option></select></label>
           </div>
           <fieldset class="lux-filter-group lux-filter-mode"><legend>รูปแบบการนัดพบ</legend><div class="lux-search-modal-mode-options"><label class="lux-check-row"><input v-model="selectedMode" type="radio" value="" /><span>ทั้งหมด</span></label><label v-for="mode in availableAppointmentModes" :key="mode" class="lux-check-row"><input v-model="selectedMode" type="radio" :value="mode" /><span>{{ mode === 'ที่ร้าน' ? 'สถานที่นัดพบ' : mode === 'นอกสถานที่' ? 'นัดตามพื้นที่' : mode }}</span></label></div></fieldset>
           <fieldset class="lux-filter-group lux-filter-services"><legend>รูปแบบบริการ</legend><div class="lux-search-modal-service-options"><label v-for="service in [{ value: '', label: 'ทั้งหมด' }, { value: 'พบปะพูดคุย', label: 'พบปะพูดคุย' }, { value: 'ร่วมกิจกรรม', label: 'ร่วมกิจกรรม' }, { value: 'งานอีเวนต์', label: 'งานอีเวนต์' }, { value: 'ไลฟ์สไตล์', label: 'ไลฟ์สไตล์' }]" :key="service.value || 'all'" class="lux-check-row"><input v-model="selectedService" type="radio" :value="service.value" /><span>{{ service.label }}</span></label></div></fieldset>
-          <footer class="lux-search-filter-footer"><button type="button" class="lux-search-reset" @click="resetSearchFilters">ล้างตัวกรอง</button><button type="button" class="lux-button lux-button-primary lux-search-submit-cta" @click="applySearchFilters">ค้นหาโปรไฟล์ <span>→</span></button></footer>
+          <footer class="lux-search-filter-footer"><button type="button" class="lux-search-reset" @click="resetSearchFilters">ล้างตัวกรอง</button><button type="button" class="lux-button lux-button-primary lux-search-submit-cta" @click="applySearchFilters">ค้นหาโปรไฟล์ <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button></footer>
         </section>
       </div>
     </main>
 
     <main v-else-if="view === 'profile' && selectedProvider" class="lux-page lux-profile-page">
       <div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><button v-if="currentRole === 'admin'" @click="adminTab = 'providers'; navigate('admin')">พาร์ตเนอร์</button><button v-else @click="navigate('search')">ค้นหาบริการ</button><span>/</span><span>{{ selectedProvider.name }}</span></div>
-      <div class="lux-profile-layout"><section class="lux-profile-main"><div class="lux-profile-identity"><div class="lux-profile-monogram" :class="[selectedProvider.visual, { 'has-profile-image': featuredProfileImage }]"><img v-if="featuredProfileImage" :src="featuredProfileImage.url" :alt="`รูปโปรไฟล์ ${selectedProvider.name}`" /><span v-else>{{ selectedProvider.initials }}</span></div><div class="lux-profile-title"><div class="lux-profile-label"><span class="lux-verified">PROVIDER PROFILE</span><span v-if="reviewSummary">★ {{ reviewSummary.service }} / 5 <small>({{ reviewSummary.count }} รีวิว)</small></span><span v-else>ยังไม่มีคะแนนรีวิว</span></div><h1>{{ selectedProvider.name }}<small>, {{ selectedProvider.age }}</small></h1><p>ผู้ให้บริการอิสระ · {{ selectedProvider.area }}, {{ selectedProvider.province }}</p></div><button class="lux-heart lux-profile-heart" :class="{ loved: favorites.includes(selectedProvider.id) }" :aria-label="favorites.includes(selectedProvider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click="toggleFavorite(selectedProvider)">{{ favorites.includes(selectedProvider.id) ? '♥' : '♡' }}</button></div>
-          <div v-if="selectedProvider.media?.length" class="lux-profile-section lux-promo-gallery"><div class="lux-section-title"><div><div class="lux-kicker"><span></span> PROVIDER MOMENTS</div><h2>ภาพและวิดีโอแนะนำโปรไฟล์</h2></div><span>{{ selectedProvider.media.length }} รายการ · แตะเพื่อขยาย</span></div><div class="lux-promo-grid"><button v-for="(media, index) in selectedProvider.media" :key="media.id" class="lux-promo-item" type="button" :aria-label="`ขยาย${media.type === 'image' ? 'รูปภาพ' : 'วิดีโอ'} ${media.name}`" @click="openMediaViewer(selectedProvider.media, index)"><img v-if="media.type === 'image'" :src="media.url" :alt="media.name" loading="lazy" /><template v-else><video :src="media.url" preload="metadata" playsinline :aria-label="media.name"></video><span class="lux-promo-play" aria-hidden="true">▶</span></template></button></div></div>
+      <div class="lux-profile-layout"><section class="lux-profile-main"><div class="lux-profile-identity"><div class="lux-profile-monogram" :class="[selectedProvider.visual, { 'has-profile-image': featuredProfileImage }]"><img v-if="featuredProfileImage" :src="featuredProfileImage.url" :alt="`รูปโปรไฟล์ ${selectedProvider.name}`" /><span v-else>{{ selectedProvider.initials }}</span></div><div class="lux-profile-title"><div class="lux-profile-label"><span class="lux-verified">PROVIDER PROFILE</span><span v-if="reviewSummary"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ reviewSummary.service }} / 5 <small>({{ reviewSummary.count }} รีวิว)</small></span><span v-else>ยังไม่มีคะแนนรีวิว</span></div><h1>{{ selectedProvider.name }}<small>, {{ selectedProvider.age }}</small></h1><p>ผู้ให้บริการอิสระ · {{ selectedProvider.area }}, {{ selectedProvider.province }}</p></div><button class="lux-heart lux-profile-heart" :class="{ loved: favorites.includes(selectedProvider.id) }" :aria-label="favorites.includes(selectedProvider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click="toggleFavorite(selectedProvider)"><i :class="favorites.includes(selectedProvider.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i></button></div>
+          <div v-if="selectedProvider.media?.length" class="lux-profile-section lux-promo-gallery"><div class="lux-section-title"><div><div class="lux-kicker"><span></span> PROVIDER MOMENTS</div><h2>ภาพและวิดีโอแนะนำโปรไฟล์</h2></div><span>{{ selectedProvider.media.length }} รายการ · แตะเพื่อขยาย</span></div><div class="lux-promo-grid"><button v-for="(media, index) in selectedProvider.media" :key="media.id" class="lux-promo-item" type="button" :aria-label="`ขยาย${media.type === 'image' ? 'รูปภาพ' : 'วิดีโอ'} ${media.name}`" @click="openMediaViewer(selectedProvider.media, index)"><img v-if="media.type === 'image'" :src="media.url" :alt="media.name" loading="lazy" /><template v-else><video :src="media.url" preload="metadata" playsinline :aria-label="media.name"></video><span class="lux-promo-play" aria-hidden="true"><i class="fa-solid fa-play" aria-hidden="true"></i></span></template></button></div></div>
           <div class="lux-profile-section"><div class="lux-kicker"><span></span> ABOUT THE PROVIDER</div><h2>คุยรายละเอียดและ<span>ขอบเขตให้ชัดเจน</span></h2><p class="lux-provider-about-copy">{{ selectedProvider.description }}</p><p class="lux-provider-about-guidance">ไม่มีการจองผ่านเว็บ · ติดต่อผู้ให้บริการผ่าน LINE หรือ Facebook แล้วตกลงเวลา สถานที่ ราคา และขอบเขตกันเอง</p><div class="lux-tag-row"><span v-for="tag in selectedProvider.tags" :key="tag">{{ tag }}</span></div><div v-if="providerLineUrl(selectedProvider) || providerFacebookUrl(selectedProvider)" class="lux-provider-contacts"><span class="lux-provider-contacts-label">ช่องทางติดต่อ</span><div class="lux-provider-contact-actions"><a v-if="providerLineUrl(selectedProvider)" class="lux-contact-btn lux-contact-line" :href="providerLineUrl(selectedProvider)" target="_blank" rel="noopener noreferrer" @click.prevent="openProviderContact(providerLineUrl(selectedProvider))"><i>LINE</i><span>{{ selectedProvider.line }}</span></a><a v-if="providerFacebookUrl(selectedProvider)" class="lux-contact-btn lux-contact-facebook" :href="providerFacebookUrl(selectedProvider)" target="_blank" rel="noopener noreferrer" @click.prevent="openProviderContact(providerFacebookUrl(selectedProvider))"><i>Facebook</i><span>เปิดโปรไฟล์</span></a></div></div></div>
           <div class="lux-profile-section lux-review-section">
-            <div class="lux-section-title"><div><div class="lux-kicker"><span></span> COMMUNITY NOTES</div><h2>ประสบการณ์จากนักท่องเที่ยว</h2></div><span v-if="reviewSummary">บริการ {{ reviewSummary.service }} ★ · คุ้มค่าเงิน {{ reviewSummary.value }} ★ · {{ reviewSummary.count }} รีวิว</span><span v-else>ยังไม่มีรีวิว</span></div>
+            <div class="lux-section-title"><div><div class="lux-kicker"><span></span> COMMUNITY NOTES</div><h2>ประสบการณ์จากนักท่องเที่ยว</h2></div><span v-if="reviewSummary">บริการ {{ reviewSummary.service }} <i class="fa-solid fa-star" aria-hidden="true"></i> · คุ้มค่าเงิน {{ reviewSummary.value }} <i class="fa-solid fa-star" aria-hidden="true"></i> · {{ reviewSummary.count }} รีวิว</span><span v-else>ยังไม่มีรีวิว</span></div>
             <form v-if="can('review:create') && availableReviewBookings.length" class="lux-review-form" @submit.prevent="submitReview">
               <h3>เขียนรีวิวหลังใช้บริการ</h3>
               <label class="lux-form-label">นัดหมายที่เสร็จสิ้น<select v-model="reviewForm.bookingId" required><option v-for="item in availableReviewBookings" :key="item.id" :value="item.id">{{ item.service }} · {{ formatDate(item.date) }}</option></select></label>
               <div class="lux-review-ratings">
-                <div v-for="rating in [{ key: 'serviceRating', label: 'บริการ' }, { key: 'valueRating', label: 'คุ้มค่าเงิน' }]" :key="rating.key" class="lux-review-rating"><span>{{ rating.label }}</span><div role="group" :aria-label="`ให้คะแนน${rating.label}`"><button v-for="star in 5" :key="star" type="button" :class="{ active: star <= reviewForm[rating.key] }" :aria-label="`${star} ดาว`" :aria-pressed="reviewForm[rating.key] === star" @click="reviewForm[rating.key] = star">★</button></div></div>
+                <div v-for="rating in [{ key: 'serviceRating', label: 'บริการ' }, { key: 'valueRating', label: 'คุ้มค่าเงิน' }]" :key="rating.key" class="lux-review-rating"><span>{{ rating.label }}</span><div role="group" :aria-label="`ให้คะแนน${rating.label}`"><button v-for="star in 5" :key="star" type="button" :class="{ active: star <= reviewForm[rating.key] }" :aria-label="`${star} ดาว`" :aria-pressed="reviewForm[rating.key] === star" @click="reviewForm[rating.key] = star"><i class="fa-solid fa-star" aria-hidden="true"></i></button></div></div>
               </div>
               <label class="lux-form-label">รายละเอียดประสบการณ์<textarea v-model.trim="reviewForm.comment" rows="4" maxlength="2000" minlength="2" placeholder="แบ่งปันประสบการณ์อย่างสุภาพและตรงตามจริง" required></textarea></label>
               <label class="lux-review-upload">เพิ่มรูปภาพ (ไม่บังคับ)<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple @change="selectReviewImages" /><small>แนบได้ไม่เกิน 6 รูป ขนาดไม่เกิน 8 MB ต่อรูป</small></label>
@@ -1689,7 +1689,7 @@ function scrollToProviders() {
             <div v-if="selectedReviews.length" class="lux-review-list">
               <article v-for="review in selectedReviews" :key="review.id" class="lux-review-card">
                 <div class="lux-review-card-head"><span><strong>{{ review.userName }}</strong></span><time>{{ new Date(review.createdAt).toLocaleDateString('th-TH') }}</time></div>
-                <div class="lux-review-score"><span>บริการ <span class="lux-review-stars" :aria-label="`${review.serviceRating} จาก 5 ดาว`"><span v-for="star in 5" :key="star" :class="{ active: star <= review.serviceRating }">★</span></span></span><span>คุ้มค่าเงิน <span class="lux-review-stars" :aria-label="`${review.valueRating} จาก 5 ดาว`"><span v-for="star in 5" :key="star" :class="{ active: star <= review.valueRating }">★</span></span></span></div>
+                <div class="lux-review-score"><span>บริการ <span class="lux-review-stars" :aria-label="`${review.serviceRating} จาก 5 ดาว`"><span v-for="star in 5" :key="star" :class="{ active: star <= review.serviceRating }"><i class="fa-solid fa-star" aria-hidden="true"></i></span></span></span><span>คุ้มค่าเงิน <span class="lux-review-stars" :aria-label="`${review.valueRating} จาก 5 ดาว`"><span v-for="star in 5" :key="star" :class="{ active: star <= review.valueRating }"><i class="fa-solid fa-star" aria-hidden="true"></i></span></span></span></div>
                 <p>{{ review.comment }}</p>
                 <div v-if="review.media.length" class="lux-review-media-row"><button v-for="(media, index) in review.media" :key="media.id" type="button" :aria-label="`ขยายรูปรีวิว ${index + 1}`" @click="openMediaViewer(review.media, index)"><img :src="media.url" :alt="media.name" loading="lazy" /></button></div>
               </article>
@@ -1731,7 +1731,7 @@ function scrollToProviders() {
 
     <main v-else-if="view === 'booking'" class="lux-page lux-booking-page">
       <div class="lux-breadcrumb"><button @click="navigate('search')">ค้นหาบริการ</button><span>/</span><span>นัดหมาย</span></div>
-      <div class="lux-empty" style="margin-top:40px"><span>◈</span><h3>ไม่รองรับการนัดหมายผ่านเว็บ</h3><p>NuaNia เป็นพื้นที่ลงโปรไฟล์และค้นหาข้อมูลเท่านั้น กรุณากลับไปที่โปรไฟล์แล้วติดต่อผู้ให้บริการผ่าน LINE หรือ Facebook โดยตรง</p><button class="lux-button lux-button-primary" type="button" @click="navigate(selectedProvider ? 'profile' : 'search')">กลับไปค้นหา / โปรไฟล์</button></div>
+      <div class="lux-empty" style="margin-top:40px"><span><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span><h3>ไม่รองรับการนัดหมายผ่านเว็บ</h3><p>NuaNia เป็นพื้นที่ลงโปรไฟล์และค้นหาข้อมูลเท่านั้น กรุณากลับไปที่โปรไฟล์แล้วติดต่อผู้ให้บริการผ่าน LINE หรือ Facebook โดยตรง</p><button class="lux-button lux-button-primary" type="button" @click="navigate(selectedProvider ? 'profile' : 'search')">กลับไปค้นหา / โปรไฟล์</button></div>
     </main>
 
     <main v-else-if="view === 'login'" class="lux-page lux-login-page">
@@ -1780,8 +1780,8 @@ function scrollToProviders() {
         <section v-if="membershipStep === 1" class="lux-membership-panel">
           <fieldset class="lux-role-picker" :disabled="isMembershipSubmitting">
             <legend>คุณต้องการใช้งานในฐานะใด?</legend>
-            <label class="lux-role-option" :class="{ active: membership.role === 'buyer' }"><input v-model="membership.role" type="radio" value="buyer" /><span class="lux-role-icon">⌕</span><span class="lux-role-copy"><strong>นักท่องเที่ยว</strong><small>ค้นหาโปรไฟล์ ดูราคา บันทึกรายการโปรด และติดต่อผู้ขายเอง</small></span><span class="lux-role-check">✓</span></label>
-            <label class="lux-role-option" :class="{ active: membership.role === 'seller' }"><input v-model="membership.role" type="radio" value="seller" /><span class="lux-role-icon">✳</span><span class="lux-role-copy"><strong>ผู้บริการ</strong><small>ลงโปรไฟล์และราคา · รับติดต่อจากลูกค้าโดยตรงนอกเว็บ</small></span><span class="lux-role-check">✓</span></label>
+            <label class="lux-role-option" :class="{ active: membership.role === 'buyer' }"><input v-model="membership.role" type="radio" value="buyer" /><span class="lux-role-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span><span class="lux-role-copy"><strong>นักท่องเที่ยว</strong><small>ค้นหาโปรไฟล์ ดูราคา บันทึกรายการโปรด และติดต่อผู้ขายเอง</small></span><span class="lux-role-check"><i class="fa-solid fa-check" aria-hidden="true"></i></span></label>
+            <label class="lux-role-option" :class="{ active: membership.role === 'seller' }"><input v-model="membership.role" type="radio" value="seller" /><span class="lux-role-icon"><i class="fa-solid fa-id-card" aria-hidden="true"></i></span><span class="lux-role-copy"><strong>ผู้บริการ</strong><small>ลงโปรไฟล์และราคา · รับติดต่อจากลูกค้าโดยตรงนอกเว็บ</small></span><span class="lux-role-check"><i class="fa-solid fa-check" aria-hidden="true"></i></span></label>
           </fieldset>
         </section>
 
@@ -1912,7 +1912,7 @@ function scrollToProviders() {
               <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" :disabled="isMembershipSubmitting" @change="selectMembershipProfilePhoto" />
               <img v-if="membershipProfilePhoto" :src="membershipProfilePhoto.previewUrl" alt="รูปโปรไฟล์" />
               <template v-else>
-                <strong>＋ เลือกรูปโปรไฟล์</strong>
+                <strong><i class="fa-solid fa-plus" aria-hidden="true"></i> เลือกรูปโปรไฟล์</strong>
                 <small>JPG, PNG, WebP หรือ GIF ไม่เกิน 8 MB</small>
               </template>
             </label>
@@ -1922,12 +1922,12 @@ function scrollToProviders() {
         </section>
 
         <div class="lux-membership-nav">
-          <button v-if="membershipStep > 1" class="lux-button lux-button-light" type="button" :disabled="isMembershipSubmitting" @click="prevMembershipStep">← ย้อนกลับ</button>
+          <button v-if="membershipStep > 1" class="lux-button lux-button-light" type="button" :disabled="isMembershipSubmitting" @click="prevMembershipStep"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> ย้อนกลับ</button>
           <button class="lux-button lux-button-primary" type="submit" :disabled="isMembershipSubmitting">
             <span v-if="isMembershipSubmitting" class="lux-btn-spinner" aria-hidden="true"></span>
             <template v-if="isMembershipSubmitting">กำลังสมัครสมาชิก...</template>
-            <template v-else-if="isMembershipLastStep">ยืนยันสมัครสมาชิก →</template>
-            <template v-else>ถัดไป →</template>
+            <template v-else-if="isMembershipLastStep">ยืนยันสมัครสมาชิก <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></template>
+            <template v-else>ถัดไป <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></template>
           </button>
         </div>
       </form>
@@ -1942,7 +1942,7 @@ function scrollToProviders() {
           <p>{{ seekBoardFilter.province ? `กำลังดูโพสในจังหวัด${seekBoardFilter.province}` : 'เลือกจังหวัดเพื่อดูโพสของทุกคน · กดปุ่มโพสเมื่อต้องการลงประกาศหา' }}</p>
         </div>
         <span v-if="seekBoardFilter.province" class="lux-province-active" aria-live="polite">
-          <span aria-hidden="true">⌖</span>
+          <span aria-hidden="true"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
           <small>จังหวัดที่เลือก</small>
           <strong>{{ seekBoardFilter.province }}</strong>
         </span>
@@ -1961,7 +1961,7 @@ function scrollToProviders() {
             {{ seekPosts.length }} โพส
             <template v-if="seekBoardFilter.province"> · {{ seekBoardFilter.province }}</template>
           </span>
-          <button v-if="can('seek:create')" type="button" class="lux-button lux-button-primary" @click="openSeekCompose">＋ โพส</button>
+          <button v-if="can('seek:create')" type="button" class="lux-button lux-button-primary" @click="openSeekCompose"><i class="fa-solid fa-plus" aria-hidden="true"></i> โพส</button>
         </div>
       </div>
 
@@ -1990,17 +1990,17 @@ function scrollToProviders() {
               </article>
             </div>
             <div v-else class="lux-empty lux-seek-empty">
-              <span>⌕</span>
+              <span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
               <h3>ยังไม่มีโพส{{ seekBoardFilter.province ? `ใน${seekBoardFilter.province}` : '' }}</h3>
-              <p>{{ can('seek:create') ? 'กดปุ่ม ＋ โพส เพื่อลงประกาศหาผู้ให้บริการ' : 'รอโพสใหม่จากนักท่องเที่ยว หรือลองเปลี่ยนจังหวัด' }}</p>
-              <button v-if="can('seek:create')" type="button" class="lux-button lux-button-primary" @click="openSeekCompose">＋ โพส</button>
+              <p>{{ can('seek:create') ? 'กดปุ่มโพสเพื่อลงประกาศหาผู้ให้บริการ' : 'รอโพสใหม่จากนักท่องเที่ยว หรือลองเปลี่ยนจังหวัด' }}</p>
+              <button v-if="can('seek:create')" type="button" class="lux-button lux-button-primary" @click="openSeekCompose"><i class="fa-solid fa-plus" aria-hidden="true"></i> โพส</button>
             </div>
           </section>
         </div>
 
         <aside v-if="selectedSeekPost" class="lux-seek-detail">
           <div class="lux-seek-detail-head">
-            <button type="button" class="lux-text-link" @click="closeSeekDetail">← ปิดรายละเอียด</button>
+            <button type="button" class="lux-text-link" @click="closeSeekDetail"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> ปิดรายละเอียด</button>
             <span class="lux-seek-status" :class="selectedSeekPost.status">{{ selectedSeekPost.status === 'open' ? 'เปิดรับ' : 'ปิดรับแล้ว' }}</span>
           </div>
           <div v-if="seekDetailLoading" class="lux-seek-detail-loading">กำลังโหลดรายละเอียด...</div>
@@ -2035,7 +2035,7 @@ function scrollToProviders() {
                   <span>ตอบโพสนี้</span>
                   <textarea v-model.trim="seekCommentDraft" rows="3" maxlength="1000" placeholder="แนะนำตัว ช่องทางติดต่อ หรือรายละเอียดที่เสนอ"></textarea>
                 </label>
-                <button class="lux-button lux-button-primary" type="submit">ส่งคอมเมนต์ →</button>
+                <button class="lux-button lux-button-primary" type="submit">ส่งคอมเมนต์ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
               </form>
               <p v-else-if="selectedSeekPost.status !== 'open'" class="lux-seek-closed-note">โพสนี้ปิดรับแล้ว ไม่สามารถคอมเมนต์เพิ่มได้</p>
 
@@ -2076,7 +2076,7 @@ function scrollToProviders() {
                   </template>
                 </article>
               </div>
-              <div v-else class="lux-empty lux-seek-empty"><span>✦</span><h3>ยังไม่มีคอมเมนต์</h3><p>{{ can('seek:comment') ? 'เป็นคนแรกที่แนะนำตัวในโพสนี้' : 'รอผู้ให้บริการเข้ามาคอมเมนต์' }}</p></div>
+              <div v-else class="lux-empty lux-seek-empty"><span><i class="fa-solid fa-comment" aria-hidden="true"></i></span><h3>ยังไม่มีคอมเมนต์</h3><p>{{ can('seek:comment') ? 'เป็นคนแรกที่แนะนำตัวในโพสนี้' : 'รอผู้ให้บริการเข้ามาคอมเมนต์' }}</p></div>
             </div>
           </template>
         </aside>
@@ -2084,17 +2084,17 @@ function scrollToProviders() {
     </main>
 
     <main v-else-if="view === 'account'" class="lux-page lux-account-page">
-      <div class="lux-account-welcome"><div class="lux-kicker"><span></span> YOUR NUANIA</div><h1>โปรไฟล์ในแบบ<span>ของคุณ</span></h1><p>บันทึกโปรไฟล์ที่สนใจ · นัดหมายติดต่อผู้ให้บริการโดยตรงนอกเว็บ</p><button class="lux-account-role-link" @click="openSellerArea">{{ member?.role === 'seller' ? 'กลับสู่ศูนย์ผู้ให้บริการ ↗' : 'ลงโปรไฟล์ผู้ให้บริการ ↗' }}</button></div>
-      <div class="lux-account-layout"><aside class="lux-account-sidebar"><div class="lux-account-person"><div class="lux-user-avatar lux-user-avatar-large">{{ member?.name?.slice(0, 1) || 'ส' }}</div><div><strong>{{ member?.name || 'สมาชิก' }}</strong><span>บัญชีผู้ใช้บริการ</span></div></div><button class="lux-account-tab" :class="{ active: accountTab === 'favorites' }" @click="accountTab = 'favorites'"><span>♡</span> โปรไฟล์ที่บันทึก <small>{{ favorites.length }}</small></button><button class="lux-account-tab" :class="{ active: accountTab === 'seek' }" @click="accountTab = 'seek'; safely(() => loadSeekPosts())"><span>✎</span> โพสหาของฉัน <small>{{ mySeekPosts.length }}</small></button><div class="lux-account-help"><span>ต้องการความช่วยเหลือ?</span><button @click="showNotice('ทีม NuaNia พร้อมช่วยประสานงาน')">ติดต่อทีม NuaNia ↗</button></div></aside><section class="lux-account-main"><template v-if="accountTab === 'seek'"><div class="lux-account-section-heading"><div><div class="lux-kicker"><span></span> MY SEEK POSTS</div><h2>โพสหาผู้ให้บริการของฉัน</h2></div><button class="lux-text-link" @click="navigate('seek')">เปิดบอร์ดโพส <span>↗</span></button></div><div v-if="mySeekPosts.length" class="lux-seek-list"><article v-for="post in mySeekPosts" :key="`acc-${post.id}`" class="lux-seek-card" :class="{ closed: post.status === 'closed' }"><button type="button" class="lux-seek-card-main" @click="openSeekPost(post.id)"><div class="lux-seek-card-top"><strong>{{ post.title }}</strong><span class="lux-seek-status" :class="post.status">{{ post.status === 'open' ? 'เปิดรับ' : 'ปิดรับแล้ว' }}</span></div><p>{{ post.description }}</p><div class="lux-seek-card-meta"><span>{{ post.province }}</span><span v-if="post.venue">ร้าน {{ post.venue }}</span><span>งบ {{ post.budget }}</span><span>{{ post.duration }}</span><span>{{ post.commentCount }} คอมเมนต์</span><span>{{ formatDateTime(post.createdAt) }}</span></div></button><button v-if="post.status === 'open'" type="button" class="lux-seek-close-btn" @click="closeSeekPost(post)">ปิดรับ</button></article></div><div v-else class="lux-empty"><span>✎</span><h3>ยังไม่มีโพสหา</h3><p>สร้างโพสเพื่อให้ผู้ให้บริการเข้ามาคอมเมนต์แนะนำตัว</p><button class="lux-button lux-button-primary" @click="navigate('seek')">ไปสร้างโพส</button></div></template><template v-else-if="accountTab === 'favorites'"><div class="lux-account-section-heading"><div><div class="lux-kicker"><span></span> YOUR SAVED PROVIDERS</div><h2>โปรไฟล์ที่บันทึกไว้</h2></div><button class="lux-text-link" @click="navigate('search')">ค้นหาเพิ่มเติม <span>↗</span></button></div><div v-if="favoriteProviders.length" class="lux-provider-grid lux-favorite-grid">
+      <div class="lux-account-welcome"><div class="lux-kicker"><span></span> YOUR NUANIA</div><h1>โปรไฟล์ในแบบ<span>ของคุณ</span></h1><p>บันทึกโปรไฟล์ที่สนใจ · นัดหมายติดต่อผู้ให้บริการโดยตรงนอกเว็บ</p><button class="lux-account-role-link" @click="openSellerArea">{{ member?.role === 'seller' ? 'กลับสู่ศูนย์ผู้ให้บริการ' : 'ลงโปรไฟล์ผู้ให้บริการ' }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div>
+      <div class="lux-account-layout"><aside class="lux-account-sidebar"><div class="lux-account-person"><div class="lux-user-avatar lux-user-avatar-large">{{ member?.name?.slice(0, 1) || 'ส' }}</div><div><strong>{{ member?.name || 'สมาชิก' }}</strong><span>บัญชีผู้ใช้บริการ</span></div></div><button class="lux-account-tab" :class="{ active: accountTab === 'favorites' }" @click="accountTab = 'favorites'"><span><i class="fa-regular fa-heart" aria-hidden="true"></i></span> โปรไฟล์ที่บันทึก <small>{{ favorites.length }}</small></button><button class="lux-account-tab" :class="{ active: accountTab === 'seek' }" @click="accountTab = 'seek'; safely(() => loadSeekPosts())"><span><i class="fa-solid fa-pen" aria-hidden="true"></i></span> โพสหาของฉัน <small>{{ mySeekPosts.length }}</small></button><div class="lux-account-help"><span>ต้องการความช่วยเหลือ?</span><button @click="showNotice('ทีม NuaNia พร้อมช่วยประสานงาน')">ติดต่อทีม NuaNia <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div></aside><section class="lux-account-main"><template v-if="accountTab === 'seek'"><div class="lux-account-section-heading"><div><div class="lux-kicker"><span></span> MY SEEK POSTS</div><h2>โพสหาผู้ให้บริการของฉัน</h2></div><button class="lux-text-link" @click="navigate('seek')">เปิดบอร์ดโพส <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button></div><div v-if="mySeekPosts.length" class="lux-seek-list"><article v-for="post in mySeekPosts" :key="`acc-${post.id}`" class="lux-seek-card" :class="{ closed: post.status === 'closed' }"><button type="button" class="lux-seek-card-main" @click="openSeekPost(post.id)"><div class="lux-seek-card-top"><strong>{{ post.title }}</strong><span class="lux-seek-status" :class="post.status">{{ post.status === 'open' ? 'เปิดรับ' : 'ปิดรับแล้ว' }}</span></div><p>{{ post.description }}</p><div class="lux-seek-card-meta"><span>{{ post.province }}</span><span v-if="post.venue">ร้าน {{ post.venue }}</span><span>งบ {{ post.budget }}</span><span>{{ post.duration }}</span><span>{{ post.commentCount }} คอมเมนต์</span><span>{{ formatDateTime(post.createdAt) }}</span></div></button><button v-if="post.status === 'open'" type="button" class="lux-seek-close-btn" @click="closeSeekPost(post)">ปิดรับ</button></article></div><div v-else class="lux-empty"><span><i class="fa-solid fa-pen" aria-hidden="true"></i></span><h3>ยังไม่มีโพสหา</h3><p>สร้างโพสเพื่อให้ผู้ให้บริการเข้ามาคอมเมนต์แนะนำตัว</p><button class="lux-button lux-button-primary" @click="navigate('seek')">ไปสร้างโพส</button></div></template><template v-else-if="accountTab === 'favorites'"><div class="lux-account-section-heading"><div><div class="lux-kicker"><span></span> YOUR SAVED PROVIDERS</div><h2>โปรไฟล์ที่บันทึกไว้</h2></div><button class="lux-text-link" @click="navigate('search')">ค้นหาเพิ่มเติม <span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button></div><div v-if="favoriteProviders.length" class="lux-provider-grid lux-favorite-grid">
             <article v-for="provider in favoriteProviders" :key="provider.id" class="lux-provider-card" role="button" tabindex="0" :aria-label="`ดูโปรไฟล์ ${provider.name}`" @click="openProfile(provider)" @keydown.enter="openProfile(provider)" @keydown.space.prevent="openProfile(provider)">
               <div class="lux-card-media" :class="[provider.visual, { 'has-media': providerPreviewMedia(provider) }]">
                 <img v-if="providerPreviewMedia(provider)?.type === 'image'" class="lux-card-photo" :src="providerPreviewMedia(provider).url" :alt="`ภาพแนะนำของ ${provider.name}`" loading="lazy" />
                 <video v-else-if="providerPreviewMedia(provider)" class="lux-card-photo" :src="providerPreviewMedia(provider).url" muted autoplay loop playsinline :aria-label="`วิดีโอแนะนำของ ${provider.name}`"></video>
                 <span v-else class="lux-scene-symbol">{{ provider.initials }}</span>
                 <div class="lux-card-badges">
-                  <span class="lux-card-badge is-check" title="โปรไฟล์เผยแพร่">✓</span>
-                  <span v-if="providerHasVideo(provider)" class="lux-card-badge is-video" title="มีวิดีโอ">▶</span>
-                  <button type="button" class="lux-card-badge is-heart" :class="{ loved: favorites.includes(provider.id) }" :aria-label="favorites.includes(provider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click.stop="toggleFavorite(provider)">{{ favorites.includes(provider.id) ? '♥' : '♡' }}</button>
+                  <span class="lux-card-badge is-check" title="โปรไฟล์เผยแพร่"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+                  <span v-if="providerHasVideo(provider)" class="lux-card-badge is-video" title="มีวิดีโอ"><i class="fa-solid fa-play" aria-hidden="true"></i></span>
+                  <button type="button" class="lux-card-badge is-heart" :class="{ loved: favorites.includes(provider.id) }" :aria-label="favorites.includes(provider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click.stop="toggleFavorite(provider)"><i :class="favorites.includes(provider.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i></button>
                 </div>
                 <div class="lux-card-caption">
                   <strong>{{ provider.name }}</strong>
@@ -2103,7 +2103,7 @@ function scrollToProviders() {
               </div>
               <div class="lux-card-panel">
                 <div class="lux-card-panel-row">
-                  <span>✦ {{ provider.rating }}</span>
+                  <span><i class="fa-solid fa-star" aria-hidden="true"></i> {{ provider.rating }}</span>
                   <span>{{ provider.reviews || 0 }} รีวิว</span>
                 </div>
                 <div class="lux-card-panel-row">
@@ -2112,7 +2112,7 @@ function scrollToProviders() {
                 </div>
               </div>
             </article>
-          </div><div v-else class="lux-empty"><span>♡</span><h3>ยังไม่มีโปรไฟล์ที่บันทึก</h3><p>บันทึกผู้ให้บริการที่สนใจ เพื่อกลับมาดูรายละเอียดได้ทุกเมื่อ</p><button class="lux-button lux-button-primary" @click="navigate('search')">ค้นหาผู้ให้บริการ</button></div></template>
+          </div><div v-else class="lux-empty"><span><i class="fa-regular fa-heart" aria-hidden="true"></i></span><h3>ยังไม่มีโปรไฟล์ที่บันทึก</h3><p>บันทึกผู้ให้บริการที่สนใจ เพื่อกลับมาดูรายละเอียดได้ทุกเมื่อ</p><button class="lux-button lux-button-primary" @click="navigate('search')">ค้นหาผู้ให้บริการ</button></div></template>
       </section></div>
     </main>
 
@@ -2142,14 +2142,14 @@ function scrollToProviders() {
           </div>
           <label class="lux-consent"><input v-model="application.consent" type="checkbox" required /><span>ยินยอมให้แสดงข้อมูลโปรไฟล์ตามที่ระบุบนเว็บไซต์</span></label>
           <div class="lux-apply-fee"><span>ค่าลงประกาศ (ชำระนอกระบบ)</span><strong>฿299 <small>/ เดือน</small></strong><span>ชำระกับเจ้าของเว็บโดยตรง แล้วรออนุมัติบนระบบ</span></div>
-          <button class="lux-button lux-button-primary lux-full-button" type="submit">ส่งใบสมัคร ↗</button>
+          <button class="lux-button lux-button-primary lux-full-button" type="submit">ส่งใบสมัคร <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
           <small class="lux-apply-note">ไม่มีการจองหรือชำระเงินผ่านเว็บ · ค่าสมาชิกจัดการนอกระบบ</small>
         </form>
       </div>
     </main>
 
-    <main v-else-if="view === 'admin'" class="lux-page lux-admin-page"><div class="lux-admin-top"><div><div class="lux-kicker"><span></span> NUANIA ADMINISTRATION</div><h1>ภาพรวม<span>แพลตฟอร์ม</span></h1><p>จัดการพาร์ตเนอร์ อนุมัติหลังชำระนอกระบบ และตั้งวันหมดอายุสมาชิก</p></div><span class="lux-admin-status">● LISTING ONLY · ไม่มีจองผ่านเว็บ</span></div><div class="lux-admin-tabs"><button v-for="tab in [{id:'overview', label:'ภาพรวม'}, {id:'providers', label:'พาร์ตเนอร์'}, {id:'applications', label:'ใบสมัคร'}, {id:'travelers', label:'นักท่องเที่ยว'}]" :key="tab.id" :class="{ active: adminTab === tab.id }" @click="adminTab = tab.id">{{ tab.label }} <small v-if="tab.id === 'applications' && applications.length">{{ applications.length }}</small></button></div>
-      <template v-if="adminTab === 'overview'"><div class="lux-admin-metrics"><article><span>พาร์ตเนอร์ที่เผยแพร่</span><strong>{{ activeProviderCount }}</strong><small>active + สมาชิกยังไม่หมดอายุ</small></article><article><span>พาร์ตเนอร์ทั้งหมด</span><strong>{{ providers.length }}</strong><small>รวมที่ซ่อน / หมดอายุ</small></article><article><span>รายได้ค่าสมาชิก</span><strong>฿{{ (activeProviderCount * 299).toLocaleString() }}</strong><small>ชำระนอกระบบ · {{ activeProviderCount }} รายที่เผยแพร่</small></article><article><span>กำลังรอตรวจสอบ</span><strong>{{ applications.length }}</strong><small><i>ใบสมัครพาร์ตเนอร์ใหม่</i></small></article></div><div class="lux-admin-overview-grid"><section class="lux-admin-panel"><div class="lux-admin-panel-head"><div><h2>ระบบลงประกาศเท่านั้น</h2><p>ไม่มีการจองผ่านเว็บ · นักท่องเที่ยวติดต่อผู้ขายเอง</p></div><button @click="adminTab = 'providers'">จัดการพาร์ตเนอร์ ↗</button></div><div class="lux-empty" style="padding:28px 16px"><span>◈</span><h3>อนุมัติหลังรับชำระนอกระบบ</h3><p>ตั้งวันหมดอายุสมาชิกเมื่ออนุมัติใบสมัคร หรือแก้ได้ในแท็บพาร์ตเนอร์</p></div></section><aside class="lux-admin-panel lux-admin-side-panel"><div class="lux-admin-panel-head"><div><h2>รอตรวจสอบ</h2><p>ใบสมัครพาร์ตเนอร์</p></div><span>{{ applications.length }}</span></div><label v-if="applications.length" class="lux-admin-expiry-field"><span>วันหมดอายุเมื่ออนุมัติ</span><input v-model="adminApproveExpiresAt" type="datetime-local" /></label><div v-if="applications.length" class="lux-pending-list"><div v-for="item in applications.slice(0, 4)" :key="item.id"><img v-if="item.profilePhotoUrl" class="lux-pending-avatar lux-pending-photo" :src="item.profilePhotoUrl" :alt="item.name" /><span v-else class="lux-pending-avatar">{{ item.name.slice(0, 1) }}</span><div><strong>{{ item.name }}</strong><small>{{ item.province }} · {{ item.line }}</small><small class="lux-email-status" :class="item.emailVerified === true ? 'is-active' : item.emailVerified === false ? 'is-pending' : 'is-unknown'">{{ item.emailVerified === true ? 'อีเมลยืนยันแล้ว' : item.emailVerified === false ? 'ยังไม่ยืนยันอีเมล' : 'ไม่มีบัญชี' }}</small><small class="lux-email-status" :class="item.hasProfilePhoto ? 'is-active' : 'is-pending'">{{ item.hasProfilePhoto ? 'มีรูปโปรไฟล์' : 'ยังไม่มีรูป' }}</small></div><button :disabled="!item.hasProfilePhoto" @click="approveApplication(item)">{{ item.hasProfilePhoto ? 'อนุมัติ' : 'รอรูป' }}</button></div></div><div v-else class="lux-admin-no-pending"><span>✓</span><strong>ไม่มีรายการค้าง</strong><small>ใบสมัครใหม่จะแสดงที่นี่</small></div></aside></div></template>
+    <main v-else-if="view === 'admin'" class="lux-page lux-admin-page"><div class="lux-admin-top"><div><div class="lux-kicker"><span></span> NUANIA ADMINISTRATION</div><h1>ภาพรวม<span>แพลตฟอร์ม</span></h1><p>จัดการพาร์ตเนอร์ อนุมัติหลังชำระนอกระบบ และตั้งวันหมดอายุสมาชิก</p></div><span class="lux-admin-status"><i class="fa-solid fa-circle" aria-hidden="true"></i> LISTING ONLY · ไม่มีจองผ่านเว็บ</span></div><div class="lux-admin-tabs"><button v-for="tab in [{id:'overview', label:'ภาพรวม'}, {id:'providers', label:'พาร์ตเนอร์'}, {id:'applications', label:'ใบสมัคร'}, {id:'travelers', label:'นักท่องเที่ยว'}]" :key="tab.id" :class="{ active: adminTab === tab.id }" @click="adminTab = tab.id">{{ tab.label }} <small v-if="tab.id === 'applications' && applications.length">{{ applications.length }}</small></button></div>
+      <template v-if="adminTab === 'overview'"><div class="lux-admin-metrics"><article><span>พาร์ตเนอร์ที่เผยแพร่</span><strong>{{ activeProviderCount }}</strong><small>active + สมาชิกยังไม่หมดอายุ</small></article><article><span>พาร์ตเนอร์ทั้งหมด</span><strong>{{ providers.length }}</strong><small>รวมที่ซ่อน / หมดอายุ</small></article><article><span>รายได้ค่าสมาชิก</span><strong>฿{{ (activeProviderCount * 299).toLocaleString() }}</strong><small>ชำระนอกระบบ · {{ activeProviderCount }} รายที่เผยแพร่</small></article><article><span>กำลังรอตรวจสอบ</span><strong>{{ applications.length }}</strong><small><i>ใบสมัครพาร์ตเนอร์ใหม่</i></small></article></div><div class="lux-admin-overview-grid"><section class="lux-admin-panel"><div class="lux-admin-panel-head"><div><h2>ระบบลงประกาศเท่านั้น</h2><p>ไม่มีการจองผ่านเว็บ · นักท่องเที่ยวติดต่อผู้ขายเอง</p></div><button @click="adminTab = 'providers'">จัดการพาร์ตเนอร์ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div><div class="lux-empty" style="padding:28px 16px"><span><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span><h3>อนุมัติหลังรับชำระนอกระบบ</h3><p>ตั้งวันหมดอายุสมาชิกเมื่ออนุมัติใบสมัคร หรือแก้ได้ในแท็บพาร์ตเนอร์</p></div></section><aside class="lux-admin-panel lux-admin-side-panel"><div class="lux-admin-panel-head"><div><h2>รอตรวจสอบ</h2><p>ใบสมัครพาร์ตเนอร์</p></div><span>{{ applications.length }}</span></div><label v-if="applications.length" class="lux-admin-expiry-field"><span>วันหมดอายุเมื่ออนุมัติ</span><input v-model="adminApproveExpiresAt" type="datetime-local" /></label><div v-if="applications.length" class="lux-pending-list"><div v-for="item in applications.slice(0, 4)" :key="item.id"><img v-if="item.profilePhotoUrl" class="lux-pending-avatar lux-pending-photo" :src="item.profilePhotoUrl" :alt="item.name" /><span v-else class="lux-pending-avatar">{{ item.name.slice(0, 1) }}</span><div><strong>{{ item.name }}</strong><small>{{ item.province }} · {{ item.line }}</small><small class="lux-email-status" :class="item.emailVerified === true ? 'is-active' : item.emailVerified === false ? 'is-pending' : 'is-unknown'">{{ item.emailVerified === true ? 'อีเมลยืนยันแล้ว' : item.emailVerified === false ? 'ยังไม่ยืนยันอีเมล' : 'ไม่มีบัญชี' }}</small><small class="lux-email-status" :class="item.hasProfilePhoto ? 'is-active' : 'is-pending'">{{ item.hasProfilePhoto ? 'มีรูปโปรไฟล์' : 'ยังไม่มีรูป' }}</small></div><button :disabled="!item.hasProfilePhoto" @click="approveApplication(item)">{{ item.hasProfilePhoto ? 'อนุมัติ' : 'รอรูป' }}</button></div></div><div v-else class="lux-admin-no-pending"><span><i class="fa-solid fa-check" aria-hidden="true"></i></span><strong>ไม่มีรายการค้าง</strong><small>ใบสมัครใหม่จะแสดงที่นี่</small></div></aside></div></template>
       <section v-else-if="adminTab !== 'travelers'" class="lux-admin-panel lux-admin-detail-panel">
         <div class="lux-admin-panel-head">
           <div>
@@ -2235,13 +2235,13 @@ function scrollToProviders() {
               </tbody>
             </table>
           </div>
-          <div v-else class="lux-admin-no-pending"><span>✓</span><strong>ไม่มีใบสมัครค้างตรวจสอบ</strong></div>
+          <div v-else class="lux-admin-no-pending"><span><i class="fa-solid fa-check" aria-hidden="true"></i></span><strong>ไม่มีใบสมัครค้างตรวจสอบ</strong></div>
         </template>
       </section>
       <section v-else class="lux-admin-panel lux-admin-detail-panel">
         <div class="lux-admin-panel-head">
           <div><h2>{{ selectedTraveler ? `ข้อมูลนักท่องเที่ยว: ${selectedTraveler.traveler.name}` : 'นักท่องเที่ยวทั้งหมด' }}</h2><p>{{ selectedTraveler ? 'ข้อมูลบัญชีและประวัติการใช้งาน' : 'ค้นหาและเปิดดูข้อมูลบัญชี รายการโปรด และรีวิว' }}</p></div>
-          <button v-if="selectedTraveler" type="button" @click="selectedTraveler = null">← กลับไปยังรายชื่อ</button>
+          <button v-if="selectedTraveler" type="button" @click="selectedTraveler = null"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> กลับไปยังรายชื่อ</button>
           <span v-else>{{ filteredAdminTravelers.length }} บัญชี</span>
         </div>
         <template v-if="selectedTraveler">
@@ -2262,7 +2262,7 @@ function scrollToProviders() {
           </section>
           <section class="lux-admin-traveler-section">
             <h3>รีวิวที่เขียน ({{ selectedTraveler.reviews.length }})</h3>
-            <article v-for="review in selectedTraveler.reviews" :key="review.id" class="lux-admin-traveler-review"><div><strong>{{ review.provider }}</strong><span>บริการ {{ review.serviceRating }} ★ · ความคุ้มค่า {{ review.valueRating }} ★ · {{ formatDateTime(review.createdAt) }}</span></div><p>{{ review.comment }}</p><div v-if="review.media.length" class="lux-admin-traveler-review-media"><img v-for="media in review.media" :key="media.id" :src="media.url" :alt="media.name" loading="lazy" /></div></article>
+            <article v-for="review in selectedTraveler.reviews" :key="review.id" class="lux-admin-traveler-review"><div><strong>{{ review.provider }}</strong><span>บริการ {{ review.serviceRating }} <i class="fa-solid fa-star" aria-hidden="true"></i> · ความคุ้มค่า {{ review.valueRating }} <i class="fa-solid fa-star" aria-hidden="true"></i> · {{ formatDateTime(review.createdAt) }}</span></div><p>{{ review.comment }}</p><div v-if="review.media.length" class="lux-admin-traveler-review-media"><img v-for="media in review.media" :key="media.id" :src="media.url" :alt="media.name" loading="lazy" /></div></article>
             <p v-if="!selectedTraveler.reviews.length" class="lux-admin-traveler-empty">ยังไม่มีรีวิว</p>
           </section>
         </template>
@@ -2274,11 +2274,11 @@ function scrollToProviders() {
       </section>
 </main>
 
-    <main v-else-if="view === 'design'" class="lux-page lux-design-page"><div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><span>Design system</span></div><div class="lux-page-heading"><div><div class="lux-kicker"><span></span> NUANIA · VISUAL LANGUAGE</div><h1>Design<span>system</span></h1><p>ระบบภาพสำหรับแพลตฟอร์มนัดหมายผู้ให้บริการอิสระ เน้นความชัดเจน ความยินยอม และความเป็นส่วนตัว</p></div></div><section class="lux-design-section"><span class="lux-design-index">01 / COLOR</span><h2>Palette <small>ชุดสีสดใสแบบ full-color พร้อมไล่เฉดม่วง–ชมพู–ส้ม</small></h2><div class="lux-gradient-strip" aria-label="Signature gradient"></div><div class="lux-color-grid"><article v-for="color in [{name:'Violet', hex:'#7C3AED', cls:'swatch-violet'}, {name:'Pink',hex:'#EC4899',cls:'swatch-pink'}, {name:'Orange',hex:'#F97316',cls:'swatch-orange'}, {name:'Teal',hex:'#14B8A6',cls:'swatch-teal'}, {name:'Sky',hex:'#0EA5E9',cls:'swatch-sky'}, {name:'Indigo',hex:'#1E1B4B',cls:'swatch-indigo'}]" :key="color.name"><div :class="color.cls"></div><strong>{{ color.name }}</strong><span>{{ color.hex }}</span></article></div></section><section class="lux-design-section lux-type-samples"><span class="lux-design-index">02 / TYPOGRAPHY</span><h2>Type scale <small>ตัวอักษรชัดเจนและอ่านง่ายทุกหน้าจอ</small></h2><div><span>Display / 64</span><strong>นัดพบในแบบที่คุณเลือก</strong><span>Heading / 32</span><h3>ผู้ให้บริการอิสระ</h3><span>Body / 16</span><p>ดูโปรไฟล์และตกลงรายละเอียดก่อนยืนยันการนัดหมาย</p><span>Caption / 12</span><small>INDEPENDENT PROVIDER · CLEAR TERMS</small></div></section><section class="lux-design-section"><span class="lux-design-index">03 / COMPONENTS</span><h2>UI elements <small>คอมโพเนนต์ที่สม่ำเสมอและเข้าถึงได้บนทุกหน้าจอ</small></h2><div class="lux-component-row"><button class="lux-button lux-button-primary">ปุ่มหลัก ↗</button><button class="lux-button lux-button-light lux-border-button">ปุ่มรอง</button><span class="lux-verified">PROFILE</span><span class="lux-status">ยืนยันแล้ว</span><span class="lux-status waiting">รอยืนยัน</span></div><div class="lux-design-input"><label class="lux-form-label">Input / default<input placeholder="ชื่อหรือพื้นที่ให้บริการ" /></label><label class="lux-form-label">Select / default<select><option>เลือกจังหวัด</option></select></label></div></section><section class="lux-design-section"><span class="lux-design-index">04 / SPACING & SHAPE</span><h2>Layout principles <small>จังหวะพื้นที่และรูปทรง</small></h2><div class="lux-principles"><div><span class="lux-space-swatch space-8"></span><strong>8 px</strong><small>micro spacing</small></div><div><span class="lux-space-swatch space-16"></span><strong>16 px</strong><small>component gap</small></div><div><span class="lux-space-swatch space-24"></span><strong>24 px</strong><small>card padding</small></div><div><span class="lux-space-swatch space-40"></span><strong>40 px</strong><small>section rhythm</small></div><p>ใช้กริด 12 คอลัมน์บน desktop และ single-column flow บนมือถือ ปุ่มและช่องกรอกมีพื้นที่สัมผัสอย่างน้อย 44 px, มุมโค้ง 14–24 px และหลีกเลี่ยงการเปิดเผยข้อมูลที่ไม่จำเป็น</p></div></section></main>
+    <main v-else-if="view === 'design'" class="lux-page lux-design-page"><div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><span>Design system</span></div><div class="lux-page-heading"><div><div class="lux-kicker"><span></span> NUANIA · VISUAL LANGUAGE</div><h1>Design<span>system</span></h1><p>ระบบภาพสำหรับแพลตฟอร์มนัดหมายผู้ให้บริการอิสระ เน้นความชัดเจน ความยินยอม และความเป็นส่วนตัว</p></div></div><section class="lux-design-section"><span class="lux-design-index">01 / COLOR</span><h2>Palette <small>ชุดสีสดใสแบบ full-color พร้อมไล่เฉดม่วง–ชมพู–ส้ม</small></h2><div class="lux-gradient-strip" aria-label="Signature gradient"></div><div class="lux-color-grid"><article v-for="color in [{name:'Violet', hex:'#7C3AED', cls:'swatch-violet'}, {name:'Pink',hex:'#EC4899',cls:'swatch-pink'}, {name:'Orange',hex:'#F97316',cls:'swatch-orange'}, {name:'Teal',hex:'#14B8A6',cls:'swatch-teal'}, {name:'Sky',hex:'#0EA5E9',cls:'swatch-sky'}, {name:'Indigo',hex:'#1E1B4B',cls:'swatch-indigo'}]" :key="color.name"><div :class="color.cls"></div><strong>{{ color.name }}</strong><span>{{ color.hex }}</span></article></div></section><section class="lux-design-section lux-type-samples"><span class="lux-design-index">02 / TYPOGRAPHY</span><h2>Type scale <small>ตัวอักษรชัดเจนและอ่านง่ายทุกหน้าจอ</small></h2><div><span>Display / 64</span><strong>นัดพบในแบบที่คุณเลือก</strong><span>Heading / 32</span><h3>ผู้ให้บริการอิสระ</h3><span>Body / 16</span><p>ดูโปรไฟล์และตกลงรายละเอียดก่อนยืนยันการนัดหมาย</p><span>Caption / 12</span><small>INDEPENDENT PROVIDER · CLEAR TERMS</small></div></section><section class="lux-design-section"><span class="lux-design-index">03 / COMPONENTS</span><h2>UI elements <small>คอมโพเนนต์ที่สม่ำเสมอและเข้าถึงได้บนทุกหน้าจอ</small></h2><div class="lux-component-row"><button class="lux-button lux-button-primary">ปุ่มหลัก <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button><button class="lux-button lux-button-light lux-border-button">ปุ่มรอง</button><span class="lux-verified">PROFILE</span><span class="lux-status">ยืนยันแล้ว</span><span class="lux-status waiting">รอยืนยัน</span></div><div class="lux-design-input"><label class="lux-form-label">Input / default<input placeholder="ชื่อหรือพื้นที่ให้บริการ" /></label><label class="lux-form-label">Select / default<select><option>เลือกจังหวัด</option></select></label></div></section><section class="lux-design-section"><span class="lux-design-index">04 / SPACING & SHAPE</span><h2>Layout principles <small>จังหวะพื้นที่และรูปทรง</small></h2><div class="lux-principles"><div><span class="lux-space-swatch space-8"></span><strong>8 px</strong><small>micro spacing</small></div><div><span class="lux-space-swatch space-16"></span><strong>16 px</strong><small>component gap</small></div><div><span class="lux-space-swatch space-24"></span><strong>24 px</strong><small>card padding</small></div><div><span class="lux-space-swatch space-40"></span><strong>40 px</strong><small>section rhythm</small></div><p>ใช้กริด 12 คอลัมน์บน desktop และ single-column flow บนมือถือ ปุ่มและช่องกรอกมีพื้นที่สัมผัสอย่างน้อย 44 px, มุมโค้ง 14–24 px และหลีกเลี่ยงการเปิดเผยข้อมูลที่ไม่จำเป็น</p></div></section></main>
 
-    <footer class="lux-footer"><div class="lux-footer-main"><div class="lux-logo"><span class="lux-logo-symbol">N</span><span class="lux-logo-word">NuaNia<span>.</span><small>CONNECT ON YOUR TERMS</small></span></div><p>เว็บไซต์รวมเด็กเอนเตอร์เทรน<br />ทั่วประเทศไทย · ไม่จองผ่านเว็บ</p><div class="lux-footer-links"><button @click="navigate('search')">ค้นหาผู้ให้บริการ</button><button v-if="currentUser" @click="openOwnArea">{{ accountMenuLabel }}</button><button v-else @click="navigate('login')">เข้าสู่ระบบ</button><button v-if="!currentUser" @click="navigate('apply')">ลงโปรไฟล์ผู้ให้บริการ</button></div><div class="lux-footer-contact"><span>NEED SUPPORT?</span><strong>มีข้อสงสัยเรื่องโปรไฟล์?</strong><button @click="showNotice('ทีม NuaNia พร้อมช่วยประสานงาน')">ติดต่อ NuaNia ↗</button></div></div><div class="lux-footer-bottom"><span>© 2026 NUANIA · INDEPENDENT PROVIDER PLATFORM</span><span>ความเป็นส่วนตัว　 ข้อกำหนดการใช้บริการ</span><span>THAILAND · CONNECT WITH CARE</span></div></footer>
+    <footer class="lux-footer"><div class="lux-footer-main"><div class="lux-logo"><span class="lux-logo-symbol">N</span><span class="lux-logo-word">NuaNia<span>.</span><small>CONNECT ON YOUR TERMS</small></span></div><p>เว็บไซต์รวมเด็กเอนเตอร์เทรน<br />ทั่วประเทศไทย · ไม่จองผ่านเว็บ</p><div class="lux-footer-links"><button @click="navigate('search')">ค้นหาผู้ให้บริการ</button><button v-if="currentUser" @click="openOwnArea">{{ accountMenuLabel }}</button><button v-else @click="navigate('login')">เข้าสู่ระบบ</button><button v-if="!currentUser" @click="navigate('apply')">ลงโปรไฟล์ผู้ให้บริการ</button></div><div class="lux-footer-contact"><span>NEED SUPPORT?</span><strong>มีข้อสงสัยเรื่องโปรไฟล์?</strong><button @click="showNotice('ทีม NuaNia พร้อมช่วยประสานงาน')">ติดต่อ NuaNia <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div></div><div class="lux-footer-bottom"><span>© 2026 NUANIA · INDEPENDENT PROVIDER PLATFORM</span><span>ความเป็นส่วนตัว　 ข้อกำหนดการใช้บริการ</span><span>THAILAND · CONNECT WITH CARE</span></div></footer>
 
-    <nav class="lux-mobile-bottom" aria-label="เมนูมือถือ"><button :class="{ active: view === 'home' }" @click="navigate('home')"><span>⌂</span>หน้าแรก</button><button :class="{ active: view === 'search' }" @click="navigate('search')"><span>⌕</span>ค้นหา</button><button v-if="!currentUser" :class="{ active: view === 'login' }" @click="navigate('login')"><span>◉</span>เข้าสู่ระบบ</button><button v-else :class="{ active: view === currentHomeView }" @click="openOwnArea"><span>◉</span>{{ accountMenuLabel }}</button></nav>
+    <nav class="lux-mobile-bottom" aria-label="เมนูมือถือ"><button :class="{ active: view === 'home' }" @click="navigate('home')"><span><i class="fa-solid fa-house" aria-hidden="true"></i></span>หน้าแรก</button><button :class="{ active: view === 'search' }" @click="navigate('search')"><span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>ค้นหา</button><button v-if="!currentUser" :class="{ active: view === 'login' }" @click="navigate('login')"><span><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i></span>เข้าสู่ระบบ</button><button v-else :class="{ active: view === currentHomeView }" @click="openOwnArea"><span><i class="fa-solid fa-user" aria-hidden="true"></i></span>{{ accountMenuLabel }}</button></nav>
     <main v-if="view === 'seller' && sellerProvider" class="lux-page lux-seller-page">
       <div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><span>ศูนย์จัดการผู้ขาย</span></div>
       <div class="lux-seller-heading"><div><div class="lux-kicker"><span></span> SELLER WORKSPACE</div><h1>จัดการ<span>บริการของคุณ</span></h1><p>{{ sellerProvider.name }} · {{ sellerProvider.province }}</p></div><span class="lux-seller-status" :class="{ published: sellerProvider.active }">{{ sellerProvider.active ? 'เผยแพร่แล้ว' : 'รอตรวจสอบโปรไฟล์' }}</span></div>
@@ -2359,7 +2359,7 @@ function scrollToProviders() {
       <form v-else class="lux-seller-panel lux-seller-profile" novalidate @submit.prevent="saveSellerProfile"><div class="lux-seller-panel-head"><div><h2>โปรไฟล์และบริการ</h2><p>ข้อมูลนี้จะแสดงในหน้าค้นหาหลังผ่านการตรวจสอบ</p></div></div><div v-if="sellerSaveAlert" id="seller-save-alert" class="lux-seller-save-alert" :class="{ ok: sellerSaveAlert === 'บันทึกข้อมูลบริการแล้ว' }" role="alert">{{ sellerSaveAlert }}</div><div class="lux-membership-fields"><label class="lux-form-label">ชื่อที่ใช้แสดง<input v-model.trim="sellerProvider.name" maxlength="40" required /></label><label class="lux-form-label">จังหวัด<select v-model="sellerProvider.province" required><option v-for="province in provinces" :key="province">{{ province }}</option></select></label><label class="lux-form-label">ราคาเริ่มต้นต่อชั่วโมง<input v-model.number="sellerProvider.price" type="number" min="1" step="50" required /></label><label class="lux-form-label">อายุ<input v-model.number="sellerProvider.age" type="number" min="18" max="100" required /></label><label class="lux-form-label">ส่วนสูง (ซม.)<input v-model.number="sellerProvider.heightCm" type="number" min="120" max="230" required /></label><label class="lux-form-label">น้ำหนัก (กก.)<input v-model.number="sellerProvider.weightKg" type="number" min="30" max="250" required /></label><label class="lux-form-label">สัดส่วน<input v-model.trim="sellerProvider.measurements" maxlength="80" placeholder="เช่น 34-24-36 นิ้ว" required /></label><label class="lux-form-label">สถานที่ให้บริการ<input v-model.trim="sellerProvider.venue" maxlength="100" required /></label><label class="lux-form-label">LINE ID<input v-model.trim="sellerProvider.line" maxlength="80" placeholder="เช่น mali.relax" /></label><label class="lux-form-label">ลิงก์ Facebook<input v-model.trim="sellerProvider.facebook" maxlength="300" type="text" inputmode="url" placeholder="https://facebook.com/yourpage" /></label><label class="lux-form-label lux-membership-wide">รายละเอียดบริการ<textarea v-model="sellerProvider.description" rows="5" maxlength="300" placeholder="เขียนรายละเอียดได้หลายบรรทัด และใส่อิโมจิได้ ✨&#10;เช่น 🌿 จุดเด่นหรือบรรยากาศบริการ&#10;🕒 เวลาที่ให้บริการ" required></textarea></label></div><section class="lux-seller-services" aria-labelledby="seller-services-heading"><div class="lux-seller-panel-head"><div><h2 id="seller-services-heading">รูปแบบและราคา</h2><p>เพิ่มรายการบริการพร้อมชื่อ ระยะเวลา รายละเอียด และราคา (แสดงบนโปรไฟล์เท่านั้น ไม่มีการจองผ่านเว็บ)</p></div><button class="lux-button lux-button-light" type="button" :disabled="sellerProvider.services.length >= 30" @click="addSellerService">＋ เพิ่มรูปแบบ</button></div><article v-for="(service, index) in sellerProvider.services" :key="index" class="lux-seller-service-row"><div class="lux-seller-service-heading"><strong>รูปแบบที่ {{ index + 1 }}</strong><button type="button" :disabled="sellerProvider.services.length <= 1" @click="removeSellerService(index)">ลบ</button></div><label class="lux-form-label">ชื่อรูปแบบ<input v-model.trim="service.name" maxlength="60" placeholder="เช่น พบปะพูดคุย ✨" required /></label><div class="lux-seller-service-fields"><label class="lux-form-label">ระยะเวลา<input v-model.trim="service.duration" maxlength="40" placeholder="เช่น 60 นาที" required /></label><label class="lux-form-label">ราคา (บาท)<input v-model.number="service.price" type="number" min="1" max="1000000" step="1" required /></label></div><label class="lux-form-label">รายละเอียด<textarea v-model.trim="service.description" maxlength="200" rows="4" placeholder="ใส่รายละเอียดได้หลายบรรทัด และใช้อิโมจิได้ ✨&#10;เช่น 🌿 นัดพบในบรรยากาศสบาย ๆ" required></textarea></label></article></section><section class="lux-seller-media-manager" aria-labelledby="seller-media-heading"><div class="lux-seller-panel-head"><div><h2 id="seller-media-heading">สื่อโปรโมตบริการ</h2><p>เพิ่มรูปภาพหรือวิดีโอได้หลายไฟล์ เพื่อแสดงในหน้าโปรไฟล์ของคุณ</p></div><span class="lux-seller-media-count">{{ sellerProvider.media?.length || 0 }} ไฟล์</span></div><label class="lux-seller-upload"><input type="file" accept="image/*,video/*" multiple @change="addSellerMedia" /><span aria-hidden="true">＋</span><strong>เลือกรูปภาพหรือวิดีโอ</strong><small>เลือกหลายไฟล์พร้อมกันได้</small></label><div v-if="sellerProvider.media?.length" class="lux-seller-media-grid"><article v-for="media in sellerProvider.media" :key="media.id" class="lux-seller-media-item"><img v-if="media.type === 'image'" :src="media.url" :alt="media.name" /><video v-else :src="media.url" controls preload="metadata" playsinline :aria-label="media.name"></video><div><span :title="media.name">{{ media.name }}</span><button type="button" :aria-label="`ลบไฟล์ ${media.name}`" @click="removeSellerMedia(media.id)">ลบ</button></div></article></div><p class="lux-seller-media-note">สื่อที่เพิ่มจะปรากฏบนโปรไฟล์สาธารณะหลังบันทึก</p></section><div v-if="sellerSaveAlert" class="lux-seller-save-alert" :class="{ ok: sellerSaveAlert === 'บันทึกข้อมูลบริการแล้ว' }" role="alert">{{ sellerSaveAlert }}</div><button class="lux-button lux-button-primary" type="button" @click="saveSellerProfile">บันทึกข้อมูลบริการ ↗</button></form>
     </main>
     <Teleport to="body">
-      <div v-if="notice" class="lux-toast" role="status" aria-live="polite"><span>✓</span>{{ notice }}</div>
+      <div v-if="notice" class="lux-toast" role="status" aria-live="polite"><span><i class="fa-solid fa-check" aria-hidden="true"></i></span>{{ notice }}</div>
       <div v-if="isMembershipSubmitting" class="lux-loading-overlay" role="status" aria-live="assertive" aria-busy="true">
         <div class="lux-loading-card">
           <span class="lux-loading-spinner" aria-hidden="true"></span>
@@ -2379,7 +2379,7 @@ function scrollToProviders() {
               <div class="lux-kicker"><span></span> NEW SEEK POST</div>
               <h2 id="seek-compose-title">สร้างโพสหา</h2>
             </div>
-            <button type="button" class="lux-seek-modal-close" aria-label="ปิด" :disabled="isSeekSubmitting" @click="closeSeekCompose">×</button>
+            <button type="button" class="lux-seek-modal-close" aria-label="ปิด" :disabled="isSeekSubmitting" @click="closeSeekCompose"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
           </div>
           <form class="lux-seek-form" novalidate @submit.prevent="submitSeekPost">
             <label class="lux-form-label" :class="{ 'has-error': seekFormErrors.title }">
@@ -2418,7 +2418,7 @@ function scrollToProviders() {
             <div class="lux-seek-modal-actions">
               <button class="lux-button lux-button-light" type="button" :disabled="isSeekSubmitting" @click="closeSeekCompose">ยกเลิก</button>
               <button class="lux-button lux-button-primary" type="submit" :disabled="isSeekSubmitting">
-                {{ isSeekSubmitting ? 'กำลังโพส...' : 'โพสหาผู้ให้บริการ →' }}
+                {{ isSeekSubmitting ? 'กำลังโพส...' : 'โพสหาผู้ให้บริการ' }} <i v-if="!isSeekSubmitting" class="fa-solid fa-arrow-right" aria-hidden="true"></i>
               </button>
             </div>
           </form>
