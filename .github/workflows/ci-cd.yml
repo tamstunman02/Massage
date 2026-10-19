@@ -16,7 +16,7 @@ concurrency:
 jobs:
   ci:
     name: Build and smoke test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
       postgres:
@@ -73,7 +73,7 @@ jobs:
     name: Deploy
     needs: ci
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Update server and restart
