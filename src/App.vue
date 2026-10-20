@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { api } from './api'
 
 const OWNER_LINE_ID = '390xblmm'
-const ownerLineUrl = `https://line.me/ti/p/~${encodeURIComponent(OWNER_LINE_ID)}`
+const ownerLineUrl = `https://line.me/R/ti/p/@${OWNER_LINE_ID}`
 const ownerLineLabel = `@${OWNER_LINE_ID}`
 
 const provinces = [
@@ -606,7 +606,8 @@ function providerFacebookUrl(provider) {
 
 function openProviderContact(url) {
   if (!url) return
-  window.open(url, '_blank', 'noopener,noreferrer')
+  const opened = window.open(url, '_blank', 'noopener,noreferrer')
+  if (!opened) window.location.assign(url)
 }
 
 function openOwnerLine() {
@@ -2396,7 +2397,7 @@ function scrollToProviders() {
     </main>
     </Transition>
 
-    <footer class="lux-footer"><div class="lux-footer-main"><div class="lux-logo"><span class="lux-logo-symbol">N</span><span class="lux-logo-word">NuaNia<span>.</span><small>CONNECT ON YOUR TERMS</small></span></div><p>นัวเนีย รวมเด็กเอ็น เด็กเอนเตอร์เทรน<br />ทั่วประเทศไทย · ไม่จองผ่านเว็บ</p><div class="lux-footer-links"><button @click="navigate('search')">ค้นหาผู้ให้บริการ</button><button v-if="currentUser" @click="openOwnArea">{{ accountMenuLabel }}</button><button v-else @click="navigate('login')">เข้าสู่ระบบ</button><button v-if="!currentUser" @click="navigate('apply')">ลงโปรไฟล์ผู้ให้บริการ</button></div><div class="lux-footer-contact"><span>NEED SUPPORT?</span><strong>ติดต่อ NuaNia ได้ที่</strong><a class="lux-footer-line" :href="ownerLineUrl" target="_blank" rel="noopener noreferrer" @click.prevent="openOwnerLine">LINE {{ ownerLineLabel }} <AppIcon name="arrow-right" /></a></div></div><div class="lux-footer-bottom"><span>© 2026 NUANIA · INDEPENDENT PROVIDER PLATFORM</span><span>ความเป็นส่วนตัว　 ข้อกำหนดการใช้บริการ</span><span>THAILAND · CONNECT WITH CARE</span></div></footer>
+    <footer class="lux-footer"><div class="lux-footer-main"><div class="lux-logo"><span class="lux-logo-symbol">N</span><span class="lux-logo-word">NuaNia<span>.</span><small>CONNECT ON YOUR TERMS</small></span></div><p>นัวเนีย รวมเด็กเอ็น เด็กเอนเตอร์เทรน<br />ทั่วประเทศไทย · ไม่จองผ่านเว็บ</p><div class="lux-footer-links"><button @click="navigate('search')">ค้นหาผู้ให้บริการ</button><button v-if="currentUser" @click="openOwnArea">{{ accountMenuLabel }}</button><button v-else @click="navigate('login')">เข้าสู่ระบบ</button><button v-if="!currentUser" @click="navigate('apply')">ลงโปรไฟล์ผู้ให้บริการ</button></div><div class="lux-footer-contact"><span>NEED SUPPORT?</span><strong>ติดต่อ NuaNia ได้ที่</strong><a class="lux-footer-line" :href="ownerLineUrl" target="_blank" rel="noopener noreferrer">LINE {{ ownerLineLabel }} <AppIcon name="arrow-right" /></a></div></div><div class="lux-footer-bottom"><span>© 2026 NUANIA · INDEPENDENT PROVIDER PLATFORM</span><span>ความเป็นส่วนตัว　 ข้อกำหนดการใช้บริการ</span><span>THAILAND · CONNECT WITH CARE</span></div></footer>
 
     <nav class="lux-mobile-bottom" aria-label="เมนูมือถือ"><button :class="{ active: view === 'search' || isSearchFilterOpen }" @click="openSearchFilters()"><span><AppIcon name="magnifying-glass" /></span>ค้นหา</button><button :class="{ active: view === 'home' }" @click="navigate('home')"><span><AppIcon name="house" /></span>หน้าแรก</button><button v-if="!currentUser" :class="{ active: view === 'membership' }" @click="navigate('membership')"><span><AppIcon name="user-plus" /></span>สมัครสมาชิก</button><button v-else :class="{ active: view === currentHomeView }" @click="openOwnArea"><span><AppIcon name="user" /></span>{{ accountMenuLabel }}</button></nav>
 
