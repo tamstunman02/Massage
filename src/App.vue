@@ -284,6 +284,8 @@ onMounted(async () => {
     applyUser((await api.me()).user)
     await loadData()
   }, 'เชื่อมต่อฐานข้อมูลไม่สำเร็จ')
+  await openSharedProfileFromUrl()
+  window.addEventListener('popstate', onProfilePopState)
 })
 
 onBeforeUnmount(() => {
@@ -295,6 +297,7 @@ onBeforeUnmount(() => {
   clearReviewImages()
   stopSeekRealtime()
   stopSeekBoardPolling()
+  window.removeEventListener('popstate', onProfilePopState)
 })
 
 function closeSeekDetail() {
@@ -726,6 +729,7 @@ function navigate(nextView) {
     startSeekBoardPolling()
   }
   isCompactMenuOpen.value = false
+  if (nextView !== 'profile') clearSharedProfileUrl()
   window.scrollTo({ top: 0, behavior: 'auto' })
 }
 
@@ -1025,7 +1029,7 @@ function openBuyerArea() {
 }
 
 
-async function openProfile(provider) {
+async function openProfile(provider, { fromHistory = false } = {}) {
   selectedProvider.value = provider
   profileBookingMode.value = provider.modes?.includes(profileBookingMode.value)
     ? profileBookingMode.value
@@ -1035,7 +1039,83 @@ async function openProfile(provider) {
   reviewForm.value = { bookingId: '', serviceRating: 5, valueRating: 5, comment: '' }
   clearReviewImages()
   navigate('profile')
+  if (!fromHistory) rememberSharedProfile(provider.id)
+  document.title = `${provider.name} | นัวเนีย NuaNia`
   await safely(() => loadProviderReviews(provider.id), 'โหลดรีวิวไม่สำเร็จ')
+}
+
+function sharedProfileId() {
+  const match = window.location.pathname.match(/^\/p\/(\d+)\/?$/)
+  return match ? Number(match[1]) : null
+}
+
+function profileShareUrl(id) {
+  return `${window.location.origin}/p/${id}`
+}
+
+function rememberSharedProfile(id) {
+  const path = `/p/${id}`
+  if (window.location.pathname !== path) history.pushState({ profileId: id }, '', path)
+}
+
+function clearSharedProfileUrl() {
+  document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอนเตอร์เทรน ทั่วประเทศไทย'
+  if (!sharedProfileId()) return
+  history.pushState({}, '', '/')
+}
+
+async function openSharedProfileFromUrl() {
+  const id = sharedProfileId()
+  if (!id) return
+  const provider = providers.value.find((item) => item.id === id && isProviderPubliclyListed(item))
+  if (!provider) {
+    showNotice('ไม่พบโปรไฟล์นี้ หรือโปรไฟล์ยังไม่เผยแพร่')
+    history.replaceState({}, '', '/')
+    return
+  }
+  await openProfile(provider, { fromHistory: true })
+}
+
+function onProfilePopState() {
+  const id = sharedProfileId()
+  if (!id) {
+    if (view.value === 'profile') {
+      selectedProvider.value = null
+      view.value = 'home'
+      document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอนเตอร์เทรน ทั่วประเทศไทย'
+    }
+    return
+  }
+  const provider = providers.value.find((item) => item.id === id && isProviderPubliclyListed(item))
+  if (!provider) {
+    showNotice('ไม่พบโปรไฟล์นี้ หรือโปรไฟล์ยังไม่เผยแพร่')
+    selectedProvider.value = null
+    view.value = 'home'
+    return
+  }
+  openProfile(provider, { fromHistory: true })
+}
+
+async function shareProviderProfile(provider) {
+  if (!isProviderPubliclyListed(provider)) {
+    showNotice('โปรไฟล์นี้ยังไม่เผยแพร่ จึงแชร์ให้คนอื่นเปิดไม่ได้')
+    return
+  }
+  const url = profileShareUrl(provider.id)
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `${provider.name} | นัวเนีย`, text: provider.name, url })
+      return
+    } catch (error) {
+      if (error?.name === 'AbortError') return
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url)
+    showNotice('คัดลอกลิงก์โปรไฟล์แล้ว')
+  } catch {
+    showNotice(url)
+  }
 }
 
 async function openSeekCommentProfile(comment) {
@@ -1698,7 +1778,7 @@ function scrollToProviders() {
 
     <main :key="'profile'" v-else-if="view === 'profile' && selectedProvider" class="lux-page lux-profile-page">
       <div class="lux-breadcrumb"><button @click="navigate('home')">หน้าแรก</button><span>/</span><button v-if="currentRole === 'admin'" @click="adminTab = 'providers'; navigate('admin')">พาร์ตเนอร์</button><button v-else @click="navigate('search')">ค้นหาบริการ</button><span>/</span><span>{{ selectedProvider.name }}</span></div>
-      <div class="lux-profile-layout"><section class="lux-profile-main"><div class="lux-profile-identity"><div class="lux-profile-monogram" :class="[selectedProvider.visual, { 'has-profile-image': featuredProfileImage }]"><img v-if="featuredProfileImage" :src="featuredProfileImage.url" :alt="`รูปโปรไฟล์ ${selectedProvider.name}`" /><span v-else>{{ selectedProvider.initials }}</span></div><div class="lux-profile-title"><div class="lux-profile-label"><span class="lux-verified">PROVIDER PROFILE</span><span v-if="reviewSummary"><AppIcon name="star" /> {{ reviewSummary.service }} / 5 <small>({{ reviewSummary.count }} รีวิว)</small></span><span v-else>ยังไม่มีคะแนนรีวิว</span></div><h1>{{ selectedProvider.name }}<small>, {{ selectedProvider.age }}</small></h1><p>ผู้ให้บริการอิสระ · {{ selectedProvider.area }}, {{ selectedProvider.province }}</p></div><button class="lux-heart lux-profile-heart" :class="{ loved: favorites.includes(selectedProvider.id) }" :aria-label="favorites.includes(selectedProvider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click="toggleFavorite(selectedProvider)"><AppIcon name="heart" /></button></div>
+      <div class="lux-profile-layout"><section class="lux-profile-main"><div class="lux-profile-identity"><div class="lux-profile-monogram" :class="[selectedProvider.visual, { 'has-profile-image': featuredProfileImage }]"><img v-if="featuredProfileImage" :src="featuredProfileImage.url" :alt="`รูปโปรไฟล์ ${selectedProvider.name}`" /><span v-else>{{ selectedProvider.initials }}</span></div><div class="lux-profile-title"><div class="lux-profile-label"><span class="lux-verified">PROVIDER PROFILE</span><span v-if="reviewSummary"><AppIcon name="star" /> {{ reviewSummary.service }} / 5 <small>({{ reviewSummary.count }} รีวิว)</small></span><span v-else>ยังไม่มีคะแนนรีวิว</span></div><h1>{{ selectedProvider.name }}<small>, {{ selectedProvider.age }}</small></h1><p>ผู้ให้บริการอิสระ · {{ selectedProvider.area }}, {{ selectedProvider.province }}</p></div><button type="button" class="lux-heart lux-profile-share" aria-label="แชร์โปรไฟล์" @click="shareProviderProfile(selectedProvider)"><AppIcon name="share" /></button><button class="lux-heart lux-profile-heart" :class="{ loved: favorites.includes(selectedProvider.id) }" :aria-label="favorites.includes(selectedProvider.id) ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'" @click="toggleFavorite(selectedProvider)"><AppIcon name="heart" /></button></div>
           <div v-if="selectedProvider.media?.length" class="lux-profile-section lux-promo-gallery"><div class="lux-section-title"><div><div class="lux-kicker"><span></span> PROVIDER MOMENTS</div><h2>ภาพและวิดีโอแนะนำโปรไฟล์</h2></div><span>{{ selectedProvider.media.length }} รายการ · แตะเพื่อขยาย</span></div><div class="lux-promo-grid"><button v-for="(media, index) in selectedProvider.media" :key="media.id" class="lux-promo-item" type="button" :aria-label="`ขยาย${media.type === 'image' ? 'รูปภาพ' : 'วิดีโอ'} ${media.name}`" @click="openMediaViewer(selectedProvider.media, index)"><img v-if="media.type === 'image'" :src="media.url" :alt="media.name" loading="lazy" /><template v-else><video :src="media.url" preload="metadata" playsinline :aria-label="media.name"></video><span class="lux-promo-play" aria-hidden="true"><AppIcon name="play" /></span></template></button></div></div>
           <div class="lux-profile-section"><div class="lux-kicker"><span></span> ABOUT THE PROVIDER</div><h2>คุยรายละเอียดและ<span>ขอบเขตให้ชัดเจน</span></h2><p class="lux-provider-about-copy">{{ selectedProvider.description }}</p><p class="lux-provider-about-guidance">ไม่มีการจองผ่านเว็บ · ติดต่อผู้ให้บริการผ่าน LINE หรือ Facebook แล้วตกลงเวลา สถานที่ ราคา และขอบเขตกันเอง</p><div class="lux-tag-row"><span v-for="tag in selectedProvider.tags" :key="tag">{{ tag }}</span></div><div v-if="providerLineUrl(selectedProvider) || providerFacebookUrl(selectedProvider)" class="lux-provider-contacts"><span class="lux-provider-contacts-label">ช่องทางติดต่อ</span><div class="lux-provider-contact-actions"><a v-if="providerLineUrl(selectedProvider)" class="lux-contact-btn lux-contact-line" :href="providerLineUrl(selectedProvider)" target="_blank" rel="noopener noreferrer" @click.prevent="openProviderContact(providerLineUrl(selectedProvider))"><i>LINE</i><span>{{ selectedProvider.line }}</span></a><a v-if="providerFacebookUrl(selectedProvider)" class="lux-contact-btn lux-contact-facebook" :href="providerFacebookUrl(selectedProvider)" target="_blank" rel="noopener noreferrer" @click.prevent="openProviderContact(providerFacebookUrl(selectedProvider))"><i>Facebook</i><span>เปิดโปรไฟล์</span></a></div></div></div>
           <div class="lux-profile-section lux-review-section">
