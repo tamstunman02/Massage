@@ -5,6 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="canonical" href="https://nuania.app/">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="https://nuania.app/sitemap.xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,6 +25,11 @@
     <meta name="twitter:title" content="นัวเนีย NuaNia — รวมเด็กเอ็น ทั่วไทย">
     <meta name="twitter:description" content="เว็บรวมเด็กเอ็น เด็กเอนเตอร์เทรน ค้นหาโปรไฟล์ ดูราคา ติดต่อโดยตรง — ไม่จองผ่านเว็บ">
     <title>นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอนเตอร์เทรน ทั่วประเทศไทย</title>
+    <style>
+      #app > main { max-width: 720px; margin: 48px auto; padding: 0 24px; color: #1e1b4b; font-family: Prompt, sans-serif; }
+      #app > main h1 { margin: 0 0 12px; font-size: 32px; line-height: 1.3; }
+      #app > main p { margin: 0 0 12px; font-size: 16px; line-height: 1.6; }
+    </style>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -42,7 +48,13 @@
     </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main>
+        <h1>นัวเนีย NuaNia รวมเด็กเอ็น ทั่วประเทศไทย</h1>
+        <p>นัวเนียเป็นเว็บรวมเด็กเอนและเด็กเอนเตอร์เทรนทั่วไทย ค้นหาโปรไฟล์ ดูราคา แล้วติดต่อนัดหมายโดยตรงผ่าน LINE หรือ Facebook ไม่มีการจองผ่านเว็บ</p>
+        <p>เลือกจังหวัดและรูปแบบบริการได้เอง เช่น พบปะพูดคุย ดื่มสังสรรค์ ร่วมกิจกรรม งานอีเวนต์ และไลฟ์สไตล์ จากนั้นอ่านโปรไฟล์แล้วติดต่อผู้ให้บริการโดยตรง</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

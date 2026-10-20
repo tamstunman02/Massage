@@ -113,6 +113,8 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-header-actions { display: flex; align-items: center; gap: 15px; }
 .lux-icon-button { width: 34px; height: 34px; color: var(--s-forest); background: transparent; border: 1px solid var(--s-line); border-radius: 50%; font-size: 21px; cursor: pointer; }
 .lux-account-button { display: flex; align-items: center; gap: 8px; padding: 0; background: transparent; border: 0; font-size: 13px; cursor: pointer; }
+.lux-account-menu { position: relative; }
+.lux-account-dropdown, .lux-account-menu-backdrop { display: none; }
 .lux-user-avatar { width: 30px; height: 30px; display: inline-grid; flex-shrink: 0; place-items: center; color: var(--s-forest); background: #e9e6d8; border-radius: 50%; font-family: var(--s-serif); font-size: 16px; }
 .lux-chevron { color: #8c8c80; }
 .lux-admin-shortcut { height: auto; padding-left: 14px; border-left: 1px solid var(--s-line); font-size: 12px; }
@@ -1809,6 +1811,13 @@ body { background: var(--s-ivory); }
   .lux-header-login { min-height: 34px; padding: 0 12px; color: #fff; background: var(--s-gradient); border: 0; border-radius: 10px; font-size: 12px; font-weight: 700; box-shadow: 0 6px 14px rgba(124,58,237,.28); }
   .lux-header-login:hover { color: #fff; filter: saturate(1.08); }
   .lux-header-signup { display: none; }
+  .lux-header-logout { display: none; }
+  .lux-account-menu { position: relative; z-index: 30; }
+  .lux-account-menu-backdrop { position: fixed; inset: 0; z-index: 20; display: block; padding: 0; background: transparent; border: 0; }
+  .lux-account-dropdown { position: absolute; top: calc(100% + 8px); right: 0; z-index: 30; display: block; min-width: 156px; padding: 6px; background: #fff; border: 1px solid var(--s-line); border-radius: 12px; box-shadow: 0 14px 32px rgba(30,27,75,.16); animation: lux-account-drop .18s ease-out; }
+  .lux-account-logout { width: 100%; min-height: 42px; padding: 0 12px; color: #dc2626; background: transparent; border: 0; border-radius: 8px; font-size: 15px; font-weight: 700; text-align: left; cursor: pointer; }
+  .lux-account-logout:hover { background: #fff1f2; }
+@keyframes lux-account-drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
   .lux-header-actions { gap: 5px; }
   .lux-login-card { margin: 25px auto; padding: 24px 18px; }
   .lux-login-card h1 { font-size: 30px; }

@@ -53,6 +53,7 @@ const sellerSaveAlert = ref('')
 const devVerifyLink = ref('')
 const bookingReference = ref('')
 const isCompactMenuOpen = ref(false)
+const isAccountMenuOpen = ref(false)
 const adminTab = ref('overview')
 const adminProviderSearch = ref('')
 const adminProviderProvince = ref('')
@@ -318,6 +319,7 @@ async function submitLogin() {
 }
 
 async function logout() {
+  isAccountMenuOpen.value = false
   await safely(() => api.logout())
   applyUser(null)
   bookings.value = []
@@ -685,8 +687,17 @@ async function deleteAdminProviderAccount(provider) {
   showNotice(`ลบผู้ขาย ${provider.name} แล้ว`)
 }
 
+function onAccountButton() {
+  if (window.matchMedia('(max-width: 680px)').matches) {
+    isAccountMenuOpen.value = !isAccountMenuOpen.value
+    return
+  }
+  openOwnArea()
+}
+
 function navigate(nextView) {
   isSearchFilterOpen.value = false
+  isAccountMenuOpen.value = false
   if (nextView === 'apply') {
     membership.value.role = 'seller'
     nextView = 'membership'
@@ -1499,8 +1510,14 @@ function scrollToProviders() {
         <template v-else>
           <span class="lux-role-badge" :class="`role-${currentRole}`">{{ roleLabel }}</span>
           <button v-if="currentRole === 'buyer'" class="lux-icon-button" aria-label="รายการโปรด" title="รายการโปรด" @click="accountTab = 'favorites'; navigate('account')"><AppIcon name="heart" /></button>
-          <button class="lux-account-button" @click="openOwnArea"><span class="lux-user-avatar" :class="`role-${currentRole}`">{{ currentUser.name.slice(0, 1) }}</span><span>{{ accountMenuLabel }}</span><span class="lux-chevron"><AppIcon name="chevron-down" /></span></button>
-          <button class="lux-login-shortcut" @click="logout">ออกจากระบบ</button>
+          <div class="lux-account-menu" :class="{ open: isAccountMenuOpen }">
+            <button class="lux-account-button" type="button" :aria-expanded="isAccountMenuOpen" aria-haspopup="menu" @click="onAccountButton"><span class="lux-user-avatar" :class="`role-${currentRole}`">{{ currentUser.name.slice(0, 1) }}</span><span>{{ accountMenuLabel }}</span><span class="lux-chevron"><AppIcon name="chevron-down" /></span></button>
+            <button v-if="isAccountMenuOpen" class="lux-account-menu-backdrop" type="button" aria-label="ปิดเมนูบัญชี" @click="isAccountMenuOpen = false"></button>
+            <div v-if="isAccountMenuOpen" class="lux-account-dropdown" role="menu">
+              <button class="lux-account-logout" type="button" role="menuitem" @click="logout">ออกจากระบบ</button>
+            </div>
+          </div>
+          <button class="lux-login-shortcut lux-header-logout" @click="logout">ออกจากระบบ</button>
         </template>
       </div>
     </header>
