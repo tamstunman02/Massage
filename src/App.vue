@@ -1978,12 +1978,16 @@ function scrollToProviders() {
       </div>
 
       <div class="lux-seek-toolbar">
-        <label class="lux-seek-filter">
-          <span>จังหวัด</span>
-          <select v-model="seekBoardFilter.province" @change="applySeekBoardFilter">
-            <option value="">ทุกจังหวัด</option>
-            <option v-for="province in provinces" :key="`seek-${province}`">{{ province }}</option>
-          </select>
+        <label class="lux-seek-filter is-board">
+          <span class="lux-seek-filter-icon" aria-hidden="true"><AppIcon name="location-dot" /></span>
+          <span class="lux-seek-filter-copy">
+            <small>จังหวัด</small>
+            <select v-model="seekBoardFilter.province" @change="applySeekBoardFilter">
+              <option value="">ทุกจังหวัด</option>
+              <option v-for="province in provinces" :key="`seek-${province}`">{{ province }}</option>
+            </select>
+          </span>
+          <span class="lux-seek-filter-chevron" aria-hidden="true"><AppIcon name="chevron-down" /></span>
         </label>
         <div class="lux-seek-toolbar-actions">
           <span class="lux-seek-count">
