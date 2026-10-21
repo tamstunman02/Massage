@@ -1,29 +1,105 @@
 <script setup>
 import AppIcon from '../components/AppIcon.vue'
+import PartnerMediaManager from '../components/PartnerMediaManager.vue'
 import { useApp } from '../app/useApp.js'
-const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, isAdminTravelerLoading, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary } = useApp()
+const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, adminEditingProvider, isAdminTravelerLoading, openAdminPartnerMedia, closeAdminPartnerMedia, addAdminPartnerMedia, addAdminPartnerMediaTo, removeAdminPartnerMedia, adminCreatingPartner, isAdminPartnerSaving, adminGenderOptions, adminPartnerForm, openAdminCreatePartner, closeAdminCreatePartner, submitAdminCreatePartner, addAdminCreateService, removeAdminCreateService, addAdminCreateMedia, removeAdminCreateMedia, replaceAdminCreateMedia, renameAdminPartnerMedia, replaceAdminPartnerMedia, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary } = useApp()
 </script>
 
 <template>
-    <main class="lux-page lux-admin-page"><div class="lux-admin-top"><div><div class="lux-kicker"><span></span> NUANIA ADMINISTRATION</div><h1>ภาพรวม<span>แพลตฟอร์ม</span></h1><p>จัดการพาร์ตเนอร์ อนุมัติหลังชำระนอกระบบ และตั้งวันหมดอายุสมาชิก</p></div><span class="lux-admin-status"><AppIcon name="circle" /> LISTING ONLY · ไม่มีจองผ่านเว็บ</span></div><div class="lux-admin-tabs"><button v-for="tab in [{id:'overview', label:'ภาพรวม'}, {id:'providers', label:'พาร์ตเนอร์'}, {id:'applications', label:'ใบสมัคร'}, {id:'travelers', label:'นักท่องเที่ยว'}]" :key="tab.id" :class="{ active: adminTab === tab.id }" @click="adminTab = tab.id">{{ tab.label }} <small v-if="tab.id === 'applications' && applications.length">{{ applications.length }}</small></button></div>
+    <main class="lux-page lux-admin-page"><div class="lux-admin-top"><div><div class="lux-kicker"><span></span> NUANIA ADMINISTRATION</div><h1>ภาพรวม<span>แพลตฟอร์ม</span></h1><p>จัดการพาร์ตเนอร์ อนุมัติหลังชำระนอกระบบ และตั้งวันหมดอายุสมาชิก</p></div><span class="lux-admin-status"><AppIcon name="circle" /> LISTING ONLY · ไม่มีจองผ่านเว็บ</span></div><div class="lux-admin-tabs"><button v-for="tab in [{id:'overview', label:'ภาพรวม'}, {id:'providers', label:'พาร์ตเนอร์'}, {id:'applications', label:'ใบสมัคร'}, {id:'travelers', label:'นักท่องเที่ยว'}]" :key="tab.id" :class="{ active: adminTab === tab.id }" @click="adminTab = tab.id; if (tab.id !== 'providers') { closeAdminPartnerMedia(); closeAdminCreatePartner() }">{{ tab.label }} <small v-if="tab.id === 'applications' && applications.length">{{ applications.length }}</small></button></div>
       <Transition name="lux-panel" mode="out-in">
       <div :key="adminTab" class="lux-admin-tab-body">
-      <template v-if="adminTab === 'overview'"><div class="lux-admin-metrics"><article><span>พาร์ตเนอร์ที่เผยแพร่</span><strong>{{ activeProviderCount }}</strong><small>active + สมาชิกยังไม่หมดอายุ</small></article><article><span>พาร์ตเนอร์ทั้งหมด</span><strong>{{ providers.length }}</strong><small>รวมที่ซ่อน / หมดอายุ</small></article><article><span>รายได้ค่าสมาชิก</span><strong>฿{{ (activeProviderCount * 299).toLocaleString() }}</strong><small>ชำระนอกระบบ · {{ activeProviderCount }} รายที่เผยแพร่</small></article><article><span>กำลังรอตรวจสอบ</span><strong>{{ applications.length }}</strong><small><i>ใบสมัครพาร์ตเนอร์ใหม่</i></small></article></div><div class="lux-admin-overview-grid"><section class="lux-admin-panel"><div class="lux-admin-panel-head"><div><h2>ระบบลงประกาศเท่านั้น</h2><p>ไม่มีการจองผ่านเว็บ · นักท่องเที่ยวติดต่อผู้ขายเอง</p></div><button @click="adminTab = 'providers'">จัดการพาร์ตเนอร์ <AppIcon name="arrow-right" /></button></div><div class="lux-empty" style="padding:28px 16px"><span><AppIcon name="circle-info" /></span><h3>อนุมัติหลังรับชำระนอกระบบ</h3><p>ตั้งวันหมดอายุสมาชิกเมื่ออนุมัติใบสมัคร หรือแก้ได้ในแท็บพาร์ตเนอร์</p></div></section><aside class="lux-admin-panel lux-admin-side-panel"><div class="lux-admin-panel-head"><div><h2>รอตรวจสอบ</h2><p>ใบสมัครพาร์ตเนอร์</p></div><span>{{ applications.length }}</span></div><label v-if="applications.length" class="lux-admin-expiry-field"><span>วันหมดอายุเมื่ออนุมัติ</span><input v-model="adminApproveExpiresAt" type="datetime-local" /></label><div v-if="applications.length" class="lux-pending-list"><div v-for="item in applications.slice(0, 4)" :key="item.id"><img v-if="item.profilePhotoUrl" class="lux-pending-avatar lux-pending-photo" :src="item.profilePhotoUrl" :alt="item.name" /><span v-else class="lux-pending-avatar">{{ item.name.slice(0, 1) }}</span><div><strong>{{ item.name }}</strong><small>{{ item.province }} · {{ item.line }}</small><small class="lux-email-status" :class="item.emailVerified === true ? 'is-active' : item.emailVerified === false ? 'is-pending' : 'is-unknown'">{{ item.emailVerified === true ? 'อีเมลยืนยันแล้ว' : item.emailVerified === false ? 'ยังไม่ยืนยันอีเมล' : 'ไม่มีบัญชี' }}</small><small class="lux-email-status" :class="item.hasProfilePhoto ? 'is-active' : 'is-pending'">{{ item.hasProfilePhoto ? 'มีรูปโปรไฟล์' : 'ยังไม่มีรูป' }}</small></div><button :disabled="!item.hasProfilePhoto" @click="approveApplication(item)">{{ item.hasProfilePhoto ? 'อนุมัติ' : 'รอรูป' }}</button></div></div><div v-else class="lux-admin-no-pending"><span><AppIcon name="check" /></span><strong>ไม่มีรายการค้าง</strong><small>ใบสมัครใหม่จะแสดงที่นี่</small></div></aside></div></template>
+      <template v-if="adminTab === 'overview'"><div class="lux-admin-metrics"><article><span>พาร์ตเนอร์ที่เผยแพร่</span><strong>{{ activeProviderCount }}</strong><small>active + สมาชิกยังไม่หมดอายุ</small></article><article><span>พาร์ตเนอร์ทั้งหมด</span><strong>{{ providers.length }}</strong><small>รวมที่ซ่อน / หมดอายุ</small></article><article><span>รายได้ค่าสมาชิก</span><strong>฿{{ (activeProviderCount * 299).toLocaleString() }}</strong><small>ชำระนอกระบบ · {{ activeProviderCount }} รายที่เผยแพร่</small></article><article><span>กำลังรอตรวจสอบ</span><strong>{{ applications.length }}</strong><small><i>ใบสมัครพาร์ตเนอร์ใหม่</i></small></article></div><div class="lux-admin-overview-grid"><section class="lux-admin-panel"><div class="lux-admin-panel-head"><div><h2>ระบบลงประกาศเท่านั้น</h2><p>ไม่มีการจองผ่านเว็บ · นักท่องเที่ยวติดต่อผู้ขายเอง</p></div><button type="button" class="lux-admin-add-partner" @click="openAdminCreatePartner">＋ เพิ่มพาร์ตเนอร์</button></div><div class="lux-empty" style="padding:28px 16px"><span><AppIcon name="circle-info" /></span><h3>เพิ่มพาร์ตเนอร์จากผู้ดูแลได้เลย</h3><p>ไม่ต้องรอให้สมัครเอง · กดปุ่มเพิ่มแล้วกรอกโปรไฟล์ ตั้งวันหมดอายุ และอัปโหลดผลงานให้ได้ทันที</p></div></section><aside class="lux-admin-panel lux-admin-side-panel"><div class="lux-admin-panel-head"><div><h2>รอตรวจสอบ</h2><p>ใบสมัครพาร์ตเนอร์</p></div><span>{{ applications.length }}</span></div><label v-if="applications.length" class="lux-admin-expiry-field"><span>วันหมดอายุเมื่ออนุมัติ</span><input v-model="adminApproveExpiresAt" type="datetime-local" /></label><div v-if="applications.length" class="lux-pending-list"><div v-for="item in applications.slice(0, 4)" :key="item.id"><img v-if="item.profilePhotoUrl" class="lux-pending-avatar lux-pending-photo" :src="item.profilePhotoUrl" :alt="item.name" /><span v-else class="lux-pending-avatar">{{ item.name.slice(0, 1) }}</span><div><strong>{{ item.name }}</strong><small>{{ item.province }} · {{ item.line }}</small><small class="lux-email-status" :class="item.emailVerified === true ? 'is-active' : item.emailVerified === false ? 'is-pending' : 'is-unknown'">{{ item.emailVerified === true ? 'อีเมลยืนยันแล้ว' : item.emailVerified === false ? 'ยังไม่ยืนยันอีเมล' : 'ไม่มีบัญชี' }}</small><small class="lux-email-status" :class="item.hasProfilePhoto ? 'is-active' : 'is-pending'">{{ item.hasProfilePhoto ? 'มีรูปโปรไฟล์' : 'ยังไม่มีรูป' }}</small></div><button :disabled="!item.hasProfilePhoto" @click="approveApplication(item)">{{ item.hasProfilePhoto ? 'อนุมัติ' : 'รอรูป' }}</button></div></div><div v-else class="lux-admin-no-pending"><span><AppIcon name="check" /></span><strong>ไม่มีรายการค้าง</strong><small>ใบสมัครใหม่จะแสดงที่นี่</small></div></aside></div></template>
       <section v-else-if="adminTab !== 'travelers'" class="lux-admin-panel lux-admin-detail-panel">
         <div class="lux-admin-panel-head">
           <div>
-            <h2>{{ adminTab === 'providers' ? 'พาร์ตเนอร์ทั้งหมด' : 'ใบสมัครพาร์ตเนอร์' }}</h2>
-            <p>{{ adminTab === 'providers' ? 'ตั้งสถานะเผยแพร่ สมาชิก และวันหมดอายุหลังรับชำระนอกระบบ' : 'อนุมัติหลังรับชำระแล้ว · ต้องระบุวันหมดอายุสมาชิก' }}</p>
+            <h2>{{ adminTab === 'providers' && adminCreatingPartner ? 'เพิ่มพาร์ตเนอร์' : adminTab === 'providers' && adminEditingProvider ? `ผลงานของ ${adminEditingProvider.name}` : adminTab === 'providers' ? 'พาร์ตเนอร์ทั้งหมด' : 'ใบสมัครพาร์ตเนอร์' }}</h2>
+            <p>{{ adminTab === 'providers' && adminCreatingPartner ? 'ผู้ดูแลเพิ่มรายบุคคลได้เลย ไม่ต้องให้พาร์ตเนอร์สมัครเอง' : adminTab === 'providers' && adminEditingProvider ? 'อัปโหลด แก้ไข หรือลบสื่อโปรโมตได้เหมือนหน้าพาร์ตเนอร์' : adminTab === 'providers' ? 'ตั้งสถานะเผยแพร่ สมาชิก และวันหมดอายุหลังรับชำระนอกระบบ' : 'อนุมัติหลังรับชำระแล้ว · ต้องระบุวันหมดอายุสมาชิก' }}</p>
           </div>
-          <span>{{ adminTab === 'providers' ? (filteredAdminProviders.length + ' / ' + providers.length) : applications.length }} รายการ</span>
+          <button v-if="adminTab === 'providers' && adminEditingProvider" type="button" @click="closeAdminPartnerMedia"><AppIcon name="arrow-left" /> กลับไปยังรายชื่อ</button>
+          <button v-else-if="adminTab === 'providers' && adminCreatingPartner" type="button" @click="closeAdminCreatePartner"><AppIcon name="arrow-left" /> กลับไปยังรายชื่อ</button>
+          <button v-else-if="adminTab === 'providers'" type="button" class="lux-admin-add-partner" @click="openAdminCreatePartner">＋ เพิ่มพาร์ตเนอร์</button>
+          <span v-else>{{ applications.length }} รายการ</span>
         </div>
-        <div v-if="adminTab === 'providers'" class="lux-admin-provider-filters">
+        <PartnerMediaManager v-if="adminTab === 'providers' && adminEditingProvider" :provider="adminEditingProvider" note="สื่อที่เพิ่มหรือแก้ไขจะปรากฏบนโปรไฟล์สาธารณะทันที" @add="addAdminPartnerMedia" @remove="removeAdminPartnerMedia" @rename="renameAdminPartnerMedia" @replace="replaceAdminPartnerMedia" />
+        <form v-else-if="adminTab === 'providers' && adminCreatingPartner" class="lux-admin-create-partner lux-seller-profile" @submit.prevent="submitAdminCreatePartner">
+          <section class="lux-admin-create-section">
+            <div class="lux-seller-panel-head">
+              <div>
+                <h2>ข้อมูลโปรไฟล์</h2>
+                <p>ข้อมูลนี้จะแสดงบนหน้าโปรไฟล์สาธารณะเหมือนศูนย์ผู้ขาย</p>
+              </div>
+            </div>
+            <div class="lux-membership-fields">
+              <label class="lux-form-label">ชื่อที่ใช้แสดง<input v-model.trim="adminPartnerForm.name" maxlength="40" required /></label>
+              <label class="lux-form-label">อัตลักษณ์ทางเพศ
+                <select v-model="adminPartnerForm.gender" required>
+                  <option value="" disabled>เลือก</option>
+                  <option v-for="gender in adminGenderOptions" :key="gender">{{ gender }}</option>
+                </select>
+              </label>
+              <label class="lux-form-label">อายุ<input v-model.number="adminPartnerForm.age" type="number" inputmode="numeric" min="18" max="100" step="1" required /></label>
+              <label class="lux-form-label">ส่วนสูง (ซม.)<input v-model.number="adminPartnerForm.heightCm" type="number" inputmode="numeric" min="120" max="230" step="1" required /></label>
+              <label class="lux-form-label">น้ำหนัก (กก.)<input v-model.number="adminPartnerForm.weightKg" type="number" inputmode="numeric" min="30" max="250" step="1" required /></label>
+              <label class="lux-form-label">สัดส่วน<input v-model.trim="adminPartnerForm.measurements" maxlength="80" placeholder="เช่น 34-24-36 นิ้ว" required /></label>
+              <label class="lux-form-label">จังหวัด
+                <select v-model="adminPartnerForm.province" required>
+                  <option value="" disabled>เลือกจังหวัด</option>
+                  <option v-for="province in provinces" :key="`admin-create-${province}`">{{ province }}</option>
+                </select>
+              </label>
+              <label class="lux-form-label">สถานที่ให้บริการ<input v-model.trim="adminPartnerForm.venue" maxlength="100" required /></label>
+              <label class="lux-form-label">ราคาเริ่มต้นต่อชั่วโมง<input v-model.number="adminPartnerForm.price" type="number" inputmode="numeric" min="1" step="1" required /></label>
+              <label class="lux-form-label">LINE ID<input v-model.trim="adminPartnerForm.line" maxlength="80" placeholder="เช่น mali.relax" /></label>
+              <label class="lux-form-label">ลิงก์ Facebook<input v-model.trim="adminPartnerForm.facebook" maxlength="300" type="text" inputmode="url" placeholder="https://facebook.com/yourpage" /></label>
+              <label class="lux-form-label lux-membership-wide">รายละเอียดบริการ<textarea v-model.trim="adminPartnerForm.description" rows="5" maxlength="300" placeholder="เขียนรายละเอียดได้หลายบรรทัด และใส่อิโมจิได้ ✨&#10;เช่น 🌿 จุดเด่นหรือบรรยากาศบริการ" required></textarea></label>
+            </div>
+          </section>
+          <section class="lux-seller-services" aria-labelledby="admin-create-services-heading">
+            <div class="lux-seller-panel-head">
+              <div>
+                <h2 id="admin-create-services-heading">รูปแบบและราคา</h2>
+                <p>เพิ่มตัวเลือกงานพร้อมชื่อ ระยะเวลา รายละเอียด และราคา</p>
+              </div>
+              <button class="lux-button lux-button-light" type="button" :disabled="adminPartnerForm.services.length >= 30" @click="addAdminCreateService">＋ เพิ่มรูปแบบ</button>
+            </div>
+            <article v-for="(service, index) in adminPartnerForm.services" :key="index" class="lux-seller-service-row">
+              <div class="lux-seller-service-heading">
+                <strong>รูปแบบที่ {{ index + 1 }}</strong>
+                <button type="button" :disabled="adminPartnerForm.services.length <= 1" @click="removeAdminCreateService(index)">ลบ</button>
+              </div>
+              <label class="lux-form-label">ชื่อรูปแบบ<input v-model.trim="service.name" maxlength="60" placeholder="เช่น พบปะพูดคุย ✨" required /></label>
+              <div class="lux-seller-service-fields">
+                <label class="lux-form-label">ระยะเวลา<input v-model.trim="service.duration" maxlength="40" placeholder="เช่น 60 นาที" required /></label>
+                <label class="lux-form-label">ราคา (บาท)<input v-model.number="service.price" type="number" inputmode="numeric" min="1" max="1000000" step="1" required /></label>
+              </div>
+              <label class="lux-form-label">รายละเอียด<textarea v-model.trim="service.description" maxlength="200" rows="4" placeholder="ใส่รายละเอียดได้หลายบรรทัด และใช้อิโมจิได้ ✨&#10;เช่น 🌿 นัดพบในบรรยากาศสบาย ๆ" required></textarea></label>
+            </article>
+          </section>
+          <PartnerMediaManager :provider="adminPartnerForm" note="เลือกรูปภาพหรือวิดีโอได้หลายไฟล์ · จะอัปโหลดเมื่อกดบันทึกพาร์ตเนอร์" @add="addAdminCreateMedia" @remove="removeAdminCreateMedia" @replace="replaceAdminCreateMedia" />
+          <section class="lux-admin-create-section lux-admin-create-account">
+            <div class="lux-seller-panel-head">
+              <div>
+                <h2>สมาชิกและบัญชี</h2>
+                <p>ตั้งวันหมดอายุ และสร้างบัญชีเข้าสู่ระบบได้ถ้าต้องการ</p>
+              </div>
+            </div>
+            <div class="lux-membership-fields">
+              <label class="lux-form-label">วันหมดอายุสมาชิก<input v-model="adminPartnerForm.membershipExpiresAt" type="datetime-local" required /></label>
+              <label class="lux-form-label">อีเมลบัญชี (ไม่บังคับ)<input v-model.trim="adminPartnerForm.email" type="email" placeholder="ถ้าต้องการให้เข้าสู่ระบบได้" /></label>
+              <label class="lux-form-label">รหัสผ่านบัญชี<input v-model="adminPartnerForm.password" type="password" minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="new-password" /></label>
+            </div>
+            <label class="lux-admin-check"><input v-model="adminPartnerForm.publishNow" type="checkbox" /> เผยแพร่ทันทีหลังบันทึก</label>
+          </section>
+          <button class="lux-button lux-button-primary" type="submit" :disabled="isAdminPartnerSaving">{{ isAdminPartnerSaving ? 'กำลังบันทึก...' : 'บันทึกพาร์ตเนอร์ ↗' }}</button>
+        </form>
+        <div v-if="adminTab === 'providers' && !adminEditingProvider && !adminCreatingPartner" class="lux-admin-provider-filters">
           <label><span>ค้นหาชื่อ</span><input v-model="adminProviderSearch" type="search" placeholder="พิมพ์ชื่อพาร์ตเนอร์" /></label>
           <label><span>จังหวัด</span><select v-model="adminProviderProvince"><option value="">เลือกจังหวัด</option><option v-for="province in provinces" :key="province">{{ province }}</option></select></label>
           <label><span>เพศ</span><select v-model="adminProviderGender"><option value="">ทุกเพศ</option><option v-for="gender in adminProviderGenders" :key="gender">{{ gender }}</option></select></label>
           <button type="button" @click="adminProviderSearch = ''; adminProviderProvince = ''; adminProviderGender = ''">ล้างตัวกรอง</button>
         </div>
-        <div v-if="adminTab === 'providers' && filteredAdminProviders.length" class="lux-admin-table-wrap">
+        <div v-if="adminTab === 'providers' && !adminEditingProvider && !adminCreatingPartner && filteredAdminProviders.length" class="lux-admin-table-wrap">
           <table class="lux-admin-table">
             <thead><tr><th>พาร์ตเนอร์</th><th>พื้นที่ให้บริการ</th><th>สมาชิก</th><th>หมดอายุ</th><th>โปรไฟล์</th><th>จัดการ</th></tr></thead>
             <tbody>
@@ -33,7 +109,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                     <img v-if="providerPreviewMedia(provider)?.type === 'image'" :src="providerPreviewMedia(provider).url" :alt="'ภาพโปรไฟล์ ' + provider.name" loading="lazy" />
                     <video v-else-if="providerPreviewMedia(provider)" :src="providerPreviewMedia(provider).url" muted playsinline preload="metadata" :aria-label="'วิดีโอโปรไฟล์ ' + provider.name"></video>
                     <span v-else class="lux-admin-provider-placeholder">{{ provider.initials }}</span>
-                    <div><strong>{{ provider.name }} · {{ provider.category }}</strong><small>LINE {{ provider.line }}</small></div>
+                    <div><strong>{{ provider.name }} · {{ provider.category }}</strong><small>LINE {{ provider.line }} · ผลงาน {{ provider.media?.length || 0 }} ไฟล์</small></div>
                   </div>
                 </td>
                 <td>{{ provider.area }}, {{ provider.province }}</td>
@@ -46,6 +122,11 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                 </td>
                 <td><button class="lux-admin-action" @click="setProviderStatus(provider, 'active')">{{ provider.active ? 'เผยแพร่' : 'ซ่อน' }}</button></td>
                 <td>
+                  <label class="lux-admin-action lux-admin-media-add">
+                    <input type="file" accept="image/*,video/*" multiple @change="addAdminPartnerMediaTo(provider, $event)" />
+                    ＋ เพิ่มผลงาน
+                  </label>
+                  <button type="button" class="lux-admin-action" @click="openAdminPartnerMedia(provider)">จัดการผลงาน</button>
                   <button type="button" class="lux-admin-action" @click="openProfile(provider)">ดูรายละเอียด</button>
                   <button v-if="can('user:delete')" type="button" class="lux-admin-action reject" @click="deleteAdminProviderAccount(provider)">ลบบัญชี</button>
                 </td>
@@ -58,8 +139,8 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
             <button type="button" :disabled="adminProviderPage === adminProviderPageCount" @click="adminProviderPage++">ถัดไป</button>
           </nav>
         </div>
-        <div v-else-if="adminTab === 'providers'" class="lux-admin-provider-empty">ไม่พบพาร์ตเนอร์ตามเงื่อนไขที่เลือก</div>
-        <template v-else>
+        <div v-else-if="adminTab === 'providers' && !adminEditingProvider && !adminCreatingPartner" class="lux-admin-provider-empty">ไม่พบพาร์ตเนอร์ตามเงื่อนไขที่เลือก</div>
+        <template v-else-if="adminTab !== 'providers'">
           <label class="lux-admin-expiry-field"><span>วันและเวลาหมดอายุเมื่ออนุมัติ</span><input v-model="adminApproveExpiresAt" type="datetime-local" required /></label>
           <div v-if="applications.length" class="lux-admin-table-wrap">
             <table class="lux-admin-table">

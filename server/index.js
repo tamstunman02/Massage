@@ -173,6 +173,20 @@ const requirePermission = (permission) => (req, res, next) => {
   next()
 }
 
+const requireLogin = (req, res, next) => {
+  if (!req.user) return fail(res, 401, 'กรุณาเข้าสู่ระบบ')
+  next()
+}
+
+function canManageProvider(req, providerId) {
+  const id = Number(providerId)
+  if (!Number.isSafeInteger(id) || id <= 0) return false
+  if (req.user.role === 'admin' && (req.user.permissions.includes('service:edit') || req.user.permissions.includes('provider:approve'))) {
+    return true
+  }
+  return req.user.permissions.includes('profile:edit:own') && Number(req.user.providerId) === id
+}
+
 const providerSql = `
   SELECT p.id, p.name, p.age, p.height_cm, p.weight_kg, p.measurements, p.province, p.area, p.gender,
     p.line, p.facebook, p.price, p.initials, p.visual, p.category, p.description, p.tags, p.venue, p.modes,
@@ -437,9 +451,9 @@ app.get('/api/providers', wrap(async (req, res) => {
   res.json(rows.map(toProvider))
 }))
 
-app.patch('/api/providers/:id', requirePermission('profile:edit:own'), wrap(async (req, res) => {
+app.patch('/api/providers/:id', requireLogin, wrap(async (req, res) => {
   const id = Number(req.params.id)
-  if (req.user.providerId !== id) return fail(res, 403, 'แก้ไขได้เฉพาะโปรไฟล์ของตนเอง')
+  if (!canManageProvider(req, id)) return fail(res, 403, 'แก้ไขได้เฉพาะโปรไฟล์ของตนเอง หรือโดยผู้ดูแล')
   let modes = null
   if (Object.hasOwn(req.body, 'modes')) {
     if (!Array.isArray(req.body.modes) || req.body.modes.length > 30 ||
@@ -514,6 +528,117 @@ app.patch('/api/providers/:id', requirePermission('profile:edit:own'), wrap(asyn
   if (!rows[0]) return fail(res, 404, 'ไม่พบโปรไฟล์')
   const result = await pool.query(`${providerSql} WHERE p.id = $1`, [id])
   res.json(toProvider(result.rows[0]))
+}))
+
+const providerGenders = ['ผู้หญิง', 'ผู้ชาย', 'นอนไบนารี', 'ทรานส์เจนเดอร์', 'เควียร์', 'LGBTQ+', 'ไม่ประสงค์ระบุ']
+
+function parseProviderServices(raw, fallbackPrice, fallbackDescription) {
+  const source = Array.isArray(raw) && raw.length ? raw : [{
+    name: 'พบปะพูดคุย',
+    duration: '60 นาที',
+    description: String(fallbackDescription || 'บริการตามที่ตกลง').slice(0, 200),
+    price: fallbackPrice,
+  }]
+  if (source.length > 30) return { ok: false, error: 'ต้องกำหนดรูปแบบบริการ 1–30 รายการ' }
+  const services = []
+  const serviceNames = new Set()
+  for (const item of source) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      return { ok: false, error: 'ข้อมูลรูปแบบบริการไม่ถูกต้อง' }
+    }
+    const name = text(item.name, 60)
+    const duration = text(item.duration, 40)
+    const description = text(item.description, 200)
+    const price = Number(item.price)
+    const nameKey = name.toLocaleLowerCase()
+    if (!name || !duration || !description.trim() || !Number.isInteger(price) || price < 1 || price > 1000000 || serviceNames.has(nameKey)) {
+      return { ok: false, error: 'กรุณากรอกชื่อ ระยะเวลา รายละเอียด และราคาของแต่ละรูปแบบให้ถูกต้องและไม่ซ้ำกัน' }
+    }
+    serviceNames.add(nameKey)
+    services.push({ name, duration, description, price })
+  }
+  return { ok: true, value: services }
+}
+
+app.post('/api/admin/providers', requirePermission('provider:approve'), wrap(async (req, res) => {
+  const name = text(req.body?.name, 40)
+  const province = text(req.body?.province, 100)
+  const venue = text(req.body?.venue, 100)
+  const gender = text(req.body?.gender, 40)
+  const description = text(req.body?.description, 300)
+  const measurements = text(req.body?.measurements, 80)
+  const age = Number(req.body?.age)
+  const heightCm = Number(req.body?.heightCm)
+  const weightKg = Number(req.body?.weightKg)
+  const price = Math.max(0, Math.min(1000000, Number(req.body?.price) || 0))
+  const line = normalizeLineId(req.body?.line)
+  const facebookResult = normalizeFacebookUrl(req.body?.facebook)
+  const email = text(req.body?.email, 200).toLowerCase()
+  const password = String(req.body?.password ?? '')
+  const publishNow = req.body?.publishNow === true
+  const reservedAdminEmail = String(process.env.ADMIN_EMAIL || 'admin@nuania.app').trim().toLowerCase()
+  const expires = parseExpiresAt(req.body?.membershipExpiresAt)
+
+  if (!name) return fail(res, 400, 'กรุณาระบุชื่อพาร์ตเนอร์')
+  if (!providerGenders.includes(gender)) return fail(res, 400, 'กรุณาเลือกอัตลักษณ์ทางเพศ')
+  if (!province || !venue) return fail(res, 400, 'กรุณาระบุจังหวัดและสถานที่ให้บริการ')
+  if (!description) return fail(res, 400, 'กรุณากรอกรายละเอียดบริการ')
+  if (!Number.isInteger(age) || age < 18 || age > 100) return fail(res, 400, 'กรุณากรอกอายุระหว่าง 18–100 ปี')
+  if (!Number.isInteger(heightCm) || heightCm < 120 || heightCm > 230) return fail(res, 400, 'กรุณากรอกส่วนสูงระหว่าง 120–230 ซม.')
+  if (!Number.isFinite(weightKg) || weightKg < 30 || weightKg > 250) return fail(res, 400, 'กรุณากรอกน้ำหนักระหว่าง 30–250 กก.')
+  if (!measurements) return fail(res, 400, 'กรุณากรอกสัดส่วน')
+  if (!facebookResult.ok) return fail(res, 400, 'กรุณากรอกลิงก์ Facebook ให้ถูกต้อง')
+  if (!line && !facebookResult.value) return fail(res, 400, 'กรุณากรอก LINE หรือ Facebook อย่างน้อย 1 ช่อง')
+  if (price < 1) return fail(res, 400, 'กรุณากรอกราคาเริ่มต้น')
+  if (!expires.ok || !expires.value) return fail(res, 400, 'กรุณาระบุวันหมดอายุสมาชิกให้ถูกต้อง')
+  if (email) {
+    if (!/^\S+@\S+\.\S+$/.test(email)) return fail(res, 400, 'กรุณากรอกอีเมลให้ถูกต้อง')
+    if (email === reservedAdminEmail) return fail(res, 403, 'อีเมลนี้สงวนไว้สำหรับผู้ดูแล')
+    if (password.length < 6) return fail(res, 400, 'รหัสผ่านบัญชีต้องมีอย่างน้อย 6 ตัวอักษร')
+  } else if (password) {
+    return fail(res, 400, 'กรุณากรอกอีเมลถ้าต้องการสร้างบัญชีเข้าสู่ระบบ')
+  }
+
+  const parsedServices = parseProviderServices(req.body?.services, price, description)
+  if (!parsedServices.ok) return fail(res, 400, parsedServices.error)
+  const services = JSON.stringify(parsedServices.value)
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const created = await client.query(
+      `INSERT INTO providers (
+         name, age, height_cm, weight_kg, measurements, province, area, gender, line, facebook,
+         price, initials, description, venue, modes, services, tags, active, membership_active, membership_expires_at
+       ) VALUES (
+         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+         $11,$12,$13,$7,'{ที่ร้าน}',$14::jsonb,'{ผู้ให้บริการ}',$15,TRUE,$16
+       ) RETURNING id`,
+      [
+        name, age, heightCm, Math.round(weightKg), measurements, province, venue, gender, line, facebookResult.value,
+        price, name.slice(0, 1), description, services, publishNow, expires.value,
+      ],
+    )
+    const providerId = created.rows[0].id
+    let hasAccount = false
+    if (email) {
+      await client.query(
+        `INSERT INTO users (name, email, phone, password_hash, role, provider_id, email_verified_at)
+         VALUES ($1,$2,'',$3,'seller',$4, now())`,
+        [name, email, await hashPassword(password), providerId],
+      )
+      hasAccount = true
+    }
+    await client.query('COMMIT')
+    const result = await pool.query(`${providerSql} WHERE p.id = $1`, [providerId])
+    res.status(201).json({ ...toProvider(result.rows[0]), hasAccount, email: email || '' })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    if (error.code === '23505') return fail(res, 409, 'อีเมลนี้ถูกใช้งานแล้ว')
+    throw error
+  } finally {
+    client.release()
+  }
 }))
 
 app.patch('/api/admin/providers/:id', requirePermission('provider:suspend'), wrap(async (req, res) => {
@@ -630,10 +755,10 @@ app.delete('/api/admin/providers/:id', requirePermission('user:delete'), wrap(as
 }))
 
 // ---------- media ----------
-app.post('/api/providers/:id/media', requirePermission('profile:edit:own'),
+app.post('/api/providers/:id/media', requireLogin,
   express.raw({ type: () => true, limit: '100mb' }), wrap(async (req, res) => {
     const id = Number(req.params.id)
-    if (req.user.providerId !== id) return fail(res, 403, 'อัปโหลดได้เฉพาะโปรไฟล์ของตนเอง')
+    if (!canManageProvider(req, id)) return fail(res, 403, 'อัปโหลดได้เฉพาะโปรไฟล์ของตนเอง หรือโดยผู้ดูแล')
     const mime = String(req.headers['content-type'] || '').split(';')[0].trim()
     const ext = mediaTypes[mime]
     if (!ext) return fail(res, 415, 'รองรับเฉพาะรูปภาพ (JPG, PNG, WebP, GIF) และวิดีโอ (MP4, WebM, MOV)')
@@ -648,11 +773,29 @@ app.post('/api/providers/:id/media', requirePermission('profile:edit:own'),
     res.status(201).json({ id: rows[0].id, name, type: mime.startsWith('video/') ? 'video' : 'image', url: `/uploads/${file}` })
   }))
 
-app.delete('/api/media/:id', requirePermission('profile:edit:own'), wrap(async (req, res) => {
-  const { rows } = await pool.query('DELETE FROM media WHERE id = $1 AND provider_id = $2 RETURNING file',
-    [Number(req.params.id), req.user.providerId])
-  if (!rows[0]) return fail(res, 404, 'ไม่พบไฟล์')
-  await unlink(path.join(uploadDir, rows[0].file)).catch(() => {})
+app.patch('/api/media/:id', requireLogin, wrap(async (req, res) => {
+  const mediaId = Number(req.params.id)
+  if (!Number.isSafeInteger(mediaId) || mediaId <= 0) return fail(res, 400, 'รหัสไฟล์ไม่ถูกต้อง')
+  const { rows: current } = await pool.query('SELECT id, provider_id, name, type, file FROM media WHERE id = $1', [mediaId])
+  if (!current[0]) return fail(res, 404, 'ไม่พบไฟล์')
+  if (!canManageProvider(req, current[0].provider_id)) return fail(res, 403, 'แก้ไขได้เฉพาะโปรไฟล์ของตนเอง หรือโดยผู้ดูแล')
+  const name = text(req.body?.name, 200)
+  if (!name) return fail(res, 400, 'กรุณาระบุชื่อไฟล์')
+  const { rows } = await pool.query(
+    'UPDATE media SET name = $2 WHERE id = $1 RETURNING id, name, type, file',
+    [mediaId, name],
+  )
+  res.json({ id: rows[0].id, name: rows[0].name, type: rows[0].type, url: `/uploads/${rows[0].file}` })
+}))
+
+app.delete('/api/media/:id', requireLogin, wrap(async (req, res) => {
+  const mediaId = Number(req.params.id)
+  if (!Number.isSafeInteger(mediaId) || mediaId <= 0) return fail(res, 400, 'รหัสไฟล์ไม่ถูกต้อง')
+  const { rows: current } = await pool.query('SELECT id, provider_id, file FROM media WHERE id = $1', [mediaId])
+  if (!current[0]) return fail(res, 404, 'ไม่พบไฟล์')
+  if (!canManageProvider(req, current[0].provider_id)) return fail(res, 403, 'ลบได้เฉพาะโปรไฟล์ของตนเอง หรือโดยผู้ดูแล')
+  await pool.query('DELETE FROM media WHERE id = $1', [mediaId])
+  await unlink(path.join(uploadDir, current[0].file)).catch(() => {})
   res.json({ ok: true })
 }))
 

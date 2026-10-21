@@ -22,10 +22,12 @@ export const api = {
   setProviderStatus: (id, payload) => request('PATCH', `/api/admin/providers/${id}`, payload),
   deleteAdminUser: (id) => request('DELETE', `/api/admin/users/${id}`),
   deleteAdminProvider: (id) => request('DELETE', `/api/admin/providers/${id}`),
+  createAdminProvider: (payload) => request('POST', '/api/admin/providers', payload),
   uploadMedia: (id, file) => request('POST', `/api/providers/${id}/media`, file, {
     raw: true,
     headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name) },
   }),
+  updateMedia: (id, payload) => request('PATCH', `/api/media/${id}`, payload),
   deleteMedia: (id) => request('DELETE', `/api/media/${id}`),
   providerReviews: (id) => request('GET', `/api/providers/${id}/reviews`),
   createReview: (providerId, payload) => request('POST', `/api/providers/${providerId}/reviews`, payload),
