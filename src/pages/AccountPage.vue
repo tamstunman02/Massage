@@ -30,7 +30,6 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                 </div>
                 <div class="lux-card-panel-row">
                   <span>อายุ {{ provider.age }}</span>
-                  <span>{{ provider.category || 'ผู้ให้บริการ' }}</span>
                 </div>
               </div>
             </article>

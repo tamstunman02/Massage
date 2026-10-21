@@ -111,7 +111,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                     <img v-if="providerPreviewMedia(provider)?.type === 'image'" :src="providerPreviewMedia(provider).url" :alt="'ภาพโปรไฟล์ ' + provider.name" loading="lazy" />
                     <video v-else-if="providerPreviewMedia(provider)" :src="providerPreviewMedia(provider).url" muted playsinline preload="metadata" :aria-label="'วิดีโอโปรไฟล์ ' + provider.name"></video>
                     <span v-else class="lux-admin-provider-placeholder">{{ provider.initials }}</span>
-                    <div><strong>{{ provider.name }} · {{ provider.category }}</strong><small>LINE {{ provider.line }} · ผลงาน {{ provider.media?.length || 0 }} ไฟล์</small></div>
+                    <div><strong>{{ provider.name }}</strong><small>LINE {{ provider.line }} · ผลงาน {{ provider.media?.length || 0 }} ไฟล์</small></div>
                   </div>
                 </td>
                 <td>{{ provider.area }}, {{ provider.province }}</td>
