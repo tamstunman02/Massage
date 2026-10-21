@@ -10,7 +10,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
         <div class="lux-hero-copy">
           <div class="lux-kicker"><span></span> นัวเนีย · NUANIA</div>
           <h1>รวมเด็กเอ็น<br />ทั่ว<span>ประเทศไทย</span></h1>
-          <p>นัวเนีย เว็บรวมเด็กเอ็น เด็กเอนเตอร์เทรน รวมเด็กเอ็นเชียงใหม่ เด็กเอ็นสุราษ เด็กเอ็นพัทยา ดูโปรไฟล์และราคา<br class="lux-desktop-only" />แล้วติดต่อนัดหมายโดยตรงผ่าน LINE หรือ Facebook — ไม่จองผ่านเว็บ</p>
+          <p>นัวเนีย เว็บรวมเด็กเอ็น เด็กเอนเตอร์เทรน ดูโปรไฟล์และราคา<br class="lux-desktop-only" />แล้วติดต่อนัดหมายโดยตรงผ่าน LINE หรือ Facebook — ไม่จองผ่านเว็บ</p>
           <button class="lux-button lux-button-primary lux-hero-cta" @click="scrollToProviders">ค้นหาเด็กเอ็น <span><AppIcon name="arrow-right" /></span></button>
           <div class="lux-hero-proof"><div class="lux-proof-seal"><AppIcon name="handshake" /></div><div><strong>ติดต่อกันเองนอกเว็บ</strong><span>เว็บนี้แสดงข้อมูลและราคาเท่านั้น</span></div></div>
         </div>
