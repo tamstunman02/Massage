@@ -438,7 +438,10 @@ const visibleProviders = computed(() => {
 
 const selectedServiceOption = computed(() => providerServices(selectedProvider.value || { price: 0 }).find((service) => service.name === booking.value.service) || providerServices(selectedProvider.value || { price: 0 })[0])
 const bookingPrice = computed(() => (selectedServiceOption.value?.price || 0) + (booking.value.mode === 'นอกสถานที่' ? 250 : 0))
-const featuredProfileImage = computed(() => selectedProvider.value?.media?.find((media) => media.type === 'image'))
+const featuredProfileImage = computed(() => {
+  const media = selectedProvider.value?.media || []
+  return media.find((item) => item.type === 'image') || null
+})
 const currentViewerMedia = computed(() => viewerMedia.value[viewerIndex.value] || null)
 const availableAppointmentModes = computed(() => [
   ...new Set(providers.value.flatMap((provider) => provider.modes || [])),
