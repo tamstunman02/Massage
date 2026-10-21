@@ -28,6 +28,7 @@ export const api = {
     headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name) },
   }),
   updateMedia: (id, payload) => request('PATCH', `/api/media/${id}`, payload),
+  reorderMedia: (id, ids) => request('PUT', `/api/providers/${id}/media-order`, { ids }),
   deleteMedia: (id) => request('DELETE', `/api/media/${id}`),
   providerReviews: (id) => request('GET', `/api/providers/${id}/reviews`),
   createReview: (providerId, payload) => request('POST', `/api/providers/${providerId}/reviews`, payload),

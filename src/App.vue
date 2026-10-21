@@ -109,7 +109,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
           <strong>กำลังสมัครสมาชิก</strong>
           <p>กำลังสร้างบัญชีและส่งอีเมลยืนยัน กรุณารอสักครู่...</p>
         </div>
-      </div>
+              </div>
       <div
         v-if="isSeekComposeOpen"
         class="lux-seek-modal-backdrop"
@@ -141,7 +141,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                 <input v-model.trim="seekForm.venue" maxlength="120" placeholder="เช่น ร้านนวดสุขใจ / โรงแรม..." :disabled="isSeekSubmitting" />
                 <small v-if="seekFormErrors.venue" class="lux-field-error">{{ seekFormErrors.venue }}</small>
               </label>
-            </div>
+      </div>
             <div class="lux-seek-form-row">
               <label class="lux-form-label" :class="{ 'has-error': seekFormErrors.budget }">
                 <span>งบประมาณ</span>
@@ -153,18 +153,18 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                 <input v-model.trim="seekForm.duration" maxlength="80" placeholder="เช่น 2 ชั่วโมง / เย็นนี้ 20:00–22:00" :disabled="isSeekSubmitting" />
                 <small v-if="seekFormErrors.duration" class="lux-field-error">{{ seekFormErrors.duration }}</small>
               </label>
-            </div>
+        </div>
             <label class="lux-form-label">
               <span>รายละเอียดเพิ่มเติม <span class="lux-optional">(ไม่บังคับ)</span></span>
               <textarea v-model.trim="seekForm.description" rows="3" maxlength="1000" placeholder="ขอบเขตหรือเงื่อนไขเพิ่มเติม" :disabled="isSeekSubmitting"></textarea>
-            </label>
+          </label>
             <div class="lux-seek-modal-actions">
               <button class="lux-button lux-button-light" type="button" :disabled="isSeekSubmitting" @click="closeSeekCompose">ยกเลิก</button>
               <button class="lux-button lux-button-primary" type="submit" :disabled="isSeekSubmitting">
                 {{ isSeekSubmitting ? 'กำลังโพส...' : 'โพสหาผู้ให้บริการ' }} <AppIcon name="arrow-right" />
               </button>
-            </div>
-          </form>
+        </div>
+      </form>
         </div>
       </div>
     </Teleport>

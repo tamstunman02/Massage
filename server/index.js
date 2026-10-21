@@ -192,7 +192,7 @@ const providerSql = `
     p.line, p.facebook, p.price, p.initials, p.visual, p.category, p.description, p.tags, p.venue, p.modes,
     p.services, p.active, p.membership_active, p.membership_expires_at,
     COALESCE((
-      SELECT json_agg(json_build_object('id', m.id, 'name', m.name, 'type', m.type, 'url', '/uploads/' || m.file) ORDER BY m.id)
+      SELECT json_agg(json_build_object('id', m.id, 'name', m.name, 'type', m.type, 'url', '/uploads/' || m.file) ORDER BY m.sort_order NULLS LAST, m.id)
       FROM media m WHERE m.provider_id = p.id), '[]') AS media,
     COALESCE((SELECT COUNT(*)::int FROM reviews r WHERE r.provider_id = p.id), 0) AS review_count,
     (
@@ -768,7 +768,11 @@ app.post('/api/providers/:id/media', requireLogin,
     const file = `${randomBytes(16).toString('hex')}.${ext}`
     await writeFile(path.join(uploadDir, file), req.body)
     const { rows } = await pool.query(
-      'INSERT INTO media (provider_id, name, type, file) VALUES ($1,$2,$3,$4) RETURNING id',
+      `INSERT INTO media (provider_id, name, type, file, sort_order)
+       VALUES (
+         $1,$2,$3,$4,
+         COALESCE((SELECT MAX(sort_order) FROM media WHERE provider_id = $1), 0) + 1
+       ) RETURNING id`,
       [id, name, mime.startsWith('video/') ? 'video' : 'image', file])
     res.status(201).json({ id: rows[0].id, name, type: mime.startsWith('video/') ? 'video' : 'image', url: `/uploads/${file}` })
   }))
@@ -797,6 +801,28 @@ app.delete('/api/media/:id', requireLogin, wrap(async (req, res) => {
   await pool.query('DELETE FROM media WHERE id = $1', [mediaId])
   await unlink(path.join(uploadDir, current[0].file)).catch(() => {})
   res.json({ ok: true })
+}))
+
+app.put('/api/providers/:id/media-order', requireLogin, wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  if (!canManageProvider(req, id)) return fail(res, 403, 'จัดลำดับได้เฉพาะโปรไฟล์ของตนเอง หรือโดยผู้ดูแล')
+  const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(Number) : []
+  if (!ids.length || ids.some((mediaId) => !Number.isSafeInteger(mediaId) || mediaId <= 0)) {
+    return fail(res, 400, 'ลำดับไฟล์ไม่ถูกต้อง')
+  }
+  const { rows } = await pool.query('SELECT id FROM media WHERE provider_id = $1', [id])
+  const existing = new Set(rows.map((row) => row.id))
+  if (ids.length !== existing.size || ids.some((mediaId) => !existing.has(mediaId))) {
+    return fail(res, 400, 'ลำดับไฟล์ไม่ครบหรือไม่ตรงกับผลงานของโปรไฟล์นี้')
+  }
+  await pool.query(
+    `UPDATE media AS m
+     SET sort_order = u.ord
+     FROM unnest($1::int[]) WITH ORDINALITY AS u(id, ord)
+     WHERE m.id = u.id AND m.provider_id = $2`,
+    [ids, id],
+  )
+  res.json({ ok: true, ids })
 }))
 
 // ---------- provider reviews ----------
@@ -999,7 +1025,7 @@ const seekCommentDetailSql = `
     (
       SELECT '/uploads/' || m.file FROM media m
       WHERE m.provider_id = sc.provider_id AND m.type = 'image'
-      ORDER BY m.id ASC LIMIT 1
+      ORDER BY m.sort_order ASC NULLS LAST, m.id ASC LIMIT 1
     ) AS provider_photo_url
   FROM seek_comments sc
   JOIN users u ON u.id = sc.user_id
@@ -1294,7 +1320,7 @@ app.get('/api/applications', requirePermission('provider:approve'), wrap(async (
        (
          SELECT '/uploads/' || m.file FROM media m
          WHERE m.provider_id = a.provider_id AND m.type = 'image'
-         ORDER BY m.id ASC LIMIT 1
+         ORDER BY m.sort_order ASC NULLS LAST, m.id ASC LIMIT 1
        ) AS profile_photo_url,
        EXISTS (
          SELECT 1 FROM media m

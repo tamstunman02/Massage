@@ -558,7 +558,7 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-appointments-head p { margin: 8px 0 0; color: #7a7693; font-size: 13px; line-height: 1.55; }
 .lux-appointment-options { display: grid; gap: 10px; padding: 14px; }
 .lux-appointment-option {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  display: block;
   padding: 14px; background: #fff; border: 1px solid #ebe4f8; border-radius: 18px;
   box-shadow: 0 8px 20px rgba(49, 46, 129, .04); transition: border-color .16s, box-shadow .16s, transform .16s;
 }
@@ -573,22 +573,23 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
   font-family: var(--s-sans); font-size: 12px; font-weight: 800; letter-spacing: .2px;
 }
 .lux-available-appointments .lux-service-name { min-width: 0; }
-.lux-available-appointments .lux-service-name strong {
+.lux-available-appointments .lux-service-name > strong {
   display: block; margin: 0; color: var(--s-ink); font-family: var(--s-sans); font-size: 15px; font-weight: 800;
+  line-height: 1.35; white-space: nowrap; overflow-wrap: normal; word-break: keep-all; hyphens: none;
 }
-.lux-available-appointments .lux-service-name > span {
-  display: inline-flex; margin-top: 5px; padding: 3px 8px; color: #6d28d9; background: #f3e8ff;
-  border-radius: 999px; font-size: 11px; font-weight: 700;
+.lux-appointment-option-meta {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px;
+}
+.lux-available-appointments .lux-appointment-option-meta > span {
+  display: inline-flex; padding: 3px 8px; color: #6d28d9; background: #f3e8ff;
+  border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap;
 }
 .lux-available-appointments .lux-service-name p {
   margin: 7px 0 0; color: #7c7893; font-size: 12px; line-height: 1.55; white-space: pre-line;
 }
-.lux-appointment-option-side {
-  display: grid; justify-items: end; align-content: center; gap: 8px; min-width: 104px;
-}
-.lux-appointment-option-side.lux-price-only { min-width: 0; }
 .lux-available-appointments .lux-service-price {
   color: #be185d; font-family: var(--s-sans); font-size: 18px; font-weight: 800; letter-spacing: -.3px;
+  white-space: nowrap;
 }
 .lux-appointments-contact-note {
   margin: 0; padding: 0 18px 16px; color: #7a7693; font-size: 12px; line-height: 1.55; text-align: center;
@@ -1099,9 +1100,7 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
   .lux-profile-main { display: contents; }
   .lux-review-section { order: 2; }
   .lux-available-appointments { order: 1; }
-  .lux-appointment-option { grid-template-columns: 1fr; gap: 12px; }
-  .lux-appointment-option-side { grid-template-columns: 1fr auto; align-items: center; justify-items: stretch; min-width: 0; width: 100%; }
-  .lux-appointment-option-side .lux-service-price { justify-self: start; }
+  .lux-appointment-option { display: block; }
   .lux-appointment-select { min-width: 0; width: auto; }
   .lux-profile-identity { gap: 9px; padding: 8px 0 14px; }
   .lux-profile-monogram { width: 59px; height: 59px; border-width: 3px; font-size: 27px; }
@@ -1886,12 +1885,28 @@ body { background: var(--s-ivory); }
 .lux-seller-upload strong { font-size: 14px; }
 .lux-seller-upload small, .lux-seller-media-note { color: var(--s-muted); font-size: 12px; }
 .lux-seller-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
-.lux-seller-media-item { min-width: 0; overflow: hidden; background: #fff; border: 1px solid var(--s-line); border-radius: 11px; }
-.lux-seller-media-item > img, .lux-seller-media-item > video { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; background: #1e1b4b; }
+.lux-seller-media-item { position: relative; min-width: 0; overflow: hidden; background: #fff; border: 1px solid var(--s-line); border-radius: 11px; cursor: grab; }
+.lux-seller-media-item.is-dragging { opacity: .55; cursor: grabbing; }
+.lux-seller-media-item.is-over { box-shadow: 0 0 0 3px rgba(124,58,237,.28); }
+.lux-seller-media-item.is-cover { border-color: #c4b5fd; }
+.lux-seller-media-handle {
+  position: absolute; z-index: 2; top: 8px; left: 8px;
+  width: 28px; height: 28px; display: grid; place-items: center;
+  color: #fff; background: rgba(30,27,75,.62); border-radius: 8px;
+  font-size: 14px; line-height: 1; cursor: grab; user-select: none; touch-action: none;
+}
+.lux-seller-media-cover {
+  position: absolute; z-index: 2; top: 8px; right: 8px;
+  padding: 4px 8px; color: #fff; background: #7c3aed; border-radius: 999px;
+  font-size: 10px; font-weight: 700;
+}
+.lux-seller-media-item > img { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; background: #1e1b4b; pointer-events: none; }
+.lux-seller-media-item > video { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; background: #1e1b4b; }
 .lux-seller-media-item > div { display: grid; gap: 6px; padding: 8px 9px; }
 .lux-seller-media-item > div input[type="text"] { width: 100%; min-width: 0; padding: 5px 7px; color: var(--s-ink); background: #fff; border: 1px solid var(--s-line); border-radius: 7px; font-size: 11px; }
 .lux-seller-media-item > div span { min-width: 0; overflow: hidden; color: var(--s-ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.lux-seller-media-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.lux-seller-media-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+.lux-seller-media-cover-btn { padding: 3px 7px; color: #5b21b6; background: #f5f3ff; border: 0; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .lux-seller-media-replace { position: relative; flex: 0 0 auto; padding: 3px 7px; color: #5b21b6; background: #f5f3ff; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .lux-seller-media-replace input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 .lux-seller-media-item > div button { flex: 0 0 auto; padding: 3px 7px; color: #be123c; background: #fff1f2; border: 0; border-radius: 6px; font-size: 11px; cursor: pointer; }

@@ -177,6 +177,17 @@ export async function initDb() {
   await pool.query("ALTER TABLE seek_posts ADD COLUMN IF NOT EXISTS duration TEXT NOT NULL DEFAULT ''")
   await pool.query("ALTER TABLE seek_posts ALTER COLUMN description SET DEFAULT ''")
   await pool.query('ALTER TABLE providers ADD COLUMN IF NOT EXISTS membership_expires_at TIMESTAMPTZ')
+  await pool.query('ALTER TABLE media ADD COLUMN IF NOT EXISTS sort_order INT')
+  await pool.query(`
+    UPDATE media AS m
+    SET sort_order = s.rn
+    FROM (
+      SELECT id, ROW_NUMBER() OVER (PARTITION BY provider_id ORDER BY id) AS rn
+      FROM media
+      WHERE sort_order IS NULL
+    ) AS s
+    WHERE m.id = s.id
+  `)
   const { rows: verifyColumn } = await pool.query(
     `SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'email_verified_at'`)
   if (!verifyColumn.length) {
