@@ -1935,6 +1935,17 @@ body { background: var(--s-ivory); }
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .lux-admin-check { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 4px; color: var(--s-ink); font-size: 14px; font-weight: 600; cursor: pointer; }
+.lux-admin-create-error {
+  margin: 0;
+  padding: 12px 14px;
+  color: #9f1239;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.5;
+}
 .lux-admin-create-partner > .lux-button {
   align-self: center;
   min-width: 240px;
@@ -1993,7 +2004,7 @@ body { background: var(--s-ivory); }
   .lux-seller-media-manager .lux-seller-panel-head { flex-wrap: wrap; }
   .lux-seller-media-toolbar { width: 100%; flex-wrap: wrap; }
   .lux-seller-media-add { flex: 1; min-height: 44px; }
-  .lux-admin-create-partner { padding: 12px; gap: 12px; }
+  .lux-admin-create-partner { padding: 12px 12px 28px; gap: 12px; }
   .lux-admin-create-section,
   .lux-admin-create-partner > .lux-seller-services,
   .lux-admin-create-partner > .lux-seller-media-manager { padding: 15px; border-radius: 14px; }
