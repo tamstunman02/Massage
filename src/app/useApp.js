@@ -1066,7 +1066,7 @@ function rememberSharedProfile(id) {
 }
 
 function clearSharedProfileUrl() {
-  document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอนเตอร์เทรน ทั่วประเทศไทย'
+  document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอ็นเชียงใหม่ เด็กเอ็นสุราษ เด็กเอ็นพัทยา'
   if (!sharedProfileId()) return
   history.pushState({}, '', '/')
 }
@@ -1089,7 +1089,7 @@ function onProfilePopState() {
     if (view.value === 'profile') {
       selectedProvider.value = null
       view.value = 'home'
-      document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอนเตอร์เทรน ทั่วประเทศไทย'
+      document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอ็นเชียงใหม่ เด็กเอ็นสุราษ เด็กเอ็นพัทยา'
     }
     return
   }

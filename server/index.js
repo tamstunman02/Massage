@@ -262,10 +262,13 @@ app.post('/api/login', wrap(async (req, res) => {
 
 app.post('/api/register', wrap(async (req, res) => {
   const role = req.body.role
+  if (role === 'admin') return fail(res, 403, 'ไม่สามารถสมัครเป็นผู้ดูแลได้')
   if (!['buyer', 'seller'].includes(role)) return fail(res, 400, 'ประเภทสมาชิกไม่ถูกต้อง')
   const name = text(req.body.name, 100)
   const email = text(req.body.email, 200).toLowerCase()
   const password = String(req.body.password ?? '')
+  const reservedAdminEmail = String(process.env.ADMIN_EMAIL || 'admin@nuania.app').trim().toLowerCase()
+  if (email === reservedAdminEmail) return fail(res, 403, 'อีเมลนี้สงวนไว้สำหรับผู้ดูแล')
   if (!name || !/^\S+@\S+\.\S+$/.test(email)) return fail(res, 400, 'กรุณากรอกชื่อและอีเมลให้ถูกต้อง')
   if (password.length < 6) return fail(res, 400, 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร')
 

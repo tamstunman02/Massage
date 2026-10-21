@@ -186,6 +186,41 @@ export async function initDb() {
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token_hash TEXT')
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_sent_at TIMESTAMPTZ')
   await pool.query('CREATE INDEX IF NOT EXISTS users_verify_token_idx ON users(email_verify_token_hash)')
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_single_admin_idx
+    ON users ((true))
+    WHERE role = 'admin'
+  `)
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION prevent_extra_admins()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    AS $prevent_admin$
+    BEGIN
+      IF TG_OP = 'INSERT' AND NEW.role = 'admin' THEN
+        IF EXISTS (SELECT 1 FROM users WHERE role = 'admin') THEN
+          RAISE EXCEPTION 'sole admin already exists';
+        END IF;
+      END IF;
+      IF TG_OP = 'UPDATE' THEN
+        IF OLD.role IS DISTINCT FROM 'admin' AND NEW.role = 'admin' THEN
+          RAISE EXCEPTION 'cannot promote user to admin';
+        END IF;
+        IF OLD.role = 'admin' AND NEW.role IS DISTINCT FROM 'admin' THEN
+          RAISE EXCEPTION 'cannot demote the sole admin';
+        END IF;
+      END IF;
+      RETURN NEW;
+    END;
+    $prevent_admin$
+  `)
+  await pool.query('DROP TRIGGER IF EXISTS users_prevent_extra_admins ON users')
+  await pool.query(`
+    CREATE TRIGGER users_prevent_extra_admins
+    BEFORE INSERT OR UPDATE OF role ON users
+    FOR EACH ROW
+    EXECUTE PROCEDURE prevent_extra_admins()
+  `)
   const roles = JSON.parse(readFileSync(new URL('./roles.json', import.meta.url), 'utf8'))
   for (const [name, role] of Object.entries(roles)) {
     await pool.query(
@@ -195,10 +230,11 @@ export async function initDb() {
     )
   }
 
+  const seedDemo = /^(1|true|yes)$/i.test(String(process.env.SEED_DEMO || '').trim())
   const { rows: providerRows } = await pool.query('SELECT count(*)::int AS n FROM providers')
   const isNewDatabase = providerRows[0].n === 0
 
-  if (isNewDatabase) {
+  if (isNewDatabase && seedDemo) {
     for (const p of seed.providers) {
       await pool.query(
         `INSERT INTO providers (id, name, age, province, area, gender, line, price, rating, reviews, initials,
@@ -211,7 +247,7 @@ export async function initDb() {
   }
 
   const { rows: demoSeeded } = await pool.query("SELECT 1 FROM app_settings WHERE key = 'province-demo-providers-v1'")
-  if (!demoSeeded.length) {
+  if (seedDemo && !demoSeeded.length) {
     const { rows: provinceCounts } = await pool.query(
       `SELECT province, count(*)::int AS count FROM providers
        WHERE active AND membership_active GROUP BY province`,
@@ -241,7 +277,7 @@ export async function initDb() {
     )
   }
 
-  if (isNewDatabase) {
+  if (isNewDatabase && seedDemo) {
     const ids = {}
     for (const u of seed.users) {
       const res = await pool.query(
@@ -302,9 +338,11 @@ export async function initDb() {
       )
       AND (id % 3 = 0)`)
 
-  await ensureSeedBuyerReviews()
-  await seedTravelerReviewsIfNeeded()
-  await seedProvinceExtraProvidersIfNeeded()
+  if (seedDemo) {
+    await ensureSeedBuyerReviews()
+    await seedTravelerReviewsIfNeeded()
+    await seedProvinceExtraProvidersIfNeeded()
+  }
 }
 
 async function ensureSeedBuyerReviews() {
