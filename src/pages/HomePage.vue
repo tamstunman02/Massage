@@ -19,12 +19,12 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
           <div class="lux-floating-card"><span class="lux-floating-icon"><AppIcon name="star" /></span><div><small>LISTING ONLY</small><strong>ดูโปรไฟล์แล้วติดต่อเอง</strong></div></div>
           <div class="lux-visual-index">01 <span></span> CONNECT WITH CONFIDENCE</div>
         </div>
-          <div class="lux-hero-vertical">นัวเนีย · เด็กเอ็น · เด็กเอ็นเชียงใหม่ · เด็กเอ็นสุราษ · เด็กเอ็นพัทยา</div>
+          <div class="lux-hero-vertical">นัวเนีย · เด็กเอ็นทั่วประเทศไทย</div>
       </section>
 
       <section class="lux-discovery" data-reveal>
         <div class="lux-section-intro" data-reveal>
-          <div><div class="lux-kicker"><span></span> FIND YOUR CONNECTION</div><h2>ค้นหาผู้ให้บริการ<br class="lux-mobile-only" />ที่<span>ตรงกับคุณ</span></h2></div>
+          <div><h2>ค้นหาผู้ให้บริการ<br class="lux-mobile-only" />ที่<span>ตรงกับคุณ</span></h2></div>
           <p>เลือกพื้นที่และรูปแบบที่สนใจ<br />แล้วติดต่อผู้ให้บริการโดยตรง</p>
         </div>
         <div class="lux-quick-search" data-reveal>
@@ -46,7 +46,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
 
       <section class="lux-home-guide" aria-labelledby="home-guide-heading">
         <div class="lux-home-guide-heading" data-reveal>
-          <div><div class="lux-kicker"><span></span> CHOOSE YOUR EXPERIENCE</div><h2 id="home-guide-heading">เลือกรูปแบบที่<span>เหมาะกับคุณ</span></h2><p>รูปแบบงานเด็กเอนเตอร์เทรนที่พบบ่อย — อ่านโปรไฟล์แล้วติดต่อตกลงขอบเขตกันเอง</p></div>
+          <div><h2 id="home-guide-heading">เลือกรูปแบบที่<span>เหมาะกับคุณ</span></h2><p>รูปแบบงานเด็กเอนเตอร์เทรนที่พบบ่อย — อ่านโปรไฟล์แล้วติดต่อตกลงขอบเขตกันเอง</p></div>
           <button class="lux-text-link" @click="navigate('search')">ค้นหาบริการ <span><AppIcon name="arrow-right" /></span></button>
         </div>
         <div class="lux-home-guide-grid">
@@ -68,7 +68,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
 
       <section class="lux-experience" data-reveal>
         <div class="lux-experience-art"><div class="lux-experience-circle">N<span><AppIcon name="star" /></span></div><div class="lux-experience-caption">NUANIA · CONNECT ON YOUR TERMS</div></div>
-        <div class="lux-experience-copy"><div class="lux-kicker"><span></span> CLEAR TERMS, BETTER CONNECTIONS</div><h2>ค้นหาอย่างมั่นใจ<br />ติดต่อ<span>กันเอง</span></h2><p>NuaNia เป็นพื้นที่ลงโปรไฟล์และราคาสำหรับผู้ให้บริการอิสระ นักท่องเที่ยวติดต่อนัดหมายโดยตรงผ่านช่องทางในโปรไฟล์ — ไม่มีการจองผ่านเว็บ</p><div class="lux-value-list"><span><i>01</i> อ่านโปรไฟล์และราคา</span><span><i>02</i> ติดต่อ LINE / Facebook โดยตรง</span><span><i>03</i> ตกลงรายละเอียดกันเองนอกเว็บ</span></div><button class="lux-text-link" @click="navigate('search')">ค้นหาผู้ให้บริการ <span><AppIcon name="arrow-right" /></span></button></div>
+        <div class="lux-experience-copy"><h2>ค้นหาอย่างมั่นใจ<br />ติดต่อ<span>กันเอง</span></h2><p>NuaNia เป็นพื้นที่ลงโปรไฟล์และราคาสำหรับผู้ให้บริการอิสระ นักท่องเที่ยวติดต่อนัดหมายโดยตรงผ่านช่องทางในโปรไฟล์ — ไม่มีการจองผ่านเว็บ</p><div class="lux-value-list"><span><i>01</i> อ่านโปรไฟล์และราคา</span><span><i>02</i> ติดต่อ LINE / Facebook โดยตรง</span><span><i>03</i> ตกลงรายละเอียดกันเองนอกเว็บ</span></div><button class="lux-text-link" @click="navigate('search')">ค้นหาผู้ให้บริการ <span><AppIcon name="arrow-right" /></span></button></div>
       </section>
 
       <section class="lux-partner-banner" data-reveal><div class="lux-partner-mark">N</div><div><small>FOR INDEPENDENT PROVIDERS</small><h2>ให้โปรไฟล์ของคุณ<br />เข้าถึงคนที่ใช่</h2><p>กำหนดรูปแบบบริการ ราคา และขอบเขตได้ด้วยตัวเอง</p></div><button class="lux-button lux-button-light" @click="membership.role = 'seller'; navigate('membership')">ลงโปรไฟล์ผู้ให้บริการ <span><AppIcon name="arrow-right" /></span></button><span class="lux-partner-bg">NUANIA</span></section>

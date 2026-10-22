@@ -1,32 +1,64 @@
 <script setup>
+import { ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import { useApp } from '../app/useApp.js'
 const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, onViewerTouchStart, onViewerTouchEnd, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, isAdminTravelerLoading, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary } = useApp()
 
-let promoPointerX = 0
-let promoPointerY = 0
-let promoScrollLeft = 0
-let promoDidDrag = false
+const promoGrid = ref(null)
+let promoActivePointer = null
+let promoDragging = false
+let promoMoved = false
+let promoStartX = 0
+let promoStartY = 0
+let promoStartScroll = 0
+let promoTapIndex = -1
 
-function onPromoPointerDown(event) {
-  const grid = event.currentTarget.closest('.lux-promo-grid')
-  promoPointerX = event.clientX
-  promoPointerY = event.clientY
-  promoScrollLeft = grid?.scrollLeft ?? 0
-  promoDidDrag = false
+function onPromoGridDown(event) {
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  const grid = promoGrid.value
+  if (!grid) return
+  const item = event.target?.closest?.('.lux-promo-item')
+  promoTapIndex = item ? Number(item.dataset.index) : -1
+  promoActivePointer = event.pointerId
+  promoDragging = true
+  promoMoved = false
+  promoStartX = event.clientX
+  promoStartY = event.clientY
+  promoStartScroll = grid.scrollLeft
+  grid.classList.add('is-dragging')
+  grid.setPointerCapture?.(event.pointerId)
 }
 
-function onPromoPointerMove(event) {
-  if (promoDidDrag) return
-  const dx = Math.abs(event.clientX - promoPointerX)
-  const dy = Math.abs(event.clientY - promoPointerY)
-  if (dx > 10 || dy > 10) promoDidDrag = true
+function onPromoGridMove(event) {
+  if (!promoDragging || event.pointerId !== promoActivePointer) return
+  const grid = promoGrid.value
+  if (!grid) return
+  const dx = event.clientX - promoStartX
+  const dy = event.clientY - promoStartY
+  if (!promoMoved && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) promoMoved = true
+  if (!promoMoved) return
+  event.preventDefault()
+  grid.scrollLeft = promoStartScroll - dx
 }
 
-function onPromoActivate(index, event) {
-  const grid = event?.currentTarget?.closest?.('.lux-promo-grid')
-  const scrolled = Math.abs((grid?.scrollLeft ?? 0) - promoScrollLeft) > 6
-  if (promoDidDrag || scrolled) return
+function onPromoGridUp(event) {
+  if (event.pointerId !== promoActivePointer) return
+  const grid = promoGrid.value
+  const wasMoved = promoMoved
+  const index = promoTapIndex
+  promoDragging = false
+  promoActivePointer = null
+  promoMoved = false
+  promoTapIndex = -1
+  grid?.classList.remove('is-dragging')
+  try { grid?.releasePointerCapture?.(event.pointerId) } catch { /* ignore */ }
+  if (wasMoved || !Number.isFinite(index) || index < 0) return
+  openMediaViewer(selectedProvider.value.media, index)
+}
+
+function onPromoItemKey(index, event) {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  event.preventDefault()
   openMediaViewer(selectedProvider.value.media, index)
 }
 </script>
@@ -43,26 +75,30 @@ function onPromoActivate(index, event) {
               </div>
               <span>{{ selectedProvider.media.length }} รายการ · ปัดเพื่อเลื่อน · แตะเพื่อขยาย</span>
             </div>
-            <div class="lux-promo-grid">
-              <button
+            <div
+              ref="promoGrid"
+              class="lux-promo-grid"
+              @pointerdown="onPromoGridDown"
+              @pointermove="onPromoGridMove"
+              @pointerup="onPromoGridUp"
+              @pointercancel="onPromoGridUp"
+            >
+              <div
                 v-for="(media, index) in selectedProvider.media"
                 :key="media.id"
                 class="lux-promo-item"
-                type="button"
+                role="button"
+                tabindex="0"
+                :data-index="index"
                 :aria-label="`ขยาย${media.type === 'image' ? 'รูปภาพ' : 'วิดีโอ'} ${media.name}`"
-                @pointerdown="onPromoPointerDown"
-                @pointermove="onPromoPointerMove"
-                @pointerup="onPromoActivate(index, $event)"
-                @pointercancel="promoDidDrag = true"
-                @keydown.enter.prevent="openMediaViewer(selectedProvider.media, index)"
-                @keydown.space.prevent="openMediaViewer(selectedProvider.media, index)"
+                @keydown="onPromoItemKey(index, $event)"
               >
                 <img v-if="media.type === 'image'" :src="media.url" :alt="media.name" loading="lazy" draggable="false" />
                 <template v-else>
                   <video :src="media.url" preload="metadata" playsinline :aria-label="media.name"></video>
                   <span class="lux-promo-play" aria-hidden="true"><AppIcon name="play" /></span>
                 </template>
-              </button>
+              </div>
             </div>
           </div>
           <div class="lux-profile-section"><h2>คุยรายละเอียดและ<span>ขอบเขตให้ชัดเจน</span></h2><p class="lux-provider-about-copy">{{ selectedProvider.description }}</p><p class="lux-provider-about-guidance">ไม่มีการจองผ่านเว็บ · ติดต่อผู้ให้บริการผ่าน LINE หรือ Facebook แล้วตกลงเวลา สถานที่ ราคา และขอบเขตกันเอง</p><div class="lux-tag-row"><span v-for="tag in selectedProvider.tags" :key="tag">{{ tag }}</span></div><div v-if="providerLineUrl(selectedProvider) || providerFacebookUrl(selectedProvider)" class="lux-provider-contacts"><span class="lux-provider-contacts-label">ช่องทางติดต่อ</span><div class="lux-provider-contact-actions"><a v-if="providerLineUrl(selectedProvider)" class="lux-contact-btn lux-contact-line" :href="providerLineUrl(selectedProvider)" target="_blank" rel="noopener noreferrer"><i>LINE</i><span>{{ selectedProvider.line }}</span></a><a v-if="providerFacebookUrl(selectedProvider)" class="lux-contact-btn lux-contact-facebook" :href="providerFacebookUrl(selectedProvider)" target="_blank" rel="noopener noreferrer"><i>Facebook</i><span>เปิดโปรไฟล์</span></a></div></div></div>

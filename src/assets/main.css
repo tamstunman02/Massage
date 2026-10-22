@@ -1094,9 +1094,8 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
   .lux-check-row { margin: 4px 0; }
   .lux-check-row small { display: none; }
   .lux-results-toolbar { margin-bottom: 9px; }
-  .lux-results-grid { grid-template-columns: 1fr; gap: 14px; max-width: 420px; margin-inline: auto; }
-  .lux-favorite-grid { grid-template-columns: 1fr; gap: 14px; max-width: 420px; }
-  .lux-card-media { aspect-ratio: 3 / 4; }
+  .lux-results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .lux-favorite-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .lux-card-photo { object-position: center top; }
   .lux-topline { display: none; }
   .lux-profile-layout { display: flex; flex-direction: column; gap: 0; }
@@ -1379,7 +1378,7 @@ body { background: var(--s-ivory); }
 @media (max-width: 680px) {
   .lux-provider-grid,
   .lux-results-grid,
-  .lux-favorite-grid { grid-template-columns: 1fr; gap: 14px; max-width: 420px; margin-inline: auto; }
+  .lux-favorite-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
 .lux-tag-row span { color: var(--s-olive); background: #f4edff; border: 0; border-radius: 999px; font-weight: 600; }
 .lux-tag-row span:nth-child(2) { color: #be185d; background: #ffe8f3; }
@@ -1986,15 +1985,16 @@ body { background: var(--s-ivory); }
   margin-top: 14px; padding: 2px 2px 10px;
   overflow-x: auto; overflow-y: hidden;
   overscroll-behavior-x: contain; scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch; touch-action: pan-x;
-  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch; touch-action: none;
+  cursor: grab; scrollbar-width: thin;
 }
+.lux-promo-grid.is-dragging { cursor: grabbing; scroll-snap-type: none; }
 .lux-promo-item {
   position: relative; min-width: 0; overflow: hidden; padding: 0;
   background: #1e1b4b; border: 0; border-radius: 13px; cursor: zoom-in;
-  scroll-snap-align: start; touch-action: pan-x; user-select: none;
-  -webkit-user-drag: none; appearance: none;
+  scroll-snap-align: start; user-select: none; -webkit-user-drag: none;
 }
+.lux-promo-grid.is-dragging .lux-promo-item { cursor: grabbing; }
 .lux-promo-item img, .lux-promo-item video {
   width: 100%; aspect-ratio: 3 / 4; display: block;
   object-fit: cover; object-position: center top;
