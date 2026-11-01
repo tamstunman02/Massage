@@ -592,6 +592,10 @@ function replaceAdminCreateMedia(media, event) {
 
 function openAdminPartnerMedia(provider) {
   adminCreatingPartner.value = false
+  adminPartnerSaveError.value = ''
+  if (!Array.isArray(provider.services) || !provider.services.length) {
+    provider.services = providerServices(provider).map((item) => ({ ...item }))
+  }
   adminEditingProvider.value = provider
   adminTab.value = 'providers'
 }
@@ -867,6 +871,88 @@ function flashSellerAlert(message, ok = false) {
     window.setTimeout(() => {
       if (sellerSaveAlert.value === message) sellerSaveAlert.value = ''
     }, 5000)
+  }
+}
+
+function addAdminPartnerService() {
+  const provider = adminEditingProvider.value
+  if (!provider) return
+  if (!Array.isArray(provider.services)) provider.services = []
+  if (provider.services.length >= 30) {
+    showNotice('เพิ่มรูปแบบบริการได้สูงสุด 30 รายการ')
+    return
+  }
+  provider.services.push({ name: '', duration: '60 นาที', description: '', price: 1500 })
+}
+
+function removeAdminPartnerService(index) {
+  const provider = adminEditingProvider.value
+  if (!provider || !Array.isArray(provider.services) || provider.services.length <= 1) {
+    showNotice('ต้องมีรูปแบบบริการอย่างน้อย 1 รายการ')
+    return
+  }
+  provider.services.splice(index, 1)
+}
+
+async function saveAdminPartnerProfile() {
+  const provider = adminEditingProvider.value
+  if (!provider) return failAdminCreate('ไม่พบโปรไฟล์พาร์ตเนอร์')
+  if (isAdminPartnerSaving.value) return
+  const measurements = String(provider.measurements || '').trim()
+  const description = String(provider.description || '').trim()
+  if (!String(provider.name || '').trim()) return failAdminCreate('กรุณาระบุชื่อพาร์ตเนอร์')
+  if (!provider.gender) return failAdminCreate('กรุณาเลือกอัตลักษณ์ทางเพศ')
+  if (!String(provider.province || '').trim() || !String(provider.venue || '').trim()) {
+    return failAdminCreate('กรุณาระบุจังหวัดและสถานที่ให้บริการ')
+  }
+  if (!Number.isInteger(Number(provider.age)) || Number(provider.age) < 18 || Number(provider.age) > 100 ||
+      !Number.isInteger(Number(provider.heightCm)) || Number(provider.heightCm) < 120 || Number(provider.heightCm) > 230 ||
+      !Number.isInteger(Number(provider.weightKg)) || Number(provider.weightKg) < 30 || Number(provider.weightKg) > 250 ||
+      !measurements) {
+    return failAdminCreate('กรุณากรอกอายุ ส่วนสูง น้ำหนัก และสัดส่วนให้ถูกต้อง')
+  }
+  if (!description) return failAdminCreate('กรุณากรอกรายละเอียดบริการ')
+  if (!String(provider.line || '').trim() && !String(provider.facebook || '').trim()) {
+    return failAdminCreate('กรุณากรอก LINE หรือ Facebook อย่างน้อย 1 ช่อง')
+  }
+  const services = Array.isArray(provider.services) ? provider.services : []
+  const serviceNames = services.map((service) => String(service.name || '').trim().toLocaleLowerCase())
+  if (!services.length || services.length > 30 ||
+      services.some((service) => !String(service.name || '').trim() ||
+        !String(service.duration || '').trim() ||
+        !String(service.description || '').trim() ||
+        !Number.isInteger(Number(service.price)) || Number(service.price) < 1) ||
+      new Set(serviceNames).size !== serviceNames.length) {
+    return failAdminCreate('กรุณากรอกชื่อ ระยะเวลา รายละเอียด และราคาของแต่ละรูปแบบให้ครบ และชื่อห้ามซ้ำ')
+  }
+  isAdminPartnerSaving.value = true
+  adminPartnerSaveError.value = ''
+  try {
+    const saved = await safely(() => api.updateProvider(provider.id, {
+      name: String(provider.name).trim(),
+      gender: provider.gender,
+      age: Number(provider.age),
+      heightCm: Number(provider.heightCm),
+      weightKg: Number(provider.weightKg),
+      measurements,
+      price: Math.min(...services.map((service) => Number(service.price))),
+      description,
+      venue: String(provider.venue).trim(),
+      province: String(provider.province).trim(),
+      services,
+      line: String(provider.line || '').trim(),
+      facebook: String(provider.facebook || '').trim(),
+    }))
+    if (!saved) {
+      failAdminCreate(notice.value || 'บันทึกข้อมูลพาร์ตเนอร์ไม่สำเร็จ')
+      return
+    }
+    providers.value = providers.value.map((item) => (item.id === saved.id ? { ...item, ...saved } : item))
+    adminEditingProvider.value = providers.value.find((item) => item.id === saved.id) || saved
+    showNotice('บันทึกรายละเอียดพาร์ตเนอร์แล้ว')
+    adminPartnerSaveError.value = ''
+  } finally {
+    isAdminPartnerSaving.value = false
   }
 }
 
@@ -1934,6 +2020,6 @@ function scrollToProviders() {
 }
 
   return {
-    clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, renameSellerMedia, replaceSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, onViewerTouchStart, onViewerTouchEnd, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, adminEditingProvider, isAdminTravelerLoading, openAdminPartnerMedia, closeAdminPartnerMedia, addAdminPartnerMedia, addAdminPartnerMediaTo, removeAdminPartnerMedia, adminCreatingPartner, isAdminPartnerSaving, adminPartnerSaveError, adminGenderOptions, adminPartnerForm, openAdminCreatePartner, closeAdminCreatePartner, submitAdminCreatePartner, addAdminCreateService, removeAdminCreateService, addAdminCreateMedia, removeAdminCreateMedia, replaceAdminCreateMedia, renameAdminPartnerMedia, replaceAdminPartnerMedia, reorderSellerMedia, reorderAdminPartnerMedia, reorderAdminCreateMedia, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary,
+    clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, renameSellerMedia, replaceSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, onViewerTouchStart, onViewerTouchEnd, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, adminEditingProvider, isAdminTravelerLoading, openAdminPartnerMedia, closeAdminPartnerMedia, addAdminPartnerMedia, addAdminPartnerMediaTo, removeAdminPartnerMedia, adminCreatingPartner, isAdminPartnerSaving, adminPartnerSaveError, adminGenderOptions, adminPartnerForm, openAdminCreatePartner, closeAdminCreatePartner, submitAdminCreatePartner, addAdminCreateService, removeAdminCreateService, addAdminCreateMedia, removeAdminCreateMedia, replaceAdminCreateMedia, renameAdminPartnerMedia, replaceAdminPartnerMedia, saveAdminPartnerProfile, addAdminPartnerService, removeAdminPartnerService, reorderSellerMedia, reorderAdminPartnerMedia, reorderAdminCreateMedia, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary,
   }
 }

@@ -2,7 +2,7 @@
 import AppIcon from '../components/AppIcon.vue'
 import PartnerMediaManager from '../components/PartnerMediaManager.vue'
 import { useApp } from '../app/useApp.js'
-const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, adminEditingProvider, isAdminTravelerLoading, openAdminPartnerMedia, closeAdminPartnerMedia, addAdminPartnerMedia, addAdminPartnerMediaTo, removeAdminPartnerMedia, adminCreatingPartner, isAdminPartnerSaving, adminPartnerSaveError, adminGenderOptions, adminPartnerForm, openAdminCreatePartner, closeAdminCreatePartner, submitAdminCreatePartner, addAdminCreateService, removeAdminCreateService, addAdminCreateMedia, removeAdminCreateMedia, replaceAdminCreateMedia, renameAdminPartnerMedia, replaceAdminPartnerMedia, reorderSellerMedia, reorderAdminPartnerMedia, reorderAdminCreateMedia, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary } = useApp()
+const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, adminEditingProvider, isAdminTravelerLoading, openAdminPartnerMedia, closeAdminPartnerMedia, addAdminPartnerMedia, addAdminPartnerMediaTo, removeAdminPartnerMedia, adminCreatingPartner, isAdminPartnerSaving, adminPartnerSaveError, adminGenderOptions, adminPartnerForm, openAdminCreatePartner, closeAdminCreatePartner, submitAdminCreatePartner, addAdminCreateService, removeAdminCreateService, addAdminCreateMedia, removeAdminCreateMedia, replaceAdminCreateMedia, renameAdminPartnerMedia, replaceAdminPartnerMedia, saveAdminPartnerProfile, addAdminPartnerService, removeAdminPartnerService, reorderSellerMedia, reorderAdminPartnerMedia, reorderAdminCreateMedia, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary } = useApp()
 </script>
 
 <template>
@@ -13,15 +13,72 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
       <section v-else-if="adminTab !== 'travelers'" class="lux-admin-panel lux-admin-detail-panel">
         <div class="lux-admin-panel-head">
           <div>
-            <h2>{{ adminTab === 'providers' && adminCreatingPartner ? 'เพิ่มพาร์ตเนอร์' : adminTab === 'providers' && adminEditingProvider ? `ผลงานของ ${adminEditingProvider.name}` : adminTab === 'providers' ? 'พาร์ตเนอร์ทั้งหมด' : 'ใบสมัครพาร์ตเนอร์' }}</h2>
-            <p>{{ adminTab === 'providers' && adminCreatingPartner ? 'ผู้ดูแลเพิ่มรายบุคคลได้เลย ไม่ต้องให้พาร์ตเนอร์สมัครเอง' : adminTab === 'providers' && adminEditingProvider ? 'อัปโหลด แก้ไข หรือลบสื่อโปรโมตได้เหมือนหน้าพาร์ตเนอร์' : adminTab === 'providers' ? 'ตั้งสถานะเผยแพร่ สมาชิก และวันหมดอายุหลังรับชำระนอกระบบ' : 'อนุมัติหลังรับชำระแล้ว · ต้องระบุวันหมดอายุสมาชิก' }}</p>
+            <h2>{{ adminTab === 'providers' && adminCreatingPartner ? 'เพิ่มพาร์ตเนอร์' : adminTab === 'providers' && adminEditingProvider ? `แก้ไขพาร์ตเนอร์: ${adminEditingProvider.name}` : adminTab === 'providers' ? 'พาร์ตเนอร์ทั้งหมด' : 'ใบสมัครพาร์ตเนอร์' }}</h2>
+            <p>{{ adminTab === 'providers' && adminCreatingPartner ? 'ผู้ดูแลเพิ่มรายบุคคลได้เลย ไม่ต้องให้พาร์ตเนอร์สมัครเอง' : adminTab === 'providers' && adminEditingProvider ? 'แก้ข้อมูลโปรไฟล์ รูปแบบราคา และสื่อโปรโมตได้จากหน้านี้' : adminTab === 'providers' ? 'ตั้งสถานะเผยแพร่ สมาชิก และวันหมดอายุหลังรับชำระนอกระบบ' : 'อนุมัติหลังรับชำระแล้ว · ต้องระบุวันหมดอายุสมาชิก' }}</p>
           </div>
           <button v-if="adminTab === 'providers' && adminEditingProvider" type="button" @click="closeAdminPartnerMedia"><AppIcon name="arrow-left" /> กลับไปยังรายชื่อ</button>
           <button v-else-if="adminTab === 'providers' && adminCreatingPartner" type="button" @click="closeAdminCreatePartner"><AppIcon name="arrow-left" /> กลับไปยังรายชื่อ</button>
           <button v-else-if="adminTab === 'providers'" type="button" class="lux-admin-add-partner" @click="openAdminCreatePartner">＋ เพิ่มพาร์ตเนอร์</button>
           <span v-else>{{ applications.length }} รายการ</span>
         </div>
-        <PartnerMediaManager v-if="adminTab === 'providers' && adminEditingProvider" :provider="adminEditingProvider" note="สื่อที่เพิ่มหรือแก้ไขจะปรากฏบนโปรไฟล์สาธารณะทันที" @add="addAdminPartnerMedia" @remove="removeAdminPartnerMedia" @rename="renameAdminPartnerMedia" @replace="replaceAdminPartnerMedia" @reorder="reorderAdminPartnerMedia" />
+        <form v-if="adminTab === 'providers' && adminEditingProvider" class="lux-admin-create-partner lux-seller-profile" novalidate @submit.prevent="saveAdminPartnerProfile">
+          <p v-if="adminPartnerSaveError" class="lux-admin-create-error" role="alert">{{ adminPartnerSaveError }}</p>
+          <section class="lux-admin-create-section">
+            <div class="lux-seller-panel-head">
+              <div>
+                <h2>ข้อมูลโปรไฟล์</h2>
+                <p>ข้อมูลนี้จะแสดงบนหน้าโปรไฟล์สาธารณะ</p>
+              </div>
+            </div>
+            <div class="lux-membership-fields">
+              <label class="lux-form-label">ชื่อที่ใช้แสดง<input v-model.trim="adminEditingProvider.name" maxlength="40" required /></label>
+              <label class="lux-form-label">อัตลักษณ์ทางเพศ
+                <select v-model="adminEditingProvider.gender" required>
+                  <option value="" disabled>เลือก</option>
+                  <option v-for="gender in adminGenderOptions" :key="`edit-${gender}`">{{ gender }}</option>
+                </select>
+              </label>
+              <label class="lux-form-label">อายุ<input v-model.number="adminEditingProvider.age" type="number" inputmode="numeric" min="18" max="100" step="1" required /></label>
+              <label class="lux-form-label">ส่วนสูง (ซม.)<input v-model.number="adminEditingProvider.heightCm" type="number" inputmode="numeric" min="120" max="230" step="1" required /></label>
+              <label class="lux-form-label">น้ำหนัก (กก.)<input v-model.number="adminEditingProvider.weightKg" type="number" inputmode="numeric" min="30" max="250" step="1" required /></label>
+              <label class="lux-form-label">สัดส่วน<input v-model.trim="adminEditingProvider.measurements" maxlength="80" placeholder="เช่น 34-24-36 นิ้ว" required /></label>
+              <label class="lux-form-label">จังหวัด
+                <select v-model="adminEditingProvider.province" required>
+                  <option value="" disabled>เลือกจังหวัด</option>
+                  <option v-for="province in provinces" :key="`admin-edit-${province}`">{{ province }}</option>
+                </select>
+              </label>
+              <label class="lux-form-label">สถานที่ให้บริการ<input v-model.trim="adminEditingProvider.venue" maxlength="100" required /></label>
+              <label class="lux-form-label">LINE ID<input v-model.trim="adminEditingProvider.line" maxlength="80" placeholder="เช่น mali.relax" /></label>
+              <label class="lux-form-label">ลิงก์ Facebook<input v-model.trim="adminEditingProvider.facebook" maxlength="300" type="text" inputmode="url" placeholder="https://facebook.com/yourpage" /></label>
+              <label class="lux-form-label lux-membership-wide">รายละเอียดบริการ<textarea v-model.trim="adminEditingProvider.description" rows="5" maxlength="300" placeholder="เขียนรายละเอียดได้หลายบรรทัด และใส่อิโมจิได้ ✨&#10;เช่น 🌿 จุดเด่นหรือบรรยากาศบริการ" required></textarea></label>
+            </div>
+          </section>
+          <section class="lux-seller-services" aria-labelledby="admin-edit-services-heading">
+            <div class="lux-seller-panel-head">
+              <div>
+                <h2 id="admin-edit-services-heading">รูปแบบและราคา</h2>
+                <p>เพิ่มตัวเลือกงานพร้อมชื่อ ระยะเวลา รายละเอียด และราคา</p>
+              </div>
+            </div>
+            <article v-for="(service, index) in adminEditingProvider.services" :key="index" class="lux-seller-service-row">
+              <div class="lux-seller-service-heading">
+                <strong>รูปแบบที่ {{ index + 1 }}</strong>
+                <button type="button" :disabled="adminEditingProvider.services.length <= 1" @click="removeAdminPartnerService(index)">ลบ</button>
+              </div>
+              <label class="lux-form-label">ชื่อรูปแบบ<input v-model.trim="service.name" maxlength="60" placeholder="เช่น พบปะพูดคุย ✨" required /></label>
+              <div class="lux-seller-service-fields">
+                <label class="lux-form-label">ระยะเวลา<input v-model.trim="service.duration" maxlength="40" placeholder="เช่น 60 นาที" required /></label>
+                <label class="lux-form-label">ราคา (บาท)<input v-model.number="service.price" type="number" inputmode="numeric" min="1" max="1000000" step="1" required /></label>
+              </div>
+              <label class="lux-form-label">รายละเอียด<textarea v-model.trim="service.description" maxlength="200" rows="4" placeholder="ใส่รายละเอียดได้หลายบรรทัด และใช้อิโมจิได้ ✨&#10;เช่น 🌿 นัดพบในบรรยากาศสบาย ๆ" required></textarea></label>
+            </article>
+            <button class="lux-button lux-button-light lux-seller-add-service" type="button" :disabled="adminEditingProvider.services.length >= 30" @click="addAdminPartnerService">＋ เพิ่มรูปแบบ</button>
+          </section>
+          <PartnerMediaManager :provider="adminEditingProvider" note="สื่อที่เพิ่มหรือแก้ไขจะปรากฏบนโปรไฟล์สาธารณะทันที" @add="addAdminPartnerMedia" @remove="removeAdminPartnerMedia" @rename="renameAdminPartnerMedia" @replace="replaceAdminPartnerMedia" @reorder="reorderAdminPartnerMedia" />
+          <p v-if="adminPartnerSaveError" class="lux-admin-create-error" role="alert">{{ adminPartnerSaveError }}</p>
+          <button class="lux-button lux-button-primary" type="submit" :disabled="isAdminPartnerSaving">{{ isAdminPartnerSaving ? 'กำลังบันทึก...' : 'บันทึกรายละเอียด ↗' }}</button>
+        </form>
         <form v-else-if="adminTab === 'providers' && adminCreatingPartner" class="lux-admin-create-partner lux-seller-profile" novalidate @submit.prevent="submitAdminCreatePartner">
           <p v-if="adminPartnerSaveError" class="lux-admin-create-error" role="alert">{{ adminPartnerSaveError }}</p>
           <section class="lux-admin-create-section">
@@ -127,7 +184,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                     <input type="file" accept="image/*,video/*" multiple @change="addAdminPartnerMediaTo(provider, $event)" />
                     ＋ เพิ่มผลงาน
                   </label>
-                  <button type="button" class="lux-admin-action" @click="openAdminPartnerMedia(provider)">จัดการผลงาน</button>
+                  <button type="button" class="lux-admin-action" @click="openAdminPartnerMedia(provider)">แก้ไขโปรไฟล์</button>
                   <button type="button" class="lux-admin-action" @click="openProfile(provider)">ดูรายละเอียด</button>
                   <button v-if="can('user:delete')" type="button" class="lux-admin-action reject" @click="deleteAdminProviderAccount(provider)">ลบบัญชี</button>
                 </td>

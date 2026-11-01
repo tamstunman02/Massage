@@ -508,13 +508,21 @@ app.patch('/api/providers/:id', requireLogin, wrap(async (req, res) => {
     if (!facebookResult.ok) return fail(res, 400, 'กรุณาใส่ลิงก์ Facebook ที่ถูกต้อง')
     facebook = facebookResult.value
   }
+  let gender = null
+  if (req.body.gender !== undefined) {
+    const nextGender = text(req.body.gender, 40)
+    if (nextGender && !['ผู้หญิง', 'ผู้ชาย', 'นอนไบนารี', 'ทรานส์เจนเดอร์', 'เควียร์', 'LGBTQ+', 'ไม่ประสงค์ระบุ'].includes(nextGender)) {
+      return fail(res, 400, 'กรุณาเลือกอัตลักษณ์ทางเพศ')
+    }
+    gender = nextGender || null
+  }
   const { rows } = await pool.query(
     `UPDATE providers SET
        name = COALESCE($2, name), price = COALESCE($3, price), description = COALESCE($4, description),
        venue = COALESCE($5, venue), province = COALESCE($6, province), modes = COALESCE($7, modes),
        services = COALESCE($8, services), age = COALESCE($9, age), height_cm = COALESCE($10, height_cm),
        weight_kg = COALESCE($11, weight_kg), measurements = COALESCE($12, measurements),
-       line = COALESCE($13, line), facebook = COALESCE($14, facebook)
+       line = COALESCE($13, line), facebook = COALESCE($14, facebook), gender = COALESCE($15, gender)
      WHERE id = $1 RETURNING id`,
     [id, req.body.name === undefined ? null : text(req.body.name, 100) || null,
       Number.isFinite(Number(req.body.price)) && req.body.price !== '' && req.body.price != null
@@ -524,7 +532,7 @@ app.patch('/api/providers/:id', requireLogin, wrap(async (req, res) => {
       req.body.venue === undefined ? null : text(req.body.venue, 200),
       req.body.province === undefined ? null : text(req.body.province, 100), modes,
       services === null ? null : JSON.stringify(services), age, heightCm, weightKg, measurements,
-      line, facebook])
+      line, facebook, gender])
   if (!rows[0]) return fail(res, 404, 'ไม่พบโปรไฟล์')
   if (Object.hasOwn(req.body, 'mediaIds')) {
     const ordered = await applyMediaOrder(id, req.body.mediaIds)
