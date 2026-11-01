@@ -786,14 +786,16 @@ const saveMediaOrder = wrap(async (req, res) => {
   res.json({ ok: true, ids: result.ids })
 })
 
-app.route('/api/providers/:id/media-order')
-  .put(requireLogin, saveMediaOrder)
-  .post(requireLogin, saveMediaOrder)
-  .patch(requireLogin, saveMediaOrder)
-app.route('/api/providers/:id/media/order')
-  .put(requireLogin, saveMediaOrder)
-  .post(requireLogin, saveMediaOrder)
-  .patch(requireLogin, saveMediaOrder)
+for (const path of [
+  '/api/providers/:id/media-order',
+  '/api/providers/:id/media-order/',
+  '/api/providers/:id/media/order',
+  '/api/providers/:id/reorder-media',
+]) {
+  app.put(path, requireLogin, saveMediaOrder)
+  app.post(path, requireLogin, saveMediaOrder)
+  app.patch(path, requireLogin, saveMediaOrder)
+}
 
 // ---------- media ----------
 app.post('/api/providers/:id/media', requireLogin,
@@ -1385,6 +1387,12 @@ app.post('/api/applications/:id/reject', requirePermission('provider:approve'), 
 }))
 
 // ---------- static + errors ----------
+app.use('/api', (req, res, next) => {
+  const match = String(req.path || '').match(/^\/providers\/(\d+)\/(?:media-order|media\/order|reorder-media)\/?$/)
+  if (!match || !['PUT', 'POST', 'PATCH'].includes(req.method)) return next()
+  req.params = { ...(req.params || {}), id: match[1] }
+  return requireLogin(req, res, () => saveMediaOrder(req, res, next))
+})
 app.use('/api', (_req, res) => fail(res, 404, 'ไม่พบ API'))
 if (existsSync(distDir)) {
   app.use(express.static(distDir))

@@ -33,6 +33,7 @@ export const api = {
       ['PUT', `/api/providers/${id}/media-order`, { ids }],
       ['POST', `/api/providers/${id}/media-order`, { ids }],
       ['PATCH', `/api/providers/${id}/media-order`, { ids }],
+      ['PUT', `/api/providers/${id}/reorder-media`, { ids }],
       ['POST', `/api/providers/${id}/media/order`, { ids }],
       ['PATCH', `/api/providers/${id}`, { mediaIds: ids }],
     ]

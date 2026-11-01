@@ -134,10 +134,21 @@ jobs:
             rm -f "$unit_tmp"
             run_root systemctl daemon-reload
             run_root systemctl enable massage
-            run_root systemctl restart massage
+            run_root systemctl stop massage || true
+            run_root fuser -k 3001/tcp || true
+            run_root systemctl start massage
             for _ in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:3001/api/me >/dev/null; then
-                echo "Deployed and API is up"
+                order_code=$(curl -s -o /tmp/media-order.json -w '%{http_code}' -X PUT \
+                  http://127.0.0.1:3001/api/providers/1/media-order \
+                  -H 'Content-Type: application/json' \
+                  -d '{"ids":[1]}')
+                if [ "$order_code" = "404" ]; then
+                  echo "media-order route missing after deploy (HTTP $order_code)"
+                  cat /tmp/media-order.json || true
+                  exit 1
+                fi
+                echo "Deployed and API is up (media-order HTTP $order_code)"
                 exit 0
               fi
               sleep 2
