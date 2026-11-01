@@ -836,7 +836,7 @@ function applyMediaOrder(provider, ids) {
 async function persistMediaOrder(provider, { silent } = {}) {
   const ids = (provider.media || []).map((item) => item.id)
   if (!provider?.id || ids.some((id) => typeof id !== 'number')) return
-  const saved = await safely(() => api.reorderMedia(provider.id, ids))
+  const saved = await safely(() => api.reorderMedia(provider.id, ids), 'จัดลำดับรูปไม่สำเร็จ')
   if (saved && !silent) showNotice('จัดลำดับผลงานแล้ว · รูปแรกเป็นรูปโปรไฟล์')
 }
 

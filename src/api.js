@@ -28,7 +28,27 @@ export const api = {
     headers: { 'Content-Type': file.type, 'X-File-Name': encodeURIComponent(file.name) },
   }),
   updateMedia: (id, payload) => request('PATCH', `/api/media/${id}`, payload),
-  reorderMedia: (id, ids) => request('PUT', `/api/providers/${id}/media-order`, { ids }),
+  reorderMedia: async (id, ids) => {
+    const attempts = [
+      ['PUT', `/api/providers/${id}/media-order`, { ids }],
+      ['POST', `/api/providers/${id}/media-order`, { ids }],
+      ['PATCH', `/api/providers/${id}/media-order`, { ids }],
+      ['POST', `/api/providers/${id}/media/order`, { ids }],
+      ['PATCH', `/api/providers/${id}`, { mediaIds: ids }],
+    ]
+    let lastError
+    for (const [method, url, body] of attempts) {
+      try {
+        return await request(method, url, body)
+      } catch (error) {
+        lastError = error
+        if (error.message !== 'ไม่พบ API') throw error
+      }
+    }
+    throw new Error(lastError?.message === 'ไม่พบ API'
+      ? 'เซิร์ฟเวอร์ยังไม่อัปเดตเส้นทางจัดลำดับรูป กรุณาอัปเดตเซิร์ฟเวอร์แล้วลองใหม่'
+      : lastError?.message || 'จัดลำดับรูปไม่สำเร็จ')
+  },
   deleteMedia: (id) => request('DELETE', `/api/media/${id}`),
   providerReviews: (id) => request('GET', `/api/providers/${id}/reviews`),
   createReview: (providerId, payload) => request('POST', `/api/providers/${providerId}/reviews`, payload),

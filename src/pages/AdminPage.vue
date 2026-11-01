@@ -62,7 +62,6 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                 <h2 id="admin-create-services-heading">รูปแบบและราคา</h2>
                 <p>เพิ่มตัวเลือกงานพร้อมชื่อ ระยะเวลา รายละเอียด และราคา</p>
               </div>
-              <button class="lux-button lux-button-light" type="button" :disabled="adminPartnerForm.services.length >= 30" @click="addAdminCreateService">＋ เพิ่มรูปแบบ</button>
             </div>
             <article v-for="(service, index) in adminPartnerForm.services" :key="index" class="lux-seller-service-row">
               <div class="lux-seller-service-heading">
@@ -76,6 +75,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
               </div>
               <label class="lux-form-label">รายละเอียด<textarea v-model.trim="service.description" maxlength="200" rows="4" placeholder="ใส่รายละเอียดได้หลายบรรทัด และใช้อิโมจิได้ ✨&#10;เช่น 🌿 นัดพบในบรรยากาศสบาย ๆ" required></textarea></label>
             </article>
+            <button class="lux-button lux-button-light lux-seller-add-service" type="button" :disabled="adminPartnerForm.services.length >= 30" @click="addAdminCreateService">＋ เพิ่มรูปแบบ</button>
           </section>
           <PartnerMediaManager :provider="adminPartnerForm" note="เลือกรูปภาพหรือวิดีโอได้หลายไฟล์ · จะอัปโหลดเมื่อกดบันทึกพาร์ตเนอร์" @add="addAdminCreateMedia" @remove="removeAdminCreateMedia" @replace="replaceAdminCreateMedia" @reorder="reorderAdminCreateMedia" />
           <section class="lux-admin-create-section lux-admin-create-account">

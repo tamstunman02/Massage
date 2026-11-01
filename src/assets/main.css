@@ -2129,9 +2129,20 @@ body { background: var(--s-ivory); }
 .lux-seller-services > .lux-seller-panel-head p { max-width: 640px; margin-top: 6px; line-height: 1.6; }
 .lux-seller-services > .lux-seller-service-row { order: 1; }
 .lux-seller-services > .lux-seller-service-note { order: 2; }
-.lux-seller-services .lux-seller-panel-head .lux-button { order: 3; align-self: center; min-height: 46px; margin-top: 15px; padding: 0 24px; border-radius: 12px; font-size: 14px; font-weight: 700; white-space: nowrap; box-shadow: 0 5px 14px rgba(124,58,237,.12); }
-.lux-seller-services .lux-seller-panel-head .lux-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(124,58,237,.2); }
-.lux-seller-services .lux-seller-panel-head .lux-button:disabled { opacity: .5; cursor: not-allowed; }
+.lux-seller-services .lux-seller-add-service {
+  order: 3;
+  align-self: center;
+  min-height: 46px;
+  margin-top: 4px;
+  padding: 0 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 5px 14px rgba(124,58,237,.12);
+}
+.lux-seller-services .lux-seller-add-service:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(124,58,237,.2); }
+.lux-seller-services .lux-seller-add-service:disabled { opacity: .5; cursor: not-allowed; }
 .lux-seller-service-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 16px; margin-bottom: 14px; padding: 20px; overflow: hidden; background: #fff; border: 1px solid #e6e0ef; border-radius: 15px; box-shadow: 0 4px 13px rgba(35,24,60,.035); transition: border-color .2s, box-shadow .2s; }
 .lux-seller-service-row::before { position: absolute; inset: 0 0 auto; height: 3px; background: var(--s-gradient); content: ''; }
 .lux-seller-service-row:focus-within { border-color: #b89be8; box-shadow: 0 0 0 3px rgba(124,58,237,.09), 0 6px 18px rgba(35,24,60,.06); }
@@ -2291,14 +2302,7 @@ body { background: var(--s-ivory); }
 .lux-admin-create-partner .lux-seller-services > .lux-seller-panel-head {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
   margin-bottom: 16px;
-}
-.lux-admin-create-partner .lux-seller-services .lux-seller-panel-head .lux-button {
-  order: 0;
-  align-self: flex-start;
-  margin-top: 0;
 }
 .lux-admin-create-partner .lux-membership-fields {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2404,7 +2408,7 @@ body { background: var(--s-ivory); }
   .lux-membership-fields .lux-form-label input[type="number"],
   .lux-seller-service-row .lux-form-label input[type="number"] { font-size: 16px; }
   .lux-seller-service-row .lux-form-label:last-of-type textarea { min-height: 100px; }
-  .lux-seller-services .lux-seller-panel-head .lux-button { width: 100%; min-height: 44px; margin-top: 12px; }
+  .lux-seller-services .lux-seller-add-service { width: 100%; min-height: 44px; margin-top: 12px; }
   .lux-seller-media-manager { padding: 14px; }
   .lux-seller-media-manager .lux-seller-panel-head { flex-wrap: wrap; }
   .lux-seller-media-toolbar { width: 100%; flex-wrap: wrap; }
@@ -2416,7 +2420,7 @@ body { background: var(--s-ivory); }
   .lux-admin-create-partner .lux-membership-fields,
   .lux-admin-create-account .lux-membership-fields { grid-template-columns: 1fr; }
   .lux-admin-create-partner .lux-seller-services > .lux-seller-panel-head { flex-wrap: wrap; }
-  .lux-admin-create-partner .lux-seller-services .lux-seller-panel-head .lux-button { width: 100%; }
+  .lux-admin-create-partner .lux-seller-services .lux-seller-add-service { width: 100%; }
   .lux-admin-create-partner > .lux-button { width: 100%; min-width: 0; }
   .lux-seller-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .lux-promo-scroller {

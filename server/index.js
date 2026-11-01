@@ -526,6 +526,10 @@ app.patch('/api/providers/:id', requireLogin, wrap(async (req, res) => {
       services === null ? null : JSON.stringify(services), age, heightCm, weightKg, measurements,
       line, facebook])
   if (!rows[0]) return fail(res, 404, 'ไม่พบโปรไฟล์')
+  if (Object.hasOwn(req.body, 'mediaIds')) {
+    const ordered = await applyMediaOrder(id, req.body.mediaIds)
+    if (ordered.error) return fail(res, 400, ordered.error)
+  }
   const result = await pool.query(`${providerSql} WHERE p.id = $1`, [id])
   res.json(toProvider(result.rows[0]))
 }))
@@ -754,6 +758,43 @@ app.delete('/api/admin/providers/:id', requirePermission('user:delete'), wrap(as
   }
 }))
 
+async function applyMediaOrder(providerId, rawIds) {
+  const ids = Array.isArray(rawIds) ? rawIds.map(Number) : []
+  if (!ids.length || ids.some((mediaId) => !Number.isSafeInteger(mediaId) || mediaId <= 0)) {
+    return { error: 'ลำดับไฟล์ไม่ถูกต้อง' }
+  }
+  const { rows } = await pool.query('SELECT id FROM media WHERE provider_id = $1', [providerId])
+  const existing = new Set(rows.map((row) => row.id))
+  if (ids.length !== existing.size || ids.some((mediaId) => !existing.has(mediaId))) {
+    return { error: 'ลำดับไฟล์ไม่ครบหรือไม่ตรงกับผลงานของโปรไฟล์นี้' }
+  }
+  await pool.query(
+    `UPDATE media AS m
+     SET sort_order = u.ord
+     FROM unnest($1::int[]) WITH ORDINALITY AS u(id, ord)
+     WHERE m.id = u.id AND m.provider_id = $2`,
+    [ids, providerId],
+  )
+  return { ok: true, ids }
+}
+
+const saveMediaOrder = wrap(async (req, res) => {
+  const id = Number(req.params.id)
+  if (!canManageProvider(req, id)) return fail(res, 403, 'จัดลำดับได้เฉพาะโปรไฟล์ของตนเอง หรือโดยผู้ดูแล')
+  const result = await applyMediaOrder(id, req.body?.ids ?? req.body?.mediaIds)
+  if (result.error) return fail(res, 400, result.error)
+  res.json({ ok: true, ids: result.ids })
+})
+
+app.route('/api/providers/:id/media-order')
+  .put(requireLogin, saveMediaOrder)
+  .post(requireLogin, saveMediaOrder)
+  .patch(requireLogin, saveMediaOrder)
+app.route('/api/providers/:id/media/order')
+  .put(requireLogin, saveMediaOrder)
+  .post(requireLogin, saveMediaOrder)
+  .patch(requireLogin, saveMediaOrder)
+
 // ---------- media ----------
 app.post('/api/providers/:id/media', requireLogin,
   express.raw({ type: () => true, limit: '100mb' }), wrap(async (req, res) => {
@@ -801,28 +842,6 @@ app.delete('/api/media/:id', requireLogin, wrap(async (req, res) => {
   await pool.query('DELETE FROM media WHERE id = $1', [mediaId])
   await unlink(path.join(uploadDir, current[0].file)).catch(() => {})
   res.json({ ok: true })
-}))
-
-app.put('/api/providers/:id/media-order', requireLogin, wrap(async (req, res) => {
-  const id = Number(req.params.id)
-  if (!canManageProvider(req, id)) return fail(res, 403, 'จัดลำดับได้เฉพาะโปรไฟล์ของตนเอง หรือโดยผู้ดูแล')
-  const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(Number) : []
-  if (!ids.length || ids.some((mediaId) => !Number.isSafeInteger(mediaId) || mediaId <= 0)) {
-    return fail(res, 400, 'ลำดับไฟล์ไม่ถูกต้อง')
-  }
-  const { rows } = await pool.query('SELECT id FROM media WHERE provider_id = $1', [id])
-  const existing = new Set(rows.map((row) => row.id))
-  if (ids.length !== existing.size || ids.some((mediaId) => !existing.has(mediaId))) {
-    return fail(res, 400, 'ลำดับไฟล์ไม่ครบหรือไม่ตรงกับผลงานของโปรไฟล์นี้')
-  }
-  await pool.query(
-    `UPDATE media AS m
-     SET sort_order = u.ord
-     FROM unnest($1::int[]) WITH ORDINALITY AS u(id, ord)
-     WHERE m.id = u.id AND m.provider_id = $2`,
-    [ids, id],
-  )
-  res.json({ ok: true, ids })
 }))
 
 // ---------- provider reviews ----------
