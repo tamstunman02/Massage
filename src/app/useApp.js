@@ -1493,7 +1493,7 @@ function rememberSharedProfile(id) {
 }
 
 function clearSharedProfileUrl() {
-  document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอ็นเชียงใหม่ เด็กเอ็นสุราษ เด็กเอ็นพัทยา'
+  document.title = 'นัวเนีย NuaNia | เด็กเอ็นเชียงใหม่ รวมเด็กเอ็นทั่วไทย'
   if (!sharedProfileId()) return
   history.pushState({}, '', '/')
 }
@@ -1516,7 +1516,7 @@ function onProfilePopState() {
     if (view.value === 'profile') {
       selectedProvider.value = null
       view.value = 'home'
-      document.title = 'นัวเนีย NuaNia | รวมเด็กเอ็น เด็กเอ็นเชียงใหม่ เด็กเอ็นสุราษ เด็กเอ็นพัทยา'
+      document.title = 'นัวเนีย NuaNia | เด็กเอ็นเชียงใหม่ รวมเด็กเอ็นทั่วไทย'
     }
     return
   }
