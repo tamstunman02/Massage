@@ -1,14 +1,18 @@
 <script setup>
-import { computed, ref, watch, onBeforeUnmount } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import { useApp } from '../app/useApp.js'
 const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData, applyUser, safely, updateScrollEffects, closeSeekDetail, openOwnArea, submitLogin, logout, openAdminTraveler, providerServices, hasAppliedFilters, addSellerMedia, removeSellerMedia, flashSellerAlert, saveSellerProfile, addSellerService, providerLineUrl, providerFacebookUrl, openProviderContact, openOwnerLine, removeSellerService, setProviderStatus, toDatetimeLocalValue, defaultMembershipExpiryLocal, isProviderPubliclyListed, saveProviderExpiry, deleteAdminTraveler, deleteAdminProviderAccount, onAccountButton, navigate, resetSeekForm, openSeekCompose, closeSeekCompose, stopSeekRealtime, stopSeekBoardPolling, refreshSelectedSeekPost, startSeekRealtime, startSeekBoardPolling, openSeekPost, validateSeekForm, submitSeekPost, closeSeekPost, submitSeekComment, startEditSeekComment, cancelEditSeekComment, saveSeekComment, removeSeekComment, applySeekBoardFilter, openSearchFilters, closeSearchFilters, resetSearchFilters, applySearchFilters, clearSearchFilters, searchWithFilters, openSellerArea, openBuyerArea, openProfile, sharedProfileId, profileShareUrl, rememberSharedProfile, clearSharedProfileUrl, openSharedProfileFromUrl, onProfilePopState, shareProviderProfile, openSeekCommentProfile, providerPreviewMedia, providerHasVideo, openMediaViewer, closeMediaViewer, handleViewerKeydown, changeViewerMedia, onViewerTouchStart, onViewerTouchEnd, clearReviewImages, selectReviewImages, loadProviderReviews, loadSellerReviews, submitReview, startBooking, submitBooking, toggleFavorite, submitApplication, clearMembershipProfilePhoto, selectMembershipProfilePhoto, validateMembershipStep, nextMembershipStep, prevMembershipStep, onMembershipFormSubmit, submitMembership, updateSellerBooking, approveApplication, rejectApplication, showNotice, resendVerification, confirmDevVerification, formatDate, formatDateTime, scrollToProviders, OWNER_LINE_ID, ownerLineUrl, ownerLineLabel, provinces, providers, view, searchName, selectedProvince, selectedGender, selectedMode, selectedService, appliedSearchFilters, isSearchFilterOpen, searchFilterInput, searchFilterTrigger, sortBy, selectedProvider, selectedReviews, sellerReviews, reviewableBookingIds, reviewForm, reviewImages, viewerMedia, viewerIndex, profileBookingMode, booking, bookings, applications, application, favorites, notice, sellerSaveAlert, devVerifyLink, bookingReference, isCompactMenuOpen, isAccountMenuOpen, adminTab, adminProviderSearch, adminProviderProvince, adminProviderGender, adminProviderPage, adminProviderPageSize, adminTravelers, adminTravelerSearch, selectedTraveler, isAdminTravelerLoading, accountTab, seekPosts, mySeekPosts, selectedSeekPost, seekBoardFilter, seekForm, seekFormErrors, seekCommentDraft, editingSeekCommentId, editingSeekCommentBody, isSeekSubmitting, seekDetailLoading, isSeekComposeOpen, seekRealtimeConnected, member, activeRole, memberSellerProviderId, membership, membershipStep, showMembershipPassword, showMembershipPasswordConfirm, membershipErrors, membershipPasswordMismatch, membershipSteps, membershipStepMeta, isMembershipLastStep, membershipProfilePhoto, isMembershipSubmitting, sellerDashboardTab, adminApproveExpiresAt, currentUser, loginForm, appRoot, userPermissions, currentRole, roleLabel, currentHomeView, accountMenuLabel, protectedViews, serviceCategories, services, searchHasFilters, activeSearchProvince, searchFilterSummary, providersByProvince, visibleProviders, selectedServiceOption, bookingPrice, featuredProfileImage, currentViewerMedia, availableAppointmentModes, reviewSummary, availableReviewBookings, upcomingBookings, completedBookings, favoriteProviders, filteredAdminProviders, adminProviderGenders, adminProviderPageCount, paginatedAdminProviders, filteredAdminTravelers, activeProviderCount, sellerProvider, sellerBookings, sellerReviewSummary } = useApp()
 
 const heroStage = ref(null)
 const heroVideo = ref(null)
+const thumbRail = ref(null)
 const heroIndex = ref(0)
 const heroPlaying = ref(false)
 const galleryFilter = ref('all')
+const canScrollThumbsPrev = ref(false)
+const canScrollThumbsNext = ref(false)
+let thumbResize = null
 
 let heroStartX = 0
 let heroStartY = 0
@@ -51,6 +55,40 @@ function changeHero(delta) {
 function selectHero(media) {
   const index = mediaIndex(media)
   if (index >= 0) heroIndex.value = index
+}
+
+function updateThumbScroll() {
+  const rail = thumbRail.value
+  if (!rail) {
+    canScrollThumbsPrev.value = false
+    canScrollThumbsNext.value = false
+    return
+  }
+  const max = rail.scrollWidth - rail.clientWidth
+  canScrollThumbsPrev.value = rail.scrollLeft > 4
+  canScrollThumbsNext.value = max > 4 && rail.scrollLeft < max - 4
+}
+
+function thumbStep() {
+  const rail = thumbRail.value
+  const first = rail?.firstElementChild
+  if (!first) return 0
+  const gap = Number.parseFloat(getComputedStyle(rail).columnGap || getComputedStyle(rail).gap) || 12
+  return first.getBoundingClientRect().width + gap
+}
+
+function scrollThumbs(direction) {
+  const rail = thumbRail.value
+  if (!rail) return
+  rail.scrollBy({ left: thumbStep() * direction, behavior: 'smooth' })
+}
+
+function bindThumbRail(el) {
+  el?.addEventListener('scroll', updateThumbScroll, { passive: true })
+}
+
+function unbindThumbRail(el) {
+  el?.removeEventListener('scroll', updateThumbScroll)
 }
 
 function toggleHeroVideo(event) {
@@ -113,6 +151,17 @@ watch(heroStage, (el, prev) => {
   bindHeroStage(el)
 }, { flush: 'post' })
 
+watch(thumbRail, (el, prev) => {
+  unbindThumbRail(prev)
+  bindThumbRail(el)
+  thumbResize?.disconnect()
+  if (el && typeof ResizeObserver !== 'undefined') {
+    thumbResize = new ResizeObserver(() => updateThumbScroll())
+    thumbResize.observe(el)
+  }
+  nextTick(updateThumbScroll)
+}, { flush: 'post' })
+
 watch(
   () => selectedProvider.value?.id,
   () => {
@@ -122,12 +171,20 @@ watch(
   },
 )
 
+watch(filteredGallery, async () => {
+  await nextTick()
+  if (thumbRail.value) thumbRail.value.scrollLeft = 0
+  updateThumbScroll()
+})
+
 watch(heroIndex, () => {
   heroPlaying.value = false
 })
 
 onBeforeUnmount(() => {
   unbindHeroStage(heroStage.value)
+  unbindThumbRail(thumbRail.value)
+  thumbResize?.disconnect()
 })
 </script>
 
@@ -299,21 +356,41 @@ onBeforeUnmount(() => {
           <button type="button" :class="{ active: galleryFilter === 'video' }" @click="galleryFilter = 'video'">วิดีโอ {{ videoCount }}</button>
         </div>
       </div>
-      <div class="lux-profile-thumbs">
+      <div class="lux-profile-rail">
         <button
-          v-for="media in filteredGallery"
-          :key="media.id"
+          v-if="canScrollThumbsPrev"
           type="button"
-          class="lux-profile-thumb"
-          :class="{ active: mediaIndex(media) === heroIndex }"
-          :aria-label="`ดู${media.type === 'image' ? 'รูปภาพ' : 'วิดีโอ'} ${media.name}`"
-          @click="selectHero(media)"
+          class="lux-profile-rail-nav previous"
+          aria-label="เลื่อนรูปไปทางซ้าย"
+          @click="scrollThumbs(-1)"
         >
-          <img v-if="media.type === 'image'" :src="media.url" :alt="media.name" loading="lazy" />
-          <template v-else>
-            <video :src="media.url" preload="metadata" playsinline :aria-label="media.name"></video>
-            <span class="lux-profile-thumb-play" aria-hidden="true"><AppIcon name="play" /></span>
-          </template>
+          <AppIcon name="arrow-left" />
+        </button>
+        <div ref="thumbRail" class="lux-profile-thumbs">
+          <button
+            v-for="media in filteredGallery"
+            :key="media.id"
+            type="button"
+            class="lux-profile-thumb"
+            :class="{ active: mediaIndex(media) === heroIndex }"
+            :aria-label="`ดู${media.type === 'image' ? 'รูปภาพ' : 'วิดีโอ'} ${media.name}`"
+            @click="selectHero(media)"
+          >
+            <img v-if="media.type === 'image'" :src="media.url" :alt="media.name" loading="lazy" />
+            <template v-else>
+              <video :src="media.url" preload="metadata" playsinline :aria-label="media.name"></video>
+              <span class="lux-profile-thumb-play" aria-hidden="true"><AppIcon name="play" /></span>
+            </template>
+          </button>
+        </div>
+        <button
+          v-if="canScrollThumbsNext"
+          type="button"
+          class="lux-profile-rail-nav next"
+          aria-label="เลื่อนรูปไปทางขวา"
+          @click="scrollThumbs(1)"
+        >
+          <AppIcon name="arrow-right" />
         </button>
       </div>
     </section>
