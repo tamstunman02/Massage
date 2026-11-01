@@ -574,7 +574,7 @@ app.post('/api/admin/providers', requirePermission('provider:approve'), wrap(asy
   const age = Number(req.body?.age)
   const heightCm = Number(req.body?.heightCm)
   const weightKg = Number(req.body?.weightKg)
-  const price = Math.max(0, Math.min(1000000, Number(req.body?.price) || 0))
+  let price = Math.max(0, Math.min(1000000, Number(req.body?.price) || 0))
   const line = normalizeLineId(req.body?.line)
   const facebookResult = normalizeFacebookUrl(req.body?.facebook)
   const email = text(req.body?.email, 200).toLowerCase()
@@ -593,7 +593,6 @@ app.post('/api/admin/providers', requirePermission('provider:approve'), wrap(asy
   if (!measurements) return fail(res, 400, 'กรุณากรอกสัดส่วน')
   if (!facebookResult.ok) return fail(res, 400, 'กรุณากรอกลิงก์ Facebook ให้ถูกต้อง')
   if (!line && !facebookResult.value) return fail(res, 400, 'กรุณากรอก LINE หรือ Facebook อย่างน้อย 1 ช่อง')
-  if (price < 1) return fail(res, 400, 'กรุณากรอกราคาเริ่มต้น')
   if (!expires.ok || !expires.value) return fail(res, 400, 'กรุณาระบุวันหมดอายุสมาชิกให้ถูกต้อง')
   if (email) {
     if (!/^\S+@\S+\.\S+$/.test(email)) return fail(res, 400, 'กรุณากรอกอีเมลให้ถูกต้อง')
@@ -603,8 +602,9 @@ app.post('/api/admin/providers', requirePermission('provider:approve'), wrap(asy
     return fail(res, 400, 'กรุณากรอกอีเมลถ้าต้องการสร้างบัญชีเข้าสู่ระบบ')
   }
 
-  const parsedServices = parseProviderServices(req.body?.services, price, description)
+  const parsedServices = parseProviderServices(req.body?.services, price || 1500, description)
   if (!parsedServices.ok) return fail(res, 400, parsedServices.error)
+  if (price < 1) price = Math.min(...parsedServices.value.map((item) => item.price))
   const services = JSON.stringify(parsedServices.value)
 
   const client = await pool.connect()

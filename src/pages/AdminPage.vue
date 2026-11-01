@@ -50,7 +50,6 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
                 </select>
               </label>
               <label class="lux-form-label">สถานที่ให้บริการ<input v-model.trim="adminPartnerForm.venue" maxlength="100" required /></label>
-              <label class="lux-form-label">ราคาเริ่มต้นต่อชั่วโมง<input v-model.number="adminPartnerForm.price" type="number" inputmode="numeric" min="1" step="1" required /></label>
               <label class="lux-form-label">LINE ID<input v-model.trim="adminPartnerForm.line" maxlength="80" placeholder="เช่น mali.relax" /></label>
               <label class="lux-form-label">ลิงก์ Facebook<input v-model.trim="adminPartnerForm.facebook" maxlength="300" type="text" inputmode="url" placeholder="https://facebook.com/yourpage" /></label>
               <label class="lux-form-label lux-membership-wide">รายละเอียดบริการ<textarea v-model.trim="adminPartnerForm.description" rows="5" maxlength="300" placeholder="เขียนรายละเอียดได้หลายบรรทัด และใส่อิโมจิได้ ✨&#10;เช่น 🌿 จุดเด่นหรือบรรยากาศบริการ" required></textarea></label>

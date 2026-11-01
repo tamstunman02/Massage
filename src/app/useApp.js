@@ -537,7 +537,7 @@ function addAdminCreateService() {
     showNotice('เพิ่มรูปแบบบริการได้สูงสุด 30 รายการ')
     return
   }
-  form.services.push({ name: '', duration: '60 นาที', description: '', price: Number(form.price) || 1500 })
+  form.services.push({ name: '', duration: '60 นาที', description: '', price: 1500 })
 }
 
 function removeAdminCreateService(index) {
@@ -646,7 +646,6 @@ async function submitAdminCreatePartner() {
     return failAdminCreate('กรุณากรอกน้ำหนักระหว่าง 30–250 กก.')
   }
   if (!measurements) return failAdminCreate('กรุณากรอกสัดส่วน')
-  if (!Number.isInteger(Number(form.price)) || Number(form.price) < 1) return failAdminCreate('กรุณากรอกราคาเริ่มต้น')
   if (!description) return failAdminCreate('กรุณากรอกรายละเอียดบริการ')
   if (!String(form.line || '').trim() && !String(form.facebook || '').trim()) {
     return failAdminCreate('กรุณากรอก LINE หรือ Facebook อย่างน้อย 1 ช่อง')
@@ -670,6 +669,7 @@ async function submitAdminCreatePartner() {
     services.push({ name: serviceName, duration, description: serviceDescription, price: servicePrice })
   }
   if (!services.length) return failAdminCreate('ต้องมีรูปแบบงานอย่างน้อย 1 รายการ')
+  const startingPrice = Math.min(...services.map((item) => item.price))
 
   isAdminPartnerSaving.value = true
   try {
@@ -682,7 +682,7 @@ async function submitAdminCreatePartner() {
       heightCm: Number(form.heightCm),
       weightKg: Number(form.weightKg),
       measurements,
-      price: Number(form.price),
+      price: startingPrice,
       description,
       line: form.line,
       facebook: form.facebook,
@@ -889,9 +889,8 @@ async function saveSellerProfile() {
     flashSellerAlert('กรุณากรอกรายละเอียดบริการ')
     return
   }
-  if (!String(provider.name || '').trim() || !String(provider.province || '').trim() || !String(provider.venue || '').trim() ||
-      !Number.isFinite(Number(provider.price)) || Number(provider.price) < 1) {
-    flashSellerAlert('กรุณากรอกชื่อ จังหวัด ราคา และสถานที่ให้บริการให้ครบ')
+  if (!String(provider.name || '').trim() || !String(provider.province || '').trim() || !String(provider.venue || '').trim()) {
+    flashSellerAlert('กรุณากรอกชื่อ จังหวัด และสถานที่ให้บริการให้ครบ')
     return
   }
   const services = Array.isArray(provider.services) ? provider.services : []
@@ -912,7 +911,7 @@ async function saveSellerProfile() {
       heightCm: Number(provider.heightCm),
       weightKg: Number(provider.weightKg),
       measurements,
-      price: Number(provider.price),
+      price: Math.min(...services.map((service) => Number(service.price))),
       description,
       venue: String(provider.venue).trim(),
       province: String(provider.province).trim(),
@@ -938,7 +937,7 @@ function addSellerService() {
     showNotice('เพิ่มรูปแบบบริการได้สูงสุด 30 รายการ')
     return
   }
-  provider.services.push({ name: '', duration: '', description: '', price: provider.price })
+  provider.services.push({ name: '', duration: '', description: '', price: 1500 })
 }
 
 function providerLineUrl(provider) {

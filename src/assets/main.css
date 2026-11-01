@@ -197,7 +197,7 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-provider-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
 .lux-provider-card { min-width: 0; }
 .lux-card-image { position: relative; width: 100%; height: 225px; display: block; overflow: hidden; padding: 0; background-color: #d5d2c3; border: 0; text-align: left; cursor: pointer; }
-.lux-card-photo { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.lux-card-photo { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .lux-card-image-has-media::before { z-index: 1; inset: 0; top: 0; left: 0; width: auto; height: auto; border: 0; border-radius: 0; background: linear-gradient(180deg,rgba(0,0,0,.12),transparent 36%,rgba(0,0,0,.38)); }
 .lux-card-image-has-media::after { display: none; }
 .visual-sand { background: radial-gradient(ellipse at 69% 31%, rgba(244,238,215,.88) 0 12%, transparent 12.5%), radial-gradient(ellipse at 17% 89%, rgba(135,143,111,.8) 0 16%, transparent 16.5%), linear-gradient(145deg,#e8ddcb,#a8aa91 55%,#607365); }
@@ -453,8 +453,8 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: center 18%;
   pointer-events: none;
 }
 .lux-profile-hero-fallback {
@@ -712,9 +712,8 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
   display: block;
   width: 100%;
   aspect-ratio: 3 / 4;
-  object-fit: contain;
-  object-position: center;
-  background: #111827;
+  object-fit: cover;
+  object-position: center 18%;
 }
 .lux-profile-thumb-play {
   position: absolute;
@@ -1441,7 +1440,7 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
   .lux-results-toolbar { margin-bottom: 9px; }
   .lux-results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .lux-favorite-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .lux-card-photo { object-fit: contain; object-position: center; }
+  .lux-card-photo { object-position: center top; }
   .lux-topline { display: none; }
   .lux-profile-layout { display: flex; flex-direction: column; gap: 0; }
   .lux-profile-main { display: contents; }
@@ -1656,8 +1655,10 @@ body { background: var(--s-ivory); }
 }
 .lux-card-media.has-media { background: #111827; }
 .lux-card-photo {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center;
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transition: transform .65s cubic-bezier(.2, .7, .25, 1);
 }
+.lux-provider-card:hover .lux-card-photo { transform: scale(1.05); }
 .lux-card-media .lux-scene-symbol {
   position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
   width: 72px; height: 72px; display: grid; place-items: center;
@@ -2444,7 +2445,8 @@ body { background: var(--s-ivory); }
 .lux-home .lux-proof-seal { animation: seal-turn 12s 1s linear infinite; }
 .lux-home .lux-category-row button { transition: transform .2s, color .2s, background .2s, box-shadow .2s; }
 .lux-home .lux-category-row button:hover { box-shadow: 0 7px 18px rgba(124,58,237,.16); }
-.lux-home .lux-card-photo { filter: none; }
+.lux-home .lux-card-photo { transition: transform .7s cubic-bezier(.2,.7,.25,1), filter .5s; }
+.lux-home .lux-provider-card:hover .lux-card-photo { transform: scale(1.07); }
 .lux-home .lux-provider-card:hover .lux-scene-symbol { transform: translate(-50%,-50%) scale(1.08) rotate(-6deg); }
 .lux-home .lux-scene-symbol { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
 .lux-home .lux-button span, .lux-home .lux-card-foot button span { display: inline-block; transition: transform .2s; }
@@ -2750,12 +2752,12 @@ body { background: var(--s-ivory); }
   }
   .lux-profile-hero-stage,
   .lux-profile-hero-fallback {
-    aspect-ratio: 3 / 4;
-    height: auto;
-    min-height: 0;
+    aspect-ratio: auto;
+    height: min(58dvh, 460px);
+    min-height: 280px;
   }
   .lux-profile-hero-stage img,
-  .lux-profile-hero-stage video { min-height: 0; height: 100%; object-fit: contain; }
+  .lux-profile-hero-stage video { min-height: 0; height: 100%; }
   .lux-profile-hero-nav { width: 34px; height: 34px; }
   .lux-profile-hero-nav.previous { left: 8px; }
   .lux-profile-hero-nav.next { right: 8px; }
