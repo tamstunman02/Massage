@@ -67,7 +67,7 @@ const { clearMembershipErrors, setMembershipError, can, loadSeekPosts, loadData,
       </section>
 
       <section class="lux-experience" data-reveal>
-        <div class="lux-experience-art"><div class="lux-experience-circle">N<span><AppIcon name="star" /></span></div><div class="lux-experience-caption">NUANIA · CONNECT ON YOUR TERMS</div></div>
+        <div class="lux-experience-art"><div class="lux-experience-circle">N<span><AppIcon name="star" /></span></div><div class="lux-experience-caption">NUANIA · เด็กเอ็นทั่วประเทศไทย</div></div>
         <div class="lux-experience-copy"><h2>ค้นหาอย่างมั่นใจ<br />ติดต่อ<span>กันเอง</span></h2><p>NuaNia เป็นพื้นที่ลงโปรไฟล์และราคาสำหรับผู้ให้บริการอิสระ นักท่องเที่ยวติดต่อนัดหมายโดยตรงผ่านช่องทางในโปรไฟล์ — ไม่มีการจองผ่านเว็บ</p><div class="lux-value-list"><span><i>01</i> อ่านโปรไฟล์และราคา</span><span><i>02</i> ติดต่อ LINE / Facebook โดยตรง</span><span><i>03</i> ตกลงรายละเอียดกันเองนอกเว็บ</span></div><button class="lux-text-link" @click="navigate('search')">ค้นหาผู้ให้บริการ <span><AppIcon name="arrow-right" /></span></button></div>
       </section>
 
