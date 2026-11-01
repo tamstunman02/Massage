@@ -423,6 +423,327 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
 .lux-profile-page { max-width: 1440px; }
 .lux-profile-layout { display: grid; grid-template-columns: minmax(0,1fr) 290px; align-items: start; gap: 30px; }
 .lux-profile-main { min-width: 0; }
+.lux-profile-showcase {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+}
+.lux-profile-hero,
+.lux-profile-sheet,
+.lux-profile-album {
+  background: #fff;
+  border: 1px solid var(--s-line);
+  border-radius: 24px;
+  box-shadow: 0 10px 28px rgba(30, 27, 75, .04);
+}
+.lux-profile-hero { overflow: hidden; align-self: start; }
+.lux-profile-hero-stage {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: #111827;
+  cursor: default;
+  touch-action: pan-y;
+  user-select: none;
+}
+.lux-profile-hero-stage.is-empty { cursor: default; }
+.lux-profile-hero-stage img,
+.lux-profile-hero-stage video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  pointer-events: none;
+}
+.lux-profile-hero-fallback {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 4;
+  color: #fff;
+  font-family: var(--s-serif);
+  font-size: 72px;
+}
+.lux-profile-hero-play,
+.lux-profile-hero-nav,
+.lux-profile-hero-tool {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background: rgba(17, 24, 39, .42);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.lux-profile-hero-play {
+  top: 50%;
+  left: 50%;
+  width: 58px;
+  height: 58px;
+  font-size: 24px;
+  transform: translate(-50%, -50%);
+}
+.lux-profile-hero-nav {
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  color: #111827;
+  background: rgba(255,255,255,.9);
+  transform: translateY(-50%);
+}
+.lux-profile-hero-nav.previous { left: 12px; }
+.lux-profile-hero-nav.next { right: 12px; }
+.lux-profile-hero-tools {
+  position: absolute;
+  top: 16px;
+  left: 14px;
+  display: grid;
+  gap: 8px;
+}
+.lux-profile-hero-tool {
+  position: static;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  background: rgba(255,255,255,.16);
+}
+.lux-profile-hero-tool.loved { color: #fb7185; }
+.lux-profile-hero-foot {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  font-size: 12px;
+  text-shadow: 0 1px 6px rgba(0,0,0,.35);
+}
+.lux-profile-hero-dots { display: flex; gap: 5px; }
+.lux-profile-hero-dots i {
+  width: 6px;
+  height: 6px;
+  background: rgba(255,255,255,.45);
+  border-radius: 50%;
+}
+.lux-profile-hero-dots i.active { background: #fff; }
+.lux-profile-sheet { display: grid; gap: 16px; padding: 22px; }
+.lux-profile-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lux-profile-sheet-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lux-profile-sheet-who h1 {
+  margin: 0;
+  color: var(--s-ink);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.lux-profile-sheet-who p { margin: 4px 0 0; color: #8b89a6; font-size: 13px; }
+.lux-profile-sheet-head > strong { color: #6b6890; font-size: 15px; font-weight: 600; white-space: nowrap; }
+.lux-profile-sheet-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: #6b6890;
+  font-size: 13px;
+}
+.lux-profile-sheet-stats span { display: inline-flex; align-items: center; gap: 6px; }
+.lux-profile-place {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  background: #faf8ff;
+  border: 1px solid #efeaf8;
+  border-radius: 16px;
+}
+.lux-profile-place span { display: inline-flex; align-items: center; gap: 6px; color: #8b89a6; font-size: 12px; }
+.lux-profile-place p { margin: 0; color: var(--s-ink); font-size: 14px; }
+.lux-profile-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.lux-profile-metrics > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 8px;
+  text-align: center;
+  background: #faf8ff;
+  border-radius: 14px;
+}
+.lux-profile-metrics strong { color: var(--s-ink); font-size: 16px; }
+.lux-profile-metrics strong small { color: #8b89a6; font-size: 11px; font-weight: 600; }
+.lux-profile-metrics span { color: #8b89a6; font-size: 12px; }
+.lux-profile-about-block h2 {
+  margin: 0 0 10px;
+  color: var(--s-ink);
+  font-size: 18px;
+  font-weight: 700;
+}
+.lux-profile-facts {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.lux-profile-facts li {
+  position: relative;
+  margin: 0 0 6px;
+  padding-left: 16px;
+  color: #4b4868;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.lux-profile-facts li::before {
+  content: "";
+  position: absolute;
+  top: .55em;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: #f97316;
+  border-radius: 50%;
+}
+.lux-profile-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 48px;
+  gap: 10px;
+  align-items: center;
+}
+.lux-profile-cta:not(:has(.lux-profile-cta-line)) { grid-template-columns: minmax(0, 1fr) 48px; }
+.lux-profile-cta:not(:has(.lux-profile-cta-chat)) { grid-template-columns: minmax(0, 1fr) 48px; }
+.lux-profile-cta:not(:has(.lux-profile-cta-line)):not(:has(.lux-profile-cta-chat)) { grid-template-columns: 1fr 48px; }
+.lux-profile-cta-line,
+.lux-profile-cta-chat,
+.lux-profile-cta-share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.lux-profile-cta-line { color: #fff; background: #06c755; border: 0; }
+.lux-profile-cta-chat { color: #4b4868; background: #fff; border: 1px solid #e5e2ef; }
+.lux-profile-cta-share {
+  width: 48px;
+  padding: 0;
+  color: #6b6890;
+  background: #fff;
+  border: 1px solid #e5e2ef;
+  cursor: pointer;
+}
+.lux-profile-album { margin-top: 22px; padding: 20px 22px 22px; }
+.lux-profile-album-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.lux-profile-album-head h2 { margin: 0; color: var(--s-ink); font-size: 20px; font-weight: 700; }
+.lux-profile-album-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.lux-profile-album-tabs button {
+  min-height: 36px;
+  padding: 0 14px;
+  color: #6b6890;
+  background: #f6f4fb;
+  border: 0;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lux-profile-album-tabs button.active { color: #fff; background: var(--s-ink); }
+.lux-profile-thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.lux-profile-thumb {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  background: #111827;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+}
+.lux-profile-thumb.active { border-color: var(--s-olive); }
+.lux-profile-thumb img,
+.lux-profile-thumb video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center 18%;
+}
+.lux-profile-thumb-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: #fff;
+  background: rgba(17, 24, 39, .62);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.lux-profile-album > .lux-profile-cta { max-width: 560px; margin-top: 4px; }
+.lux-profile-chat-float {
+  position: fixed;
+  z-index: 11;
+  right: auto;
+  bottom: 24px;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: min(420px, calc(100% - 32px));
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 14px 32px rgba(17, 24, 39, .2);
+  transform: translateX(-50%);
+}
+.lux-profile-chat-float.is-line { color: #fff; background: #06c755; }
+.lux-profile-chat-float.is-facebook { color: #fff; background: #1877f2; }
+.lux-page.lux-profile-page { padding-bottom: 110px; }
+.lux-profile-page .lux-review-section {
+  margin-top: 22px;
+  padding: 20px 22px 8px;
+  background: #fff;
+  border: 1px solid var(--s-line);
+  border-radius: 24px;
+  box-shadow: 0 10px 28px rgba(30, 27, 75, .04);
+}
+
+@media (max-width: 1200px) {
+  .lux-profile-showcase { grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); }
+  .lux-profile-thumbs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 980px) {
+  .lux-profile-showcase { grid-template-columns: 1fr; }
+  .lux-profile-thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .lux-profile-identity { position: relative; display: flex; align-items: center; gap: 16px; margin: 0; padding: 16px 0 22px; border-bottom: 1px solid var(--s-line); }
 .lux-profile-monogram { position: relative; width: 76px; height: 76px; display: grid; flex-shrink: 0; place-items: center; overflow: hidden; color: var(--s-forest); border: 4px solid var(--s-ivory); border-radius: 50%; font-family: var(--s-serif); font-size: 34px; }
 .lux-profile-monogram.has-profile-image { background: transparent; }
@@ -1100,8 +1421,9 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible, input:focu
   .lux-topline { display: none; }
   .lux-profile-layout { display: flex; flex-direction: column; gap: 0; }
   .lux-profile-main { display: contents; }
-  .lux-review-section { order: 2; }
-  .lux-available-appointments { order: 1; }
+  .lux-profile-showcase { grid-template-columns: 1fr; gap: 10px; }
+  .lux-review-section { order: unset; }
+  .lux-available-appointments { order: unset; }
   .lux-appointment-option { display: block; }
   .lux-appointment-select { min-width: 0; width: auto; }
   .lux-profile-identity { gap: 9px; padding: 8px 0 14px; }
@@ -1979,22 +2301,38 @@ body { background: var(--s-ivory); }
   min-height: 50px;
 }
 .lux-seller-media-note { margin: 12px 0 0; line-height: 1.6; }
+.lux-promo-gallery {
+  transform: none !important;
+}
 .lux-promo-gallery .lux-section-title { align-items: center; }
-.lux-promo-grid {
-  display: grid; grid-auto-columns: minmax(220px, 32%); grid-auto-flow: column; gap: 12px;
-  margin-top: 14px; padding: 2px 2px 10px;
-  overflow-x: auto; overflow-y: hidden;
-  overscroll-behavior-x: contain; scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch; touch-action: none;
-  cursor: grab; scrollbar-width: thin;
+.lux-promo-scroller {
+  overflow: hidden;
+  margin-top: 14px;
+  touch-action: pan-y;
 }
-.lux-promo-grid.is-dragging { cursor: grabbing; scroll-snap-type: none; }
+.lux-promo-track {
+  display: flex; gap: 12px; width: max-content;
+  will-change: transform;
+  transition: transform .28s cubic-bezier(.22, .8, .24, 1);
+  touch-action: pan-y;
+}
+.lux-promo-track.is-dragging { transition: none; }
 .lux-promo-item {
-  position: relative; min-width: 0; overflow: hidden; padding: 0;
+  position: relative; flex: 0 0 170px;
+  min-width: 0; overflow: hidden; padding: 0;
   background: #1e1b4b; border: 0; border-radius: 13px; cursor: zoom-in;
-  scroll-snap-align: start; user-select: none; -webkit-user-drag: none;
+  user-select: none; -webkit-user-drag: none;
+  touch-action: pan-y;
 }
-.lux-promo-grid.is-dragging .lux-promo-item { cursor: grabbing; }
+.lux-promo-controls {
+  display: none; align-items: center; justify-content: center; gap: 12px;
+  margin-top: 4px; color: #7a7693; font-size: 12px;
+}
+.lux-promo-controls button {
+  width: 36px; height: 36px; display: grid; place-items: center;
+  padding: 0; border: 0; border-radius: 50%;
+  color: #fff; background: #4c1d95; font-size: 22px; line-height: 1;
+}
 .lux-promo-item img, .lux-promo-item video {
   width: 100%; aspect-ratio: 3 / 4; display: block;
   object-fit: cover; object-position: center top;
@@ -2058,12 +2396,12 @@ body { background: var(--s-ivory); }
   .lux-admin-create-partner .lux-seller-services .lux-seller-panel-head .lux-button { width: 100%; }
   .lux-admin-create-partner > .lux-button { width: 100%; min-width: 0; }
   .lux-seller-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .lux-promo-grid {
-    grid-auto-columns: minmax(72vw, 78%); gap: 10px;
-    margin-right: -16px; margin-left: -16px; padding: 2px 16px 12px;
-    scroll-padding-inline: 16px; scroll-snap-type: x proximity;
+  .lux-promo-scroller {
+    margin-right: -16px; margin-left: -16px; padding: 0 16px 8px;
+    overflow: hidden;
   }
-  .lux-promo-item { border-radius: 16px; }
+  .lux-promo-track { gap: 10px; }
+  .lux-promo-item { flex: 0 0 58%; border-radius: 16px; }
   .lux-media-viewer { touch-action: pan-y; user-select: none; }
   .lux-media-viewer-stage { width: 100%; touch-action: pan-y; }
   .lux-media-viewer-hint { display: block; }
@@ -2359,3 +2697,124 @@ body { background: var(--s-ivory); }
 .lux-button .app-icon.icon-arrow-left,
 .lux-button .app-icon.icon-plus,
 .lux-text-link .app-icon.icon-arrow-left { margin-right: 2px; }
+
+@media (max-width: 680px) {
+  .lux-page.lux-profile-page {
+    overflow-x: hidden;
+    padding: 10px 0 calc(188px + env(safe-area-inset-bottom));
+  }
+  .lux-profile-chat-float {
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    width: min(340px, calc(100% - 28px));
+    min-width: 0;
+    min-height: 50px;
+    font-size: 15px;
+  }
+  .lux-profile-page .lux-breadcrumb {
+    min-width: 0;
+    margin: 0 14px 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lux-profile-hero {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .lux-profile-hero-stage,
+  .lux-profile-hero-fallback {
+    aspect-ratio: auto;
+    height: min(58dvh, 460px);
+    min-height: 280px;
+  }
+  .lux-profile-hero-stage img,
+  .lux-profile-hero-stage video { min-height: 0; height: 100%; }
+  .lux-profile-hero-nav { width: 34px; height: 34px; }
+  .lux-profile-hero-nav.previous { left: 8px; }
+  .lux-profile-hero-nav.next { right: 8px; }
+  .lux-profile-hero-tools { top: 12px; left: 10px; }
+  .lux-profile-hero-tool { width: 34px; height: 34px; }
+  .lux-profile-hero-foot { right: 10px; bottom: 10px; left: 10px; font-size: 11px; }
+  .lux-profile-sheet,
+  .lux-profile-album,
+  .lux-profile-page .lux-review-section {
+    margin-right: 12px;
+    margin-left: 12px;
+    border-radius: 18px;
+  }
+  .lux-profile-sheet { padding: 14px; gap: 12px; }
+  .lux-profile-sheet-who { min-width: 0; flex: 1; }
+  .lux-profile-sheet-who h1 {
+    overflow-wrap: anywhere;
+    font-size: 18px;
+  }
+  .lux-profile-sheet-who p { font-size: 12px; }
+  .lux-profile-sheet-head > strong { font-size: 13px; }
+  .lux-profile-sheet-stats { gap: 10px; font-size: 12px; }
+  .lux-profile-place { padding: 10px 12px; }
+  .lux-profile-place p { font-size: 13px; }
+  .lux-profile-metrics > div { padding: 10px 4px; }
+  .lux-profile-metrics strong { font-size: 13px; }
+  .lux-profile-metrics strong small { font-size: 10px; }
+  .lux-profile-metrics span { font-size: 11px; }
+  .lux-profile-about-block h2 { font-size: 16px; }
+  .lux-profile-facts li { font-size: 13px; }
+  .lux-profile-cta,
+  .lux-profile-cta:not(:has(.lux-profile-cta-line)),
+  .lux-profile-cta:not(:has(.lux-profile-cta-chat)),
+  .lux-profile-cta:not(:has(.lux-profile-cta-line)):not(:has(.lux-profile-cta-chat)) {
+    grid-template-columns: minmax(0, 1fr) 46px;
+  }
+  .lux-profile-cta:has(.lux-profile-cta-line):has(.lux-profile-cta-chat) {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 46px;
+  }
+  .lux-profile-cta-line,
+  .lux-profile-cta-chat {
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  .lux-profile-cta-share { width: 46px; }
+  .lux-profile-album { margin-top: 10px; padding: 14px; }
+  .lux-profile-album-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .lux-profile-album-head h2 { font-size: 17px; }
+  .lux-profile-album-tabs {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lux-profile-album-tabs button {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  .lux-profile-thumbs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 0 -14px 14px;
+    padding: 0 14px 6px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+  .lux-profile-thumb {
+    flex: 0 0 30%;
+    scroll-snap-align: start;
+  }
+  .lux-profile-album > .lux-profile-cta { max-width: none; }
+  .lux-profile-page .lux-review-section {
+    margin-top: 10px;
+    padding: 14px 14px 8px;
+  }
+  .lux-profile-page .lux-review-section h2 { font-size: 18px; }
+}
