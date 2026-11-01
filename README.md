@@ -62,7 +62,7 @@ npm run build
 Workflow อยู่ที่ `.github/workflows/ci-cd.yml`
 
 - **CI** รันเมื่อเปิด pull request หรือ push เข้า `main`: ติดตั้งแพ็กเกจ, build หน้าเว็บ, แล้วเปิด API กับ PostgreSQL ชั่วคราวเพื่อตรวจว่า `/api/me` ตอบกลับ
-- **CD** รันตอน push เข้า `main` โดยอัตโนมัติ (ตั้ง `DEPLOY_ENABLED=false` ถ้าต้องการข้าม) ระบบเข้าเซิร์ฟเวอร์ด้วยชื่อผู้ใช้และรหัสผ่าน แล้ว `git pull`, build และ restart service `massage`
+- **CD** รันตอน push เข้า `main` โดยอัตโนมัติ (ตั้ง `DEPLOY_ENABLED=false` ถ้าต้องการข้าม) ระบบเข้าเซิร์ฟเวอร์ด้วยชื่อผู้ใช้และรหัสผ่าน แล้ว `git pull`, build และ `pm2 restart nuania`
 
 Secrets ที่ต้องใส่: `SSH_HOST`, `SSH_USER`, `SSH_PASSWORD` และถ้าพอร์ตไม่ใช่ 22 ให้ใส่ `SSH_PORT` แอปอยู่ที่ `/var/www/nuania` ถ้าโฟลเดอร์เปลี่ยน ให้ใส่ `APP_DIR`
 

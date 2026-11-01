@@ -114,29 +114,26 @@ jobs:
             export NODE_OPTIONS="--max-old-space-size=512"
             npm ci --no-audit --no-fund --foreground-scripts
             npm run build
-            app_dir="${APP_DIR:-/var/www/nuania}"
-            node_bin=$(command -v node)
-            service_user=$(id -un)
-            service_group=$(id -gn)
-            if [ "$service_user" = root ] && id massage >/dev/null 2>&1; then
-              service_user=massage
-              service_group=massage
+            export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              # shellcheck disable=SC1090
+              . "$NVM_DIR/nvm.sh"
             fi
-            unit_tmp=$(mktemp)
-            sed \
-              -e "s|^User=.*|User=${service_user}|" \
-              -e "s|^Group=.*|Group=${service_group}|" \
-              -e "s|^WorkingDirectory=.*|WorkingDirectory=${app_dir}|" \
-              -e "s|^EnvironmentFile=.*|EnvironmentFile=-${app_dir}/.env|" \
-              -e "s|^ExecStart=.*|ExecStart=${node_bin} server/index.js|" \
-              deploy/massage.service > "$unit_tmp"
-            run_root cp "$unit_tmp" /etc/systemd/system/massage.service
-            rm -f "$unit_tmp"
-            run_root systemctl daemon-reload
-            run_root systemctl enable massage
-            run_root systemctl stop massage || true
-            run_root fuser -k 3001/tcp || true
-            run_root systemctl start massage
+            export PATH="$PATH:/usr/local/bin:$HOME/.local/bin"
+            pm2_bin=$(command -v pm2 || true)
+            if [ -z "$pm2_bin" ]; then
+              pm2_bin=$(ls -1 "$HOME"/.nvm/versions/node/*/bin/pm2 2>/dev/null | tail -n 1 || true)
+            fi
+            if [ -z "$pm2_bin" ]; then
+              echo "pm2 not found; cannot restart nuania"
+              exit 1
+            fi
+            if "$pm2_bin" describe nuania >/dev/null 2>&1; then
+              "$pm2_bin" restart nuania --update-env
+            else
+              "$pm2_bin" start server/index.js --name nuania --update-env
+            fi
+            "$pm2_bin" save || true
             for _ in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:3001/api/me >/dev/null; then
                 order_code=$(curl -s -o /tmp/media-order.json -w '%{http_code}' -X PUT \
@@ -146,6 +143,7 @@ jobs:
                 if [ "$order_code" = "404" ]; then
                   echo "media-order route missing after deploy (HTTP $order_code)"
                   cat /tmp/media-order.json || true
+                  "$pm2_bin" status || true
                   exit 1
                 fi
                 echo "Deployed and API is up (media-order HTTP $order_code)"
@@ -154,9 +152,6 @@ jobs:
               sleep 2
             done
             echo "Service did not become ready"
-            if [ "$(id -u)" -eq 0 ]; then
-              systemctl status massage --no-pager || true
-            else
-              printf '%s\n' "$SSH_PASSWORD" | sudo -S -p '' systemctl status massage --no-pager || true
-            fi
+            "$pm2_bin" status || true
+            "$pm2_bin" logs nuania --lines 40 --nostream || true
             exit 1
